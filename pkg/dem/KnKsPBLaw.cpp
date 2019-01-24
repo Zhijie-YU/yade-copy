@@ -31,7 +31,7 @@ bool Law2_SCG_KnKsPBPhys_KnKsPBLaw::go(shared_ptr<IGeom>& ig /* contact geometry
 
 	Vector3r& shearForce = phys->shearForce; /* shear force at previous timestep */
 	Real un=geom->penetrationDepth; /* overlap distance */
-	TRVAR3(geom->penetrationDepth,de1->se3.position,de2->se3.position);
+	//TRVAR3(geom->penetrationDepth,de1->se3.position,de2->se3.position);
 	
 	/* ERASE CONTACT OR RESET PARAMETERS IF NO OVERLAP */
 	if(geom->penetrationDepth <0.0 ){

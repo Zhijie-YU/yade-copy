@@ -1,6 +1,6 @@
 /*CWBoon 2016 */
 /* Please cite: */
-/* CW Boon, GT Houlsby, S Utili (2012).  A new algorithm for contact detection between convex polygonal and polyhedral particles in the discrete element method.  Computers and Geotechnics 44, 73-82. */
+/* CW Boon, GT Houlsby, S Utili (2013).  A new algorithm for contact detection between convex polygonal and polyhedral particles in the discrete element method.  Computers and Geotechnics 44, 73-82. */
 /* The numerical library is changed from CPLEX to CLP because subscription to the academic initiative is required to use CPLEX for free */
 
 
@@ -62,7 +62,7 @@ class Ig2_PB_PB_ScGeom: public IGeomFunctor
 		double getDet(const Eigen::MatrixXd A);
 		bool customSolve(const shared_ptr<Shape>& cm1, const State& state1, const shared_ptr<Shape>& cm2, const State& state2, Vector3r &contactPt, bool warmstart);
 		
-		double evaluatePhys(const shared_ptr<Shape>& cm1,  const State& state1, const Vector3r newTrial, double& phi_b, double& phi_r, double& JRC, double& JSC, double& cohesion, double& sigmaC, double& asperity, double& tension, double &lambda0, double &heatCapacity, double &hwater, bool &intactRock, int &activePlanesNo, int &jointType);
+		double evaluatePhys(const shared_ptr<Shape>& cm1,  const State& state1, const Vector3r newTrial, double& phi_b, double& phi_r, double& JRC, double& JSC, double& cohesion, double& ks, double& kn, double& tension, double &lambda0, double &heatCapacity, double &hwater, bool &intactRock, int &activePlanesNo, int &jointType);
 		Vector3r getNormal(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r newTrial);
 		
 		void BrentZeroSurf(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r bracketA, const Vector3r bracketB, Vector3r& zero);
@@ -76,10 +76,10 @@ class Ig2_PB_PB_ScGeom: public IGeomFunctor
 
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(Ig2_PB_PB_ScGeom,IGeomFunctor,"PB",		
 			((double, accuracyTol, pow(10,-7),, "accuracy desired, tolerance criteria for SOCP"))
-			((double, stepAngle, pow(10,-2),, "accuracy desired, tolerance criteria for SOCP"))
-			((double,interactionDetectionFactor,1.0,,"bool to avoid granular ratcheting"))
-			((Vector3r, twoDdir, Vector3r(0,1,0),, "to get radius of curvature"))
-			((bool,twoDimension,false,,"bool to avoid granular ratcheting")),
+			((double, stepAngle, pow(10,-2),, ""))
+			((double,interactionDetectionFactor,1.0,,""))
+			((Vector3r, twoDdir, Vector3r(0,1,0),, "direction of 2D"))
+			((bool,twoDimension,false,,"bool whether 2D")),
 			//((std::string,myfile,"./PotentialBlocks"+"","string")),
 			//timingDeltas=shared_ptr<TimingDeltas>(new TimingDeltas);
 			//mosekTaskEnv = MSK_makeenv(&mosekEnv,NULL,NULL,NULL,NULL);
