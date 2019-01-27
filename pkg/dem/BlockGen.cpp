@@ -1314,6 +1314,7 @@ std::cout<<"joint_a.size(): "<<joint_a.size()<<", joint size: "<<joint.size()<<e
 	/* Create blocks */
 	for (unsigned int i=0; i<blk.size(); i++){
 		std::cout<<"Generating progress.... block no: "<<i+1<<"/"<<blk.size()<<endl;
+		int shapeIDcount = 0;
 		if(blk[i].subMembers.size()>0){
 			//#if 0
 			shared_ptr<Body> clumpBody=shared_ptr<Body>(new Body());
@@ -1330,13 +1331,13 @@ std::cout<<"joint_a.size(): "<<joint_a.size()<<", joint size: "<<joint.size()<<e
 			vector<int> memberId;
 			int clumpMemberCount = 0;
 		       	for(int j=0; j<blk[i].subMembers.size();j++){
-				if(createBlock(body,blk[i].subMembers[j],j) ){
+				if(createBlock(body,blk[i].subMembers[j],shapeIDcount /* j */) ){
 						//scene->bodies->insert(body);
 						 Body::id_t lastId=(Body::id_t)scene->bodies->insert(body);
 						 /* new */ memberId.push_back(lastId);
 						 //Clump::add(clumpBody, /* body*/  Body::byId(lastId,scene) );
 						//clump->ids.push_back(lastId);
-						
+						 shapeIDcount++;
 						 clumpMemberCount++;
 				}
 				//std::cout<<"Generating progress.... sub-block no: "<<j+1<<"/"<<blk[i].subMembers.size()<<endl;
@@ -1356,8 +1357,9 @@ std::cout<<"joint_a.size(): "<<joint_a.size()<<", joint size: "<<joint.size()<<e
 			
 		        
 		}else{
-			if(createBlock(body, blk[i],i)){ 
+			if(createBlock(body, blk[i],shapeIDcount /* i */)){ 
 				scene->bodies->insert(body);
+				shapeIDcount++;
 			
 			}
 		}	

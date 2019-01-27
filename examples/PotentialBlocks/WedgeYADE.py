@@ -6,7 +6,8 @@
 #Users need to update westBodyId, midBodyId, eastBodyID by displaying the IDs of the body and re-run. Otherwise will receive error. 
 #The code runs some steps to stabilise.  After that a vertical cut is carried out.  And the simulations shows the failure mechanism of the slope.
 
-#Display is saved to a vtk file in the "vtk folder" and the user is required to load it using ParaView.  Control the frequency of printing a vtk file using vtkRecorder.iterPeriod in python
+#Display is saved to a vtk file in the "vtk folder" and the user is required to load it using ParaView.  Control the frequency of printing a vtk file using vtkRecorder.iterPeriod in python 
+#QT DISPLAY IS NOT DISPLAYING THE BLOCK CORRECTLY YET
 
 #Disclaimer: This script is just for illustration to demonstrate the function of Block Gen and PotentialBlock Code, and not for other purpose outside for this intended use
 
@@ -17,6 +18,7 @@
 #coinor-libclp-dev, 
 #coinor-libclp1, 
 #coinor-libosi1v5
+
 
 
 name ='BlockGeneration' # PLEASE CHECK THIS  
