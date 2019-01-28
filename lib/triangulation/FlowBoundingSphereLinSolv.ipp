@@ -175,6 +175,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setLinearSystem(Real dt)
 		cholmod_l_free_triplet(&cholT, &com);
 		if (!reuseOrdering) {
 			cholmod_l_free_factor(&L, &com);
+			cholmod_l_free_factor(&M, &com);
 			cholmod_l_finish(&com);
 			if (getCHOLMODPerfTimings){
 				gettimeofday (&end, NULL);
