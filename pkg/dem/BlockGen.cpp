@@ -1311,10 +1311,12 @@ std::cout<<"joint_a.size(): "<<joint_a.size()<<", joint size: "<<joint.size()<<e
 
 		}
 	}
+
+	int shapeIDcount = 0;
 	/* Create blocks */
 	for (unsigned int i=0; i<blk.size(); i++){
 		std::cout<<"Generating progress.... block no: "<<i+1<<"/"<<blk.size()<<endl;
-		int shapeIDcount = 0;
+		
 		if(blk[i].subMembers.size()>0){
 			//#if 0
 			shared_ptr<Body> clumpBody=shared_ptr<Body>(new Body());

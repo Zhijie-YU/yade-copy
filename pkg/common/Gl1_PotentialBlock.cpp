@@ -131,7 +131,7 @@ void Gl1_PotentialBlock::go( const shared_ptr<Shape>& cm, const shared_ptr<State
 			PotentialBlock* cmbody = dynamic_cast<PotentialBlock*>(b->shape.get());
 			if (!cmbody) continue;
 
-				Eigen::Matrix3d rotation = b->state->ori.conjugate().toRotationMatrix(); //*pb->oriAabb.conjugate(); 
+				Eigen::Matrix3d rotation = b->state->ori.toRotationMatrix(); //*pb->oriAabb.conjugate(); 
 				int count = 0;
 				for (int i=0; i<3; i++){
 					for (int j=0; j<3; j++){
@@ -200,8 +200,8 @@ double Gl1_PotentialBlock::evaluateF(const PotentialBlock& pp, double x, double 
 
 		int planeNo = pp.a.size();
 
-		Eigen::Vector3d xori(x,y,z);
-		Eigen::Vector3d xlocal = rotationMatrix*xori;
+		//Eigen::Vector3d xori(x,y,z);
+		//Eigen::Vector3d xlocal = rotationMatrix*xori;
 		//rotationMatrix*xori;
 		//xlocal[0] = rotationMatrix(0,0)*xori[0] + rotationMatrix(0,1)*xori[1] + rotationMatrix(0,2)*xori[2];
 		//xlocal[1] = rotationMatrix(1,0)*xori[0] + rotationMatrix(1,1)*xori[1] + rotationMatrix(1,2)*xori[2];
@@ -209,17 +209,17 @@ double Gl1_PotentialBlock::evaluateF(const PotentialBlock& pp, double x, double 
 
 		vector<double>a; vector<double>b; vector<double>c; vector<double>d; vector<double>p; Real pSum3 = 0.0;
 		for (int i=0; i<planeNo; i++){
-			//Vector3r planeOri(pp.a[i],pp.b[i],pp.c[i]);
-			//Vector3r planeRotated = rotationMatrix*planeOri; //FIXME 
-			a.push_back(pp.a[i]);
-			b.push_back(pp.b[i]);		
-			c.push_back(pp.c[i]);
-			//a.push_back(planeRotated.x()); //pp.a[i]);
-			//b.push_back(planeRotated.y()); //pp.b[i]);		
-			//c.push_back(planeRotated.z()); //pp.c[i]);
+			Vector3r planeOri(pp.a[i],pp.b[i],pp.c[i]);
+			Vector3r planeRotated = planeOri; //rotationMatrix*planeOri; //FIXME 
+			//a.push_back(pp.a[i]);
+			//b.push_back(pp.b[i]);		
+			//c.push_back(pp.c[i]);
+			a.push_back(planeRotated.x()); //pp.a[i]);
+			b.push_back(planeRotated.y()); //pp.b[i]);		
+			c.push_back(planeRotated.z()); //pp.c[i]);
 			d.push_back(pp.d[i]);
-			//Real plane = planeRotated.x()*x +planeRotated.y()*y + planeRotated.z()*z - pp.d[i]; if (plane<pow(10,-15)){plane = 0.0;} 
-			Real plane = pp.a[i]*xlocal[0] +pp.b[i]*xlocal[1] + pp.c[i]*xlocal[2] - pp.d[i]; if (plane<pow(10,-15)){plane = 0.0;} 
+			Real plane = planeRotated.x()*x +planeRotated.y()*y + planeRotated.z()*z - pp.d[i]; if (plane<pow(10,-15)){plane = 0.0;} 
+			//Real plane = pp.a[i]*xlocal[0] +pp.b[i]*xlocal[1] + pp.c[i]*xlocal[2] - pp.d[i]; if (plane<pow(10,-15)){plane = 0.0;} 
 			p.push_back(plane);
 			pSum3 += pow(p[i],2);
 		}
