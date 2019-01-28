@@ -82,7 +82,7 @@ class KnKsPhys: public FrictPhys {
 			((bool, calJointLength, false,, "calculate joint length"))
 			((bool, useOverlapVol, false,, "calculate overlap volume"))
 			((bool, calContactArea, false,, "calculate contact area"))
-			((double, jointLength, 0.0,, "approximatedJointLength"))
+			((double, jointLength, 1.0,, "approximatedJointLength"))
 			((double, shearIncrementForCD, 0.0,, "toSeeWhether it is necessary to update contactArea"))
 			((Real, overlappingVol,0.0 , ,"not used, overlapping vol"))
 			((Real, overlappingVolMulti,0.0 , ,"not used, overlapping vol"))

@@ -65,8 +65,8 @@ void Gl1_PotentialParticle::calcMinMax(const PotentialParticle& pp) {
 		}
 	}
 
-	min = -aabbEnlargeFactor*pp.minAabb;
-	max =  aabbEnlargeFactor*pp.maxAabb;
+	min = -aabbEnlargeFactor*pp.minAabbRotated;
+	max =  aabbEnlargeFactor*pp.maxAabbRotated;
 
 	Real dx = (max[0]-min[0])/((Real)(sizeX-1));
 	Real dy = (max[1]-min[1])/((Real)(sizeY-1));
@@ -399,11 +399,15 @@ void PotentialParticleVTKRecorder::action() {
 		sample->ComputeNormalsOff();
 		//sample->Update();
 		vtkSmartPointer<vtkContourFilter> contours = vtkContourFilter::New();
-    #ifdef YADE_VTK6
-		  contours->SetInputData(sample->GetOutput());
-    #else
-		  contours->SetInput(sample->GetOutput());
-		#endif
+   //#ifdef YADE_VTK6
+		  contours->SetInputConnection(sample->GetOutputPort());
+   // #else
+//		  contours->SetInput(sample->GetOutput());
+//		#endif
+
+		
+
+
     contours->SetNumberOfContours(1);
 		contours->SetValue(0,0.0);
 		vtkSmartPointer<vtkPolyData> polydata = vtkSmartPointer<vtkPolyData>::New();
@@ -438,11 +442,11 @@ void PotentialParticleVTKRecorder::action() {
 		AngleAxisr aa(orientation);
 		//Vector3r axis = aa.axis();
 		vtkSmartPointer<vtkTransformPolyDataFilter> transformFilter = vtkSmartPointer<vtkTransformPolyDataFilter>::New();
-    #ifdef YADE_VTK6
+   // #ifdef YADE_VTK6
 		  transformFilter->SetInputData( polydata );
-    #else
-		  transformFilter->SetInput( polydata );
-		#endif
+    //#else
+		 // transformFilter->SetInput( polydata );
+		//#endif
 		vtkSmartPointer<vtkTransform> transform = vtkSmartPointer<vtkTransform>::New();
 
 		transformFilter->SetTransform( transform );
@@ -496,11 +500,11 @@ void PotentialParticleVTKRecorder::action() {
 		writerA->SetDataModeToAscii();
 		string fv=fileName+"vel."+std::to_string(scene->iter)+".vtu";
 		writerA->SetFileName(fv.c_str());
-    #ifdef YADE_VTK6
+  //  #ifdef YADE_VTK6
 		  writerA->SetInputData(pbUg);
-    #else
-		  writerA->SetInput(pbUg);
-		#endif
+   // #else
+//		  writerA->SetInput(pbUg);
+//		#endif
 		writerA->Write();
 		//writerA->Delete();
 		//pbUg->Delete();
@@ -516,11 +520,11 @@ void PotentialParticleVTKRecorder::action() {
 		writerA->SetDataModeToAscii();
 		string fv=fileName+"Id."+std::to_string(scene->iter)+".vtu";
 		writerA->SetFileName(fv.c_str());
-    #ifdef YADE_VTK6
+    //#ifdef YADE_VTK6
 		  writerA->SetInputData(pbUg);
-    #else
-		  writerA->SetInput(pbUg);
-		#endif
+   // #else
+	//	  writerA->SetInput(pbUg);
+	//	#endif
 		writerA->Write();
 		//writerA->Delete();
 		//pbUg->Delete();
@@ -558,11 +562,11 @@ void PotentialParticleVTKRecorder::action() {
 			writerB->SetDataModeToAscii();
 			string fcontact=fileName+"contactPoint."+std::to_string(scene->iter)+".vtu";
 			writerB->SetFileName(fcontact.c_str());
-      #ifdef YADE_VTK6
+     // #ifdef YADE_VTK6
 			  writerB->SetInputData(pbUgCP);
-      #else
-			  writerB->SetInput(pbUgCP);
-		  #endif
+     // #else
+	//		  writerB->SetInput(pbUgCP);
+	//	  #endif
 			writerB->Write();
 			//writerB->Delete();
 			//pbUgCP->Delete();

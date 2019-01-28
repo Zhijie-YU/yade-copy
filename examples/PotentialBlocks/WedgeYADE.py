@@ -1,11 +1,10 @@
 #CW BOON 2018
 # Use the following algorithms:
-# CW Boon, GT Houlsby, S Utili (2013).  A new algorithm for contact detection between convex polygonal and polyhedral particles in the discrete element method.  Computers and Geotechnics 44, 73-82. 
+# CW Boon, GT Houlsby, S Utili (2012).  A new algorithm for contact detection between convex polygonal and polyhedral particles in the discrete element method.  Computers and Geotechnics 44, 73-82. 
 # CW Boon, GT Houlsby, S Utili (2015).  A new rock slicing method based on linear programming.  Computers and Geotechnics 65, 12-29. 
 
 #Users need to update westBodyId, midBodyId, eastBodyID by displaying the IDs of the body and re-run. Otherwise will receive error. 
 #The code runs some steps to stabilise.  After that a vertical cut is carried out.  And the simulations shows the failure mechanism of the slope.
-
 #Display is saved to a vtk file in the "vtk folder" and the user is required to load it using ParaView.  Control the frequency of printing a vtk file using vtkRecorder.iterPeriod in python
 
 #Disclaimer: This script is just for illustration to demonstrate the function of Block Gen and PotentialBlock Code, and not for other purpose outside for this intended use
@@ -114,6 +113,7 @@ O.step()
 
 
 idCountBegin = len(O.bodies)
+count = idCountBegin
 
 # material
 young = 600.0e6 # [N/m^2]
@@ -138,7 +138,7 @@ bPP = [0,0,1,-1,0,0]
 cPP = [0,0,0,0,1,-1]
 dPP = [p.boundarySizeXmax , p.boundarySizeXmax ,p.boundarySizeYmax,p.boundarySizeYmax,thickness,thickness]
 minmaxAabb = Vector3(1.05*(dPP[0]+rPP),1.05*(dPP[2]-rPP),1.05*(dPP[4]+rPP))
-bBottom.shape=PotentialBlock(k=kPP, r=rPP , R=RPP,a=aPP, b=bPP, c=cPP, d=dPP,id=idCountBegin+1+2,isBoundary=True,color=color ,wire=wire,highlight=highlight,AabbMinMax=True,minAabb=minmaxAabb ,maxAabb=minmaxAabb,minAabbRotated=minmaxAabb ,maxAabbRotated=minmaxAabb,fixedNormal=True,boundaryNormal=Vector3(0,0,-1))	
+bBottom.shape=PotentialBlock(k=kPP, r=rPP , R=RPP,a=aPP, b=bPP, c=cPP, d=dPP,id=count,isBoundary=True,color=color ,wire=wire,highlight=highlight,AabbMinMax=True,minAabb=minmaxAabb ,maxAabb=minmaxAabb,minAabbRotated=minmaxAabb ,maxAabbRotated=minmaxAabb,fixedNormal=True,boundaryNormal=Vector3(0,0,-1))	
 V = (2*(thickness+rPP))*(p.boundarySizeXmax+rPP)*(p.boundarySizeYmax)
 geomInert = 1/12*(p.boundarySizeYmax)*(length**3)
 geomInertX = 1/12*V*p.density*(p.boundarySizeYmax**2 + (2.0*thickness+2.0*rPP)**2 ) 
@@ -150,7 +150,7 @@ bBottom.shape.isBoundary=True
 bBottom.state.mass = p.density*V
 bBottom.dynamic=False
 O.bodies.append(bBottom)
-
+count=count+1
 
 bSideA = Body()
 thickness = 0.1*p.boundarySizeZmax
@@ -167,7 +167,7 @@ bPP = [0,0,1,-1,0,0]
 cPP = [0,0,0,0,1,-1]
 dPP = [p.boundarySizeXmax , p.boundarySizeXmax ,thickness,thickness,0.5*p.boundarySizeZmax,0.5*p.boundarySizeZmax]
 minmaxAabb = Vector3(1.05*(dPP[0]+rPP),1.05*(dPP[2]-rPP),1.05*(dPP[4]+rPP))
-bSideA.shape=PotentialBlock(k=kPP, r=rPP , R=RPP,a=aPP, b=bPP, c=cPP, d=dPP,id=idCountBegin+1+2,isBoundary=True,color=color ,wire=wire,highlight=highlight,AabbMinMax=True,minAabb=minmaxAabb ,maxAabb=minmaxAabb,minAabbRotated=minmaxAabb ,maxAabbRotated=minmaxAabb,fixedNormal=True,boundaryNormal=Vector3(0,-1.0,0))	
+bSideA.shape=PotentialBlock(k=kPP, r=rPP , R=RPP,a=aPP, b=bPP, c=cPP, d=dPP,id=count,isBoundary=True,color=color ,wire=wire,highlight=highlight,AabbMinMax=True,minAabb=minmaxAabb ,maxAabb=minmaxAabb,minAabbRotated=minmaxAabb ,maxAabbRotated=minmaxAabb,fixedNormal=True,boundaryNormal=Vector3(0,-1.0,0))	
 V = (2*(thickness+rPP))*(p.boundarySizeXmax+rPP)*(p.boundarySizeYmax)
 geomInert = 1/12*(p.boundarySizeYmax)*(length**3)
 geomInertX = 1/12*V*p.density*(p.boundarySizeYmax**2 + (2.0*thickness+2.0*rPP)**2 ) 
@@ -179,7 +179,7 @@ bSideA.shape.isBoundary=True
 bSideA.state.mass = p.density*V
 bSideA.dynamic=False
 O.bodies.append(bSideA)
-
+count=count+1
 
 bSideB = Body()
 
@@ -196,7 +196,7 @@ bPP = [0,0,1,-1,0,0]
 cPP = [0,0,0,0,1,-1]
 dPP = [p.boundarySizeXmax , p.boundarySizeXmax ,thickness,thickness,0.5*p.boundarySizeZmax,0.5*p.boundarySizeZmax]
 minmaxAabb = Vector3(1.05*(dPP[0]+rPP),1.05*(dPP[2]-rPP),1.05*(dPP[4]+rPP))
-bSideB.shape=PotentialBlock(k=kPP, r=rPP , R=RPP,a=aPP, b=bPP, c=cPP, d=dPP,id=idCountBegin+1+2,isBoundary=True,color=color ,wire=wire,highlight=highlight,AabbMinMax=True,minAabb=minmaxAabb ,maxAabb=minmaxAabb,minAabbRotated=minmaxAabb ,maxAabbRotated=minmaxAabb,fixedNormal=True,boundaryNormal=Vector3(0,1.0,0.0))	
+bSideB.shape=PotentialBlock(k=kPP, r=rPP , R=RPP,a=aPP, b=bPP, c=cPP, d=dPP,id=count,isBoundary=True,color=color ,wire=wire,highlight=highlight,AabbMinMax=True,minAabb=minmaxAabb ,maxAabb=minmaxAabb,minAabbRotated=minmaxAabb ,maxAabbRotated=minmaxAabb,fixedNormal=True,boundaryNormal=Vector3(0,1.0,0.0))	
 V = (2*(thickness+rPP))*(p.boundarySizeXmax+rPP)*(p.boundarySizeYmax)
 geomInert = 1/12*(p.boundarySizeYmax)*(length**3)
 geomInertX = 1/12*V*p.density*(p.boundarySizeYmax**2 + (2.0*thickness+2.0*rPP)**2 ) 
@@ -208,7 +208,7 @@ bSideB.shape.isBoundary=True
 bSideB.state.mass = p.density*V
 bSideB.dynamic=False
 O.bodies.append(bSideB)
-
+count=count+1
 
 bSideC = Body()
 
@@ -225,7 +225,7 @@ bPP = [0,0,1,-1,0,0]
 cPP = [0,0,0,0,1,-1]
 dPP = [thickness , thickness ,p.boundarySizeYmax,p.boundarySizeYmax,0.5*p.boundarySizeZmax,0.5*p.boundarySizeZmax]
 minmaxAabb = Vector3(1.05*(dPP[0]+rPP),1.05*(dPP[2]-rPP),1.05*(dPP[4]+rPP))
-bSideC.shape=PotentialBlock(k=kPP, r=rPP , R=RPP,a=aPP, b=bPP, c=cPP, d=dPP,id=idCountBegin+1+2,isBoundary=True,color=color ,wire=wire,highlight=highlight,AabbMinMax=True,minAabb=minmaxAabb ,maxAabb=minmaxAabb,minAabbRotated=minmaxAabb ,maxAabbRotated=minmaxAabb,fixedNormal=True,boundaryNormal=Vector3(1.0,0,0.0))	
+bSideC.shape=PotentialBlock(k=kPP, r=rPP , R=RPP,a=aPP, b=bPP, c=cPP, d=dPP,id=count,isBoundary=True,color=color ,wire=wire,highlight=highlight,AabbMinMax=True,minAabb=minmaxAabb ,maxAabb=minmaxAabb,minAabbRotated=minmaxAabb ,maxAabbRotated=minmaxAabb,fixedNormal=True,boundaryNormal=Vector3(1.0,0,0.0))	
 V = (2*(thickness+rPP))*(p.boundarySizeXmax+rPP)*(p.boundarySizeYmax)
 geomInert = 1/12*(p.boundarySizeYmax)*(length**3)
 geomInertX = 1/12*V*p.density*(p.boundarySizeYmax**2 + (2.0*thickness+2.0*rPP)**2 ) 
@@ -237,7 +237,7 @@ bSideC.shape.isBoundary=True
 bSideC.state.mass = p.density*V
 bSideC.dynamic=False
 O.bodies.append(bSideC)
-
+count=count+1
 
 bSideD = Body()
 
@@ -254,7 +254,7 @@ bPP = [0,0,1,-1,0,0]
 cPP = [0,0,0,0,1,-1]
 dPP = [thickness , thickness ,p.boundarySizeYmax,p.boundarySizeYmax,0.5*p.boundarySizeZmax,0.5*p.boundarySizeZmax]
 minmaxAabb = Vector3(1.05*(dPP[0]+rPP),1.05*(dPP[2]-rPP),1.05*(dPP[4]+rPP))
-bSideD.shape=PotentialBlock(k=kPP, r=rPP , R=RPP,a=aPP, b=bPP, c=cPP, d=dPP,id=idCountBegin+1+2,isBoundary=True,color=color ,wire=wire,highlight=highlight,AabbMinMax=True,minAabb=minmaxAabb ,maxAabb=minmaxAabb,minAabbRotated=minmaxAabb ,maxAabbRotated=minmaxAabb,fixedNormal=True,boundaryNormal=Vector3(-1.0,0,0.0))	
+bSideD.shape=PotentialBlock(k=kPP, r=rPP , R=RPP,a=aPP, b=bPP, c=cPP, d=dPP,id=count,isBoundary=True,color=color ,wire=wire,highlight=highlight,AabbMinMax=True,minAabb=minmaxAabb ,maxAabb=minmaxAabb,minAabbRotated=minmaxAabb ,maxAabbRotated=minmaxAabb,fixedNormal=True,boundaryNormal=Vector3(-1.0,0,0.0))	
 V = (2*(thickness+rPP))*(p.boundarySizeXmax+rPP)*(p.boundarySizeYmax)
 geomInert = 1/12*(p.boundarySizeYmax)*(length**3)
 geomInertX = 1/12*V*p.density*(p.boundarySizeYmax**2 + (2.0*thickness+2.0*rPP)**2 ) 

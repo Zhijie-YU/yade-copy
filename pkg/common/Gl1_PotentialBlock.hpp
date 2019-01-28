@@ -6,6 +6,7 @@
 #include<pkg/dem/PotentialBlock2AABB.hpp>
 #include<pkg/common/GLDrawFunctors.hpp>
 //#include<pkg/dem/MarchingCube.hpp>
+#include <lib/computational-geometry/MarchingCube.hpp>
 #include <vector>
 #include <pkg/common/PeriodicEngines.hpp>
 
@@ -87,18 +88,18 @@ protected:
     // Add parameters/members here if you need
 };
 
-#if 0
+#ifdef YADE_OPENGL
 class Gl1_PotentialBlock : public GlShapeFunctor
 {	
 	private :
 		MarchingCube mc;
 		Vector3r min,max;
-		vector<vector<vector<float > > > 	scalarField,weights;
-		void generateScalarField(const shared_ptr<Shape>& cm);
-		void calcMinMax(const shared_ptr<Shape>& cm);
+		vector<vector<vector<Real > > > scalarField,weights;
+		void generateScalarField(const PotentialBlock& pp);
+		void calcMinMax(const PotentialBlock& cm);
 		float oldIsoValue,oldIsoSec,oldIsoThick;
 		Vector3r isoStep;
-		
+		Eigen::Matrix3d rotationMatrix;
 		
 
 	public :
@@ -112,31 +113,34 @@ class Gl1_PotentialBlock : public GlShapeFunctor
 			 vector<Vector3r> triangles;
 			 vector<Vector3r> normals;
 			 int nbTriangles;
+			
+    
 		};
 		virtual void go(const shared_ptr<Shape>&, const shared_ptr<State>&,bool,const GLViewInfo&);
-		double evaluateF(const shared_ptr<Shape>& cm, double x, double y, double z);
+		double evaluateF(const PotentialBlock& pp, double x, double y, double z);
 		static vector<scalarF> SF ;
-		void clearMemory();
-	RENDERS(PotentialBlock);
+		//void clearMemory();
+		
 	//YADE_CLASS_BASE_DOC_STATICATTRS(Gl1_PotentialBlock,GlShapeFunctor,"Renders :yref:`Sphere` object",
 		//(( vector<scalarF>, SF ," "))
 	//);
 	YADE_CLASS_BASE_DOC_STATICATTRS(Gl1_PotentialBlock,GlShapeFunctor,"Renders :yref:`Sphere` object",
-		((int,sizeX,80,,"Number of divisions in the x direction for triangulation"))
-		((int,sizeY,80,,"Number of divisions in the x direction for triangulation"))
-		((int,sizeZ,80,,"Number of divisions in the y direction for triangulation"))
-		((bool,store,false,,"Number of divisions in the z direction for triangulation"))
+		((int,sizeX,30,,"Number of divisions in the x direction for triangulation"))
+		((int,sizeY,30,,"Number of divisions in the x direction for triangulation"))
+		((int,sizeZ,30,,"Number of divisions in the y direction for triangulation"))
+		((bool,store,true,,"Number of divisions in the z direction for triangulation"))
 		((bool,initialized,false,,"Number of divisions in the z direction for triangulation"))
+		((Real,aabbEnlargeFactor,1.3,,"some factor for displaying algorithm, try different value if you have problems with displaying"))
 		
 	);
-	
+	RENDERS(PotentialBlock);
 
 
 };
 REGISTER_SERIALIZABLE(Gl1_PotentialBlock);
 
+#endif // YADE_OPENGL
 
-#endif
 
 
 class PotentialBlockVTKRecorder: public PeriodicEngine{	

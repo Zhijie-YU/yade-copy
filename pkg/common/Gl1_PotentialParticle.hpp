@@ -124,10 +124,10 @@ class Gl1_PotentialParticle : public GlShapeFunctor {
 		virtual void go(const shared_ptr<Shape>&, const shared_ptr<State>&,bool,const GLViewInfo&);
 
 		YADE_CLASS_BASE_DOC_STATICATTRS(Gl1_PotentialParticle,GlShapeFunctor,"Renders :yref:`PotentialParticle` object",
-			((int,sizeX,10,,"Number of divisions in the x direction for triangulation"))
-			((int,sizeY,10,,"Number of divisions in the y direction for triangulation"))
-			((int,sizeZ,10,,"Number of divisions in the z direction for triangulation"))
-			((bool,store,false,,"store computed triangulation or not"))
+			((int,sizeX,20,,"Number of divisions in the x direction for triangulation"))
+			((int,sizeY,20,,"Number of divisions in the y direction for triangulation"))
+			((int,sizeZ,20,,"Number of divisions in the z direction for triangulation"))
+			((bool,store,true,,"store computed triangulation or not"))
 			((bool,initialized,false,,"if triangulation is initialized"))
 			((Real,aabbEnlargeFactor,1.3,,"some factor for displaying algorithm, try different value if you have problems with displaying"))
 		);
