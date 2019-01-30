@@ -219,6 +219,31 @@ def userSession(gui='none',qapp=None):
 		InteractiveShellEmbed.config=cfg
 		InteractiveShellEmbed.banner1=banner+'\n'
 		ipshell=InteractiveShellEmbed()
+
+		# ipython since version 5.0 stopped using libreadline, now we must make the bindings in another way
+		# see: https://python-prompt-toolkit.readthedocs.io/en/1.0.14/pages/full_screen_apps.html?highlight=add_binding
+		# and: https://stackoverflow.com/questions/38443907/how-does-one-set-specific-vim-bindings-in-ipython-5-0-0
+		# and: https://github.com/ipython/ipython/pull/11426/commits/e08dc1b4dd30e8d2b607134693f226e8a22100ec#diff-d47c339db04f28c44a59c6662dbd53eaR228
+		from prompt_toolkit.keys import Keys
+		registry = ipshell.pt_cli.application.key_bindings_registry
+		@registry.add_binding(Keys.F12, eager=True)
+		def invokeController_(event):
+			yade.qt.Controller()
+		@registry.add_binding(Keys.F11, eager=True)
+		def invokeView_(event):
+			yade.qt.View()
+		@registry.add_binding(Keys.F10, eager=True)
+		def invokeBoth_(event):
+			yade.qt.View()
+			yade.qt.Controller()
+		@registry.add_binding(Keys.F9, eager=True)
+		def invokeGenerator_(event):
+			yade.qt.Generator()
+		@registry.add_binding(Keys.F8, eager=True)
+		def invokeGenerator_(event):
+			import yade.plot
+			yade.plot.plot()
+
 		# If IPython > 5 one need to initialize graphic gui
 		if ((gui == "qt5" or gui == "qt4")and yade.runtime.ipython_version>=500):
 			ipshell.enable_gui(gui)
