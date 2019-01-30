@@ -242,8 +242,11 @@ def userSession(gui='none',qapp=None):
 			yade.qt.Generator()
 		@registry.add_binding(Keys.F8, eager=True)
 		def invokeGenerator_(event):
-			import yade.plot
-			yade.plot.plot()
+			try:
+				import yade.plot
+				yade.plot.plot()
+			except:
+				print("\nThere is no data to plot (yet), see https://yade-dem.org/doc/user.html#plotting-variables\n")
 
 		# If IPython > 5 one need to initialize graphic gui
 		if ((gui == "qt5" or gui == "qt4")and yade.runtime.ipython_version>=500):
