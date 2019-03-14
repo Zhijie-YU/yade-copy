@@ -1332,6 +1332,7 @@ std::cout<<"joint_a.size(): "<<joint_a.size()<<", joint size: "<<joint.size()<<e
 
 			vector<int> memberId;
 			int clumpMemberCount = 0;
+
 		       	for(unsigned int j=0; j<blk[i].subMembers.size();j++){
 				if(createBlock(body,blk[i].subMembers[j],shapeIDcount /* j */) ){
 						//scene->bodies->insert(body);
