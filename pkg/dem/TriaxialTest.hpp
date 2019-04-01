@@ -20,7 +20,7 @@ class GlobalStiffnessTimeStepper;
 
 /*! \brief Isotropic compression + triaxial compression test
 
-	TriaxialTest full documentation is here : http://yade-dem.org/wiki/TriaxialTest
+	TriaxialTest full documentation is here : https://yade-dem.org/doc/yade.wrapper.html#yade.wrapper.TriaxialTest
 	This preprocessor shows how to simulate a triaxial test in Yade. It is using the elastic-frictional contact law defined in ElasticContactLaw (similar procedures can be used for other contact laws).  It is designed to :
 	1/ generate random loose packings and compress them under isotropic confining stress, either squeezing the packing between moving rigid boxes or expanding the particles while boxes are fixed (depending on flag "InternalCompaction").
 	2/ simulate all sorts triaxial loading path (there is however a default loading path corresponding to constant lateral stress in 2 directions and constant strain rate on the third direction - this loading path is used when the flag AutoCompressionActivation = true, otherwise the simulation stops after isotropic compression)

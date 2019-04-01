@@ -32,7 +32,7 @@ class Engine: public Serializable{
 	
 		virtual bool isActivated() { return true; };
 		virtual void action() {
-			LOG_FATAL("Engine "<<getClassName()<<" calling virtual method Engine::action(). Please submit bug report at http://bugs.launchpad.net/yade.");
+			LOG_FATAL("Engine "<<getClassName()<<" calling virtual method Engine::action(). Please submit bug report at https://gitlab.com/yade-dev/trunk/issues");
 			throw std::logic_error("Engine::action() called.");
 		}
 	private:

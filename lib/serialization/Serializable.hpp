@@ -34,7 +34,7 @@ namespace yade{
 using namespace yade;
 
 // see:
-// https://bugs.launchpad.net/yade/+bug/539562
+// (old site, fixed bug) https://bugs.launchpad.net/yade/+bug/539562
 // http://www.boost.org/doc/libs/1_42_0/libs/python/doc/v2/faq.html#topythonconversionfailed
 // for reason why the original def_readwrite will not work:
 // #define _PYATTR_DEF(x,thisClass,z) .def_readwrite(BOOST_PP_STRINGIZE(BOOST_PP_TUPLE_ELEM(2,0,z)),&thisClass::BOOST_PP_TUPLE_ELEM(2,0,z),BOOST_PP_TUPLE_ELEM(2,1,z))

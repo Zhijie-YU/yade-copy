@@ -128,6 +128,7 @@ class GLViewer : public QGLViewer
 		virtual void wheelEvent(QWheelEvent* e);
 		virtual void mouseMoveEvent(QMouseEvent *e);
 		virtual void mousePressEvent(QMouseEvent *e);
+		virtual QString helpString() const;
 };
 
 /*! Get unconditional lock on a GL view.

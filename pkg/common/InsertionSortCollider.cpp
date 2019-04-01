@@ -28,8 +28,8 @@ void InsertionSortCollider::handleBoundInversion(Body::id_t id1, Body::id_t id2,
 
 void InsertionSortCollider::insertionSort(VecBounds& v, InteractionContainer* interactions, Scene*, bool doCollide){
 	assert(!periodic);
-	assert(v.size==(long)v.vec.size());
-	for(long i=1; i<v.size; i++){
+	//assert(v.size()==v.vec.size());
+	for(size_t i=1; i<v.size(); i++){
 		const Bounds viInit=v[i]; long j=i-1; /* cache hasBB; otherwise 1% overall performance hit */ const bool viInitBB=viInit.flags.hasBB;
 		const bool isMin=viInit.flags.isMin; 
 
@@ -37,7 +37,7 @@ void InsertionSortCollider::insertionSort(VecBounds& v, InteractionContainer* in
 			v[j+1]=v[j];
 			// no collisions without bounding boxes
 			// also, do not collide body with itself; it sometimes happens for facets aligned perpendicular to an axis, for reasons that are not very clear
-			// see https://bugs.launchpad.net/yade/+bug/669095
+			// see (old site, fixed bug) https://bugs.launchpad.net/yade/+bug/669095
 			// skip bounds with same isMin flags, since inversion doesn't imply anything in that case  
 			if(isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id!=v[j].id)) {
 				/*if (isMin)*/ handleBoundInversion(viInit.id,v[j].id,interactions,scene);
@@ -54,7 +54,7 @@ void InsertionSortCollider::insertionSort(VecBounds& v, InteractionContainer* in
 void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionContainer* interactions, Scene*, bool doCollide){
 #ifdef YADE_OPENMP
 	assert(!periodic);	
-	assert(v.size==(long)v.vec.size());
+	//assert(v.size()==v.vec.size());
 	if (ompThreads<=1) return insertionSort(v,interactions, scene, doCollide);
 	
 	Real chunksVerlet = 4*verletDist;//is 2* the theoretical requirement?
@@ -63,14 +63,14 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 	///chunks defines subsets of the bounds lists, we make sure they are not too small wrt. verlet dist.
 	std::vector<unsigned> chunks;
 	unsigned nChunks = ompThreads;
-	unsigned chunkSize = unsigned(v.size/nChunks)+1;
-	for(unsigned n=0; n<nChunks;n++) chunks.push_back(n*chunkSize); chunks.push_back(v.size);
+	unsigned chunkSize = unsigned(v.size()/nChunks)+1;
+	for(unsigned n=0; n<nChunks;n++) chunks.push_back(n*chunkSize); chunks.push_back(v.size());
 	while (nChunks>1){
 		bool changeChunks=false;
 		for(unsigned n=1; n<nChunks;n++) if (chunksVerlet>(v[chunks[n]].coord-v[chunks[n-1]].coord)) changeChunks=true;
 		if (!changeChunks) break;
-		nChunks--; chunkSize = unsigned(v.size/nChunks)+1; chunks.clear();
-		for(unsigned n=0; n<nChunks;n++) chunks.push_back(n*chunkSize); chunks.push_back(v.size);
+		nChunks--; chunkSize = unsigned(v.size()/nChunks)+1; chunks.clear();
+		for(unsigned n=0; n<nChunks;n++) chunks.push_back(n*chunkSize); chunks.push_back(v.size());
 	}
 	static unsigned warnOnce=0;
 	if (nChunks<unsigned(ompThreads) && !warnOnce++) LOG_WARN("Parallel insertion: only "<<nChunks <<" thread(s) used. The number of bodies is probably too small for allowing more threads, or the geometry is flat. The contact detection should succeed but not all available threads are used.");
@@ -142,8 +142,8 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 vector<Body::id_t> InsertionSortCollider::probeBoundingVolume(const Bound& bv){
 	if(periodic){ throw invalid_argument("InsertionSortCollider::probeBoundingVolume: handling periodic boundary not implemented."); }
 	vector<Body::id_t> ret;
-	for( vector<Bounds>::iterator 
-			it=BB[0].vec.begin(),et=BB[0].vec.end(); it < et; ++it)
+	for( vector<Bounds>::const_iterator
+			it=BB[0].cbegin(),et=BB[0].cend(); it < et; ++it)
 	{		
 		if (it->coord > bv.max[0]) break;
 		if (!it->flags.isMin || !it->flags.hasBB) continue;
@@ -173,7 +173,7 @@ vector<Body::id_t> InsertionSortCollider::probeBoundingVolume(const Bound& bv){
 		if(fastestBodyMaxDist<0){fastestBodyMaxDist=0; return true;}
 		fastestBodyMaxDist=newton->maxVelocitySq;
 		if(fastestBodyMaxDist>=1 || fastestBodyMaxDist==0) return true;
-		if((size_t)BB[0].size!=2*scene->bodies->size()) return true;
+		if(BB[0].size() != 2*scene->bodies->size()) return true;
 		if(scene->interactions->dirty) return true;
 		if(scene->doSort) { scene->doSort=false; return true; }
 		return false;
@@ -184,7 +184,7 @@ void InsertionSortCollider::action(){
 		timingDeltas->start();
 	#endif
 
-	long nBodies=(long)scene->bodies->size();
+	const size_t nBodies = scene->bodies->size();
 	InteractionContainer* interactions=scene->interactions.get();
 	scene->interactions->iterColliderLastRun=-1;
 	#ifdef YADE_OPENMP
@@ -192,7 +192,9 @@ void InsertionSortCollider::action(){
 	#endif
 	// periodicity changed, force reinit
 	if(scene->isPeriodic != periodic){
-		for(int i=0; i<3; i++) BB[i].vec.clear();
+		for(int i=0; i<3; i++) {
+			BB[i].clear();
+		}
 		periodic=scene->isPeriodic;
 	}
 	// pre-conditions
@@ -202,25 +204,25 @@ void InsertionSortCollider::action(){
 			doInitSort=true;
 			doSort=false;
 		}
-		if(BB[0].size!=2*nBodies){
-			long BBsize=BB[0].size;
+		if(BB[0].size() != 2*nBodies){
+			// store previous size
+			size_t BBsize = BB[0].size();
 			LOG_DEBUG("Resize bounds containers from "<<BBsize<<" to "<<nBodies*2<<", will std::sort.");
 			// bodies deleted; clear the container completely, and do as if all bodies were added (rather slow…)
 			// future possibility: insertion sort with such operator that deleted bodies would all go to the end, then just trim bounds
-			if(2*nBodies<BBsize){ for(int i=0; i<3; i++) BB[i].vec.clear(); }
+			if(2*nBodies<BBsize){ for(int i=0; i<3; i++) BB[i].clear(); }
 			// more than 100 bodies was added, do initial sort again
 			// maybe: should rather depend on ratio of added bodies to those already present...?
 			if(2*nBodies-BBsize>200 || BBsize==0) doInitSort=true;
 			assert((BBsize%2)==0);
 			for(int i=0; i<3; i++){
-				BB[i].vec.reserve(2*nBodies);
+				BB[i].reserve(2*nBodies);
 				// add lower and upper bounds; coord is not important, will be updated from bb shortly
-				for(long id=BBsize/2; id<nBodies; id++){ BB[i].vec.push_back(Bounds(0,id,/*isMin=*/true)); BB[i].vec.push_back(Bounds(0,id,/*isMin=*/false)); }
-				BB[i].size=BB[i].vec.size();
+				for(size_t id=BBsize/2; id<nBodies; id++){ BB[i].push_back(Bounds(0,id,/*isMin=*/true)); BB[i].push_back(Bounds(0,id,/*isMin=*/false)); }
 			}
 		}
 		if(minima.size()!=(size_t)3*nBodies){ minima.resize(3*nBodies); maxima.resize(3*nBodies); }
-		assert((size_t)BB[0].size==2*scene->bodies->size());
+		assert( BB[0].size() == 2*scene->bodies->size());
 		
 		//Increase the size of force container.
 		scene->forces.addMaxId(2*scene->bodies->size());
@@ -280,7 +282,7 @@ void InsertionSortCollider::action(){
 
 	// copy bounds along given axis into our arrays 
 	#pragma omp parallel for schedule(guided) num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
-	for(long i=0; i<2*nBodies; i++){
+	for(size_t i=0; i<2*nBodies; i++){
 // 		const long cacheIter = scene->iter;
 		for(int j=0; j<3; j++){
 				VecBounds& BBj=BB[j];
@@ -330,7 +332,7 @@ void InsertionSortCollider::action(){
 				// the initial sort is in independent in 3 dimensions, may be run in parallel; it seems that there is no time gain running in parallel, though
 				// important to reset loInx for periodic simulation (!!)
 // 				#pragma omp parallel for schedule(dynamic,1) num_threads(min(ompThreads,3))
-				for(int i=0; i<3; i++) { BB[i].loIdx=0; std::sort(BB[i].vec.begin(),BB[i].vec.end()); }
+				for(int i=0; i<3; i++) { BB[i].loIdx=0; BB[i].sort(); }
 				numReinit++;
 			} else { // sortThenCollide
 				if(!periodic) for(int i=0; i<3; i++) insertionSort(BB[i],interactions,scene,false);
@@ -347,13 +349,13 @@ void InsertionSortCollider::action(){
 				for (int kk=0;  kk<ompThreads; kk++) newInts[kk].reserve(unsigned(10*nBodies/ompThreads));
 				#pragma omp parallel for schedule(guided,200) num_threads(ompThreads)
 			#endif
-				for(long i=0; i<2*nBodies; i++){
+				for(size_t i=0; i<2*nBodies; i++){
 					// start from the lower bound (i.e. skipping upper bounds)
 					// skip bodies without bbox, because they don't collide
 					if(!(V[i].flags.isMin && V[i].flags.hasBB)) continue;
 					const Body::id_t& iid=V[i].id;
 					// go up until we meet the upper bound
-					for(long j=i+1; /* handle case 2. of swapped min/max */ j<2*nBodies && V[j].id!=iid; j++){
+					for(size_t j=i+1; /* handle case 2. of swapped min/max */ j<2*nBodies && V[j].id!=iid; j++){
 						const Body::id_t& jid=V[j].id;
 						// take 2 of the same condition (only handle collision [min_i..max_i]+min_j, not [min_i..max_i]+min_i (symmetric)
 						if(!(V[j].flags.isMin && V[j].flags.hasBB)) continue;
@@ -375,7 +377,7 @@ void InsertionSortCollider::action(){
 						interactions->insert(shared_ptr<Interaction>(new Interaction(newInts[n][k].first,newInts[n][k].second)));
 				#endif
 			} else { // periodic case: see comments above
-				for(long i=0; i<2*nBodies; i++){
+				for(size_t i=0; i<2*nBodies; i++){
 					if(!(V[i].flags.isMin && V[i].flags.hasBB)) continue;
 					const Body::id_t& iid=V[i].id;
 					// we might wrap over the periodic boundary here; that's why the condition is different from the aperiodic case
@@ -409,11 +411,11 @@ Real InsertionSortCollider::cellWrapRel(const Real x, const Real x0, const Real 
 // 2) use norm() only when needed (first and last elements, mainly, can be treated as special cases)
 void InsertionSortCollider::insertionSortPeri(VecBounds& v, InteractionContainer* interactions, Scene*, bool doCollide){
 	assert(periodic);
-	long &loIdx=v.loIdx; const long &size=v.size;
+	size_t &loIdx=v.loIdx; const size_t &size=v.size();
 	/* We have to visit each bound at least once (first condition), but this is not enough. The correct ordering in the begining of the list needs a second pass to connect begin and end consistently (the second condition). Strictly the second condition should include "+ (v.norm(j+1)==loIdx ? v.cellDim : 0)" but it is ok as is since the shift is added inside the loop. */
-	for(long _i=0; (_i<size) || (v[v.norm(_i)].coord <  v[v.norm(_i-1)].coord); _i++){
-		const long i=v.norm(_i);//FIXME: useless, and many others can probably be removed
-		const long i_1=v.norm(i-1);
+	for(size_t _i=0; (_i<size) || (v[v.norm(_i)].coord <  v[v.norm(_i-1)].coord); _i++){
+		const size_t i=v.norm(_i);//FIXME: useless, and many others can probably be removed
+		const size_t i_1=v.norm(i-1);
 		//switch period of (i) if the coord is below the lower edge cooridnate-wise and just above the split
 		if(i==loIdx && v[i].coord<0){ v[i].period-=1; v[i].coord+=v.cellDim; loIdx=v.norm(loIdx+1); }
 		// coordinate of v[i] used to check inversions
@@ -424,12 +426,12 @@ void InsertionSortCollider::insertionSortPeri(VecBounds& v, InteractionContainer
 		if(v[i_1].coord<=iCmpCoord) continue;
 		// vi is the copy that will travel down the list, while other elts go up
 		// if will be placed in the list only at the end, to avoid extra copying
-		int j=i_1; Bounds vi=v[i];  const bool viHasBB=vi.flags.hasBB;
+		size_t j=i_1; Bounds vi=v[i];  const bool viHasBB=vi.flags.hasBB;
 		const bool isMin=v[i].flags.isMin; 
 
 		//For the first pass, the bounds are not travelling down past v[0] (j<_i above prevents that), otherwise we would not know which part of the list has been correctly sorted. Only after the first pass, we sort end vs. begining of the list.
 		while((j<_i) and v[j].coord>(vi.coord + /* wrap for elt just below split */ (v.norm(j+1)==loIdx ? v.cellDim : 0))){
-			int j1=v.norm(j+1);
+			size_t j1=v.norm(j+1);
 			// OK, now if many bodies move at the same pace through the cell and at one point, there is inversion,
 			// this can happen without any side-effects
 			if (false && v[j].coord>2*v.cellDim){
@@ -450,7 +452,7 @@ void InsertionSortCollider::insertionSortPeri(VecBounds& v, InteractionContainer
 		v[v.norm(j+1)]=vi;
 	}
 	//Keep coord's in [0,cellDim] by clamping the largest values
-	for(long i=v.norm(loIdx-1); v[i].coord > v.cellDim; i= v.norm(--i)) {v[i].period+=1; v[i].coord-=v.cellDim; loIdx=i;}
+	for(size_t i=v.norm(loIdx-1); v[i].coord > v.cellDim; i= v.norm(--i)) {v[i].period+=1; v[i].coord-=v.cellDim; loIdx=i;}
 }
 
 // called by the insertion sort if 2 bodies swapped their bounds
@@ -511,12 +513,12 @@ boost::python::tuple InsertionSortCollider::dumpBounds(){
 	for(int axis=0; axis<3; axis++){
 		VecBounds& V=BB[axis];
 		if(periodic){
-			for(long i=0; i<V.size; i++){
+			for(size_t i=0; i<V.size(); i++){
 				long ii=V.norm(i); // start from the period boundary
 				bl[axis].append(boost::python::make_tuple(V[ii].coord,(V[ii].flags.isMin?-1:1)*V[ii].id,V[ii].period));
 			}
 		} else {
-			for(long i=0; i<V.size; i++){
+			for(size_t i=0; i<V.size(); i++){
 				bl[axis].append(boost::python::make_tuple(V[i].coord,(V[i].flags.isMin?-1:1)*V[i].id));
 			}
 		}

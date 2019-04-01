@@ -278,7 +278,7 @@ double ImpFuncPB::FunctionValue(double x[3])
 		 //  Real f = (1.0-k)*(pSum2/pow(r,2) - 1.0)+k*(sphere/pow(R,2)-1.0);
 		   Real f = (pSum2 - 1.0*pow(r,2) );
   		 return f;
-	}else if(clump==true){
+	} else {
 		
 		Eigen::Vector3d xori(x[0],x[1],x[2]);
 		Eigen::Vector3d clumpMemberCentre(clumpMemberCentreX,clumpMemberCentreY,clumpMemberCentreZ);
@@ -447,7 +447,7 @@ void PotentialBlockVTKRecorderTunnel::action(){
 		}
 		//vtkSmartPointer<ImpFunc> function = ImpFunc::New();
 		vtkSmartPointer<vtkImplicitBoolean> boolFunction = vtkSmartPointer<vtkImplicitBoolean>::New();
-		vtkSmartPointer<ImpFuncPB>* functionBool;
+		vtkSmartPointer<ImpFuncPB>* functionBool=nullptr;
 		int ImplicitBoolNo = 0;
 		double xmin = 0.0; double xmax = 0.0; double ymin = 0.0; double ymax = 0.0; double zmin = 0.0; double zmax =0.0;
 		Vector3r particleColour (0,0,0);

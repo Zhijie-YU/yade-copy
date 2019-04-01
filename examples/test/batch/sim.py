@@ -1,3 +1,4 @@
+# see https://yade-dem.org/doc/user.html#batch-queuing-and-execution-yade-batch
 
 readParamsFromTable(unknownOk=True,
 	important=6,

@@ -19,7 +19,7 @@
 	The index the function getClassIndex() returns, corresponds to the index in the matrix where the class will be handled.
 */
 
-#define _THROW_NOT_OVERRIDDEN  throw std::logic_error(std::string("Derived class did not override ")+__PRETTY_FUNCTION__+", use REGISTER_INDEX_COUNTER and REGISTER_CLASS_INDEX.")
+#define _THROW_NOT_OVERRIDDEN  throw std::logic_error(std::string("Derived class did not override ")+__PRETTY_FUNCTION__+", please use macros REGISTER_INDEX_COUNTER and REGISTER_CLASS_INDEX.")
 
 class Indexable
 {

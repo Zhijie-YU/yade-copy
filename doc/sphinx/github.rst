@@ -35,7 +35,7 @@ Setup
    You can check these settings with ``git config --list``.
 
 
-4. `Fork <https://help.github.com/articles/fork-a-repo>`_ the repository:
+4. `Fork <https://help.github.com/articles/fork-a-repo>`_ the repository (optional):
 
    Click the “Fork” button on the `gitlab page <https://gitlab.com/yade-dev/trunk>`_
    
@@ -79,9 +79,26 @@ After changing the source code in the local repository you may start by inspecti
 Pushing changes to remote repository
 ------------------------------------
 
-1. Push to personnal repository
+Depending on the remote repository you want to push to, follow one of the methods below.
 
-   After previous steps proceed to commit through terminal, "localBranch" should be replaced by a relevant name (e.g. "fixBug457895")::
+1. Push to yade-dev
+
+   Merging changes into yade-dev's master branch cannot be done directly with a push, only by merge request (see below). It is possible however to push changes to a new branch of yade-dev repository for members of that group. It is `currently <https://gitlab.com/gitlab-org/gitlab-ce/issues/23902>`_ the only way to have merge requests tested by the gitlab CI pipeline before being effectively merged. To push to a new yade-dev/branch::
+
+      git branch localBranch
+      git checkout localBranch
+      git add path/to/new/file.cpp  #Version a newly created file
+      git commit path/to/new_or_modified/file.cpp -m 'Commit message'  #stage (register) change in the local repository
+      git pull --rebase upstream master #get updated version of sources from yade-dev repo and apply your commits on the top of them
+      git push upstream localBranch:newlyCreatedBranch #Push all commits to a new remote branch.
+
+   The first two lines are optional, if ignored the commits will go the to the default branch, called "master".
+   In the last command ``localBranch`` is the local branch name on which you were working (possibly ``master``) and ``newlyCreatedBranch`` will be the name of that branch on the remote. Please choose a descriptive name as much as you can (e.g. "fixBug457895").
+
+
+2. Push to personnal repository
+
+   After previous steps proceed to commit through terminal, "localBranch" should be replaced by a relevant name::
 
       git branch localBranch
       git checkout localBranch
@@ -90,17 +107,7 @@ Pushing changes to remote repository
       git push  #Push all commits to the remote branch
   
    The changes will be pushed to your personal fork.
-   The first two lines are optional, if ignored the commits will go the to the default branch, called "master".
-
-
-2. Push to yade-dev
-
-   Merging changes into yade-dev's master branch cannot be done directly with a push, only by merge request (see below). It is possible however to push changes to a new branch of yade-dev repository for members of that group. It is `currently <https://gitlab.com/gitlab-org/gitlab-ce/issues/23902>`_ the only way to have merge requests tested by the gitlab CI pipeline before being effectively merged. To push to a new yade-dev/branch::
-
-      git pull --rebase upstream master #get updated version of sources from yade-dev repo and apply your commits on the top of them
-      git push upstream localBranch:newlyCreatedBranch #Push all commits to a new remote branch.
-
-   in that command ``localBranch`` is the local branch name on which you were working (possibly ``master``) and ``newlyCreatedBranch`` will be the name of that branch on the remote. Please choose a descriptive name as much as you can.
+   
 
 Requesting merge into yade-dev master branch
 --------------------------------------------
@@ -110,7 +117,7 @@ If the full pipeline succeeds the merge request can be merged into master branch
 
 .. note::
    In case of MR to yade-dev's master from another branch of yade-dev, the pipeline will use group runners attached to yade-dev (the group runners are kindly provided by `3SR <https://www.3sr-grenoble.fr/?lang=en>`_ and `UMS Gricad <https://gricad.univ-grenoble-alpes.fr/>`_).
-   If the MR is from a branch of a forked repository (under personnal account) however, the pipeline needs runners available under the personnal account (check this with your local IT support). If you don't have access to gitlab runners pushing to a branch of yade-dev is mandatory (method 2 in previous section).
+   If the MR is from a branch of a forked repository (under personnal account) however, the pipeline needs runners available under the personnal account (check this with your local IT support). If you don't have access to gitlab runners pushing to a branch of yade-dev is mandatory (method 1 in previous section).
 
 Alternatively, create a patch from your commit via::
 
@@ -160,6 +167,27 @@ We promote "rebasing" to avoid confusing logs after each commit/pull/push cycle.
 
 
 
+Pulling a rebased branch
+------------------------
+
+If someone else rebased on the gitlab server the branch on which you are working on locally, the command ``git pull`` may complain that the branches have diverged, and refuse to perform operation, in that case this command::
+
+ git pull --rebase upstream branchName
+
+Will match your local branch history with the one present on the gitlab server.
+
+If you are afraid of messing up your local branch you can always make a copy of this branch with command::
+
+ git branch backupCopyName
+
+If you forgot to make that backup-copy and want to go back, then make a copy anyway and go back with this command::
+
+ git reset --merge ORIG_HEAD
+
+The ``ORIG_HEAD`` backs up the position of HEAD before a potentially dangerous operation (merge, rebase, etc.).
+
+
+
 ********************************************
 General guidelines for pushing to yade/trunk
 ********************************************
@@ -194,7 +222,6 @@ General guidelines for pushing to yade/trunk
   git pull --rebase upstream master
 
 5. Make sure it compiles and that regression tests pass: try ``yade --test`` and ``yade --check``.
-
 
 
 **Thanks a lot for your cooperation to Yade!**

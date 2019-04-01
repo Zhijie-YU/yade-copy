@@ -12,7 +12,14 @@
 #include "TesselationWrapper.hpp"
 #include <lib/triangulation/Timer.h>
 #include <pkg/dem/SpherePack.hpp>
+
+// https://codeyarns.com/2014/03/11/how-to-selectively-ignore-a-gcc-warning/
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-function"
+// Code that generates this warning, Note: we cannot do this trick in yade. If we have a warning in yade, we have to fix it! See also https://gitlab.com/yade-dev/trunk/merge_requests/73
+// This method will work once g++ bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53431#c34 is fixed.
 #include <lib/pyutil/numpy_boost.hpp>
+#pragma GCC diagnostic pop
 
 YADE_PLUGIN((TesselationWrapper));
 CREATE_LOGGER(TesselationWrapper);

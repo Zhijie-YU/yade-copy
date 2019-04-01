@@ -9,7 +9,7 @@ import os, sys, thread, time, logging, pipes, socket, xmlrpclib, re, shutil, ran
 # Add search path for yade Python-modules
 # It allows to use both Yade-versions (packaged and self-compiled one).
 # See LP:1254708 for more details
-# https://bugs.launchpad.net/yade/+bug/1254708
+# (old site, fixed bug) https://bugs.launchpad.net/yade/+bug/1254708
 
 sys.path.insert(1,'${runtimePREFIX}/${LIBRARY_OUTPUT_PATH}/yade${SUFFIX}/py')
 
@@ -61,7 +61,10 @@ finished: %s
 			else:
 				statusString = 'FAILED!'
 			n = pynotify.Notification("Yade", "The job %d/%d is %s Duration %s"%(self.num+1, len(jobs), statusString, self.duration), imageLogo)
-			n.show()
+			try:
+				n.show()
+			except:
+				pass
 		
 	def ensureXmlrpc(self):
 		'Attempt to establish xmlrpc connection to the job (if it does not exist yet). If the connection could not be established, as magic line was not found in the log, return False.'
@@ -363,11 +366,20 @@ parser.add_argument('--timing-output',type=str,metavar='FILE',dest='timingOut',d
 parser.add_argument('--randomize',action='store_true',dest='randomize',help='Randomize job order (within constraints given by assigned cores).')
 parser.add_argument('--disable-pynotify',action='store_true',dest='disablePynotify',help='Disable screen notifications')
 parser.add_argument('args',nargs=argparse.REMAINDER,help=argparse.SUPPRESS) # see argparse doc, par.disable_interspersed_args() from optargs module
+parser.add_argument('-L','--libs',help='import libraries at startup before importing yade libs. May be used when the ordering of imports matter (see e.g. https://bugs.launchpad.net/yade/+bug/1183402/comments/3). The option can be used multiple times, as in "yade -Llib1 -Llib2"',default=None,action='append',dest='impLibraries',type=str)
 #parser.add_argument('--serial',action='store_true',dest='serial',default=False,help='Run all jobs serially, even if there are free cores
 opts=parser.parse_args()
 args = opts.args
 
 logFormat,lineList,maxJobs,nice,executable,gnuplotOut,dryRun,httpWait,globalLog=opts.logFormat,opts.lineList,opts.maxJobs,opts.nice,opts.executable,opts.gnuplotOut,opts.dryRun,opts.httpWait,opts.globalLog
+
+if opts.impLibraries:
+	print "\n\n ------------------------ IMPORTING ---------------------------------------\n\n"
+	sys.path.append('.')
+	for lib in opts.impLibraries:
+		print "\n\n ------------------------ IMPORTING ---------------------------------------\n\n"
+		print lib
+		__import__(lib)
 
 if opts.version:
 	print 'Yade version: %s, features: %s'%(version,','.join(features))
@@ -396,7 +408,10 @@ if not opts.disablePynotify:
 		import pynotify
 		pynotifyAvailable = True
 		pynotify.init("Yade")
-	except ImportError:
+		# check server capabilities, I need to do this because otherwise it would not detect that server is not present.
+		# https://notify2.readthedocs.io/en/latest/
+		pynotify.get_server_caps()
+	except Exception:
 		pynotifyAvailable = False
 
 print "Will run simulation(s) %s using `%s', nice value %d, using max %d cores."%(scripts,executable,nice,maxJobs)

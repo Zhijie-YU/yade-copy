@@ -17,7 +17,7 @@ static boost::minstd_rand randGen(TimingInfo::getNow(/* get the number even if t
 static boost::variate_generator<boost::minstd_rand&, boost::uniform_real<Real> > randomUnit(randGen, boost::uniform_real<Real>(0,1));
 
 void SpheresFactory::pickRandomPosition(Vector3r&,Real){
-	LOG_FATAL("Engine "<<getClassName()<<" calling virtual method SpheresFactory::pickRandomPosition(), but had to call derived class. This could occur if you use SpheresFactory directly instead derived engines. If not, please submit bug report at http://bugs.launchpad.net/yade.");
+	LOG_FATAL("Engine "<<getClassName()<<" calling virtual method SpheresFactory::pickRandomPosition(), but had to call derived class. This could occur if you use SpheresFactory directly instead derived engines. If not, please submit bug report at https://gitlab.com/yade-dev/trunk/issues");
 	throw std::logic_error("SpheresFactory::pickRandomPosition() called.");
 }
 

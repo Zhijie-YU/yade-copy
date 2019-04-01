@@ -6,8 +6,6 @@ This tutorial originated as handout for a course held at `Technische Universitä
 
 The course did not in reality follow this document, but was based on interactive writing and commenting simple :doc:`Examples <tutorial-examples>`, which were mostly suggested by participants; many thanks to them for their ideas and suggestions.
 
-A few minor bugs were discovered during the course. They were all fixed in rev. 2640 of Yade which is therefore the minimum recommended version to run the examples (notably, 0.60 will not work).
-
 .. toctree::
   :maxdepth: 2
   
@@ -22,3 +20,7 @@ A few minor bugs were discovered during the course. They were all fixed in rev. 
   tutorial-advanced.rst
   
   tutorial-examples.rst
+  
+  tutorial-more-examples-fast.rst
+  
+.. comment:  tutorial-more-examples.rst

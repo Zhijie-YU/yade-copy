@@ -19,11 +19,13 @@ Before you start moving around in Yade, you should have some prior knowledge.
 
 You are advised to try all commands described yourself. Don't be afraid to experiment.
 
+.. hint::
+	Sometimes reading `this documentation in a .pdf format <https://yade-dem.org/doc/Yade.pdf>`_ can be more comfortable. For example in `okular pdf viewer <https://okular.kde.org/>`_ clicking links is faster than a page refresh in the web browser and to go back press the shortcut ``Alt Shift ←``. To try it have a look at the inheritance graph of :ref:`PartialEngine<inheritanceGraphPartialEngine>` then go back.
 
 Starting yade
 -------------
 
-Yade is being run primarily from terminal; the name of command is ``yade``. [#f1]_ (In case you did not install from package, you might need to give specific path to the command [#fcmd]_ )::
+Yade is being run primarily from terminal; the name of command is ``yade``. [#f1]_ (In case you did not install from package, you might need to give specific path to the command [#fcmd]_)::
 
 	\$ yade
 	Welcome to Yade
@@ -37,7 +39,7 @@ These initial lines give you some information about
 * some information for :ref:`remoteaccess`, which you are unlikely to need now;
 * basic help for the command-line that just appeared (``Yade [1]:``).
 
-Type ``quit()``, ``exit()`` or simply press ``^D`` to quit Yade. 
+Type ``quit()``, ``exit()`` or simply press ``^D`` (``^`` is a commonly used written shortcut for pressing the ``Ctrl`` key, so here ``^D`` means ``Ctrl D``) to quit Yade.
 
 The command-line is `ipython <http://ipython.scipy.org>`_, python shell with enhanced interactive capabilities; it features persistent history (remembers commands from your last sessions), searching and so on. See ipython's documentation for more details.
 
@@ -84,11 +86,13 @@ There is more command-line options than just ``-x``, run ``yade -h`` to see all 
 	                        is 0 if all tests pass, 1 if a test fails and 2 for an
 	                        unspecified exception.
 	  --check               Run a series of user-defined check tests as described
-	                        in /build/buildd/yade-
-	                        daily-1+3021+27~lucid1/scripts/test/checks/README
-	  --performance         Starts a test to measure the productivity
+	                        in :ysrc:`scripts/checks-and-tests/checks/README` and :ref:`regression-tests`
+	  --performance
+	                        Starts a test to measure the productivity
 	  --no-gdb              Do not show backtrace when yade crashes (only
-	                        effective with \-\-debug).
+	                        effective with \-\-debug) [#fdbg]_.
+
+.. comment: NOTE: I can't find a way to link to sphinx generated anchors. I feel that I've found it once, but now I added by hand the :ref:`regression-tests` label in prog.rst
 
 .. rubric:: Footnotes
 
@@ -103,17 +107,40 @@ There is more command-line options than just ``-x``, run ``yade -h`` to see all 
 
 .. [#f2] Plain Python interpreter exits once it finishes running the script. The reason why Yade does the contrary is that most of the time script only sets up simulation and lets it run; since computation typically runs in background thread, the script is technically finished, but the computation is running.
 
+.. [#fdbg] On some linux systems stack trace will not be shown and a message ``ptrace: Operation not permitted`` will appear instead. To enable stack trace issue command: ``sudo echo 0 > /proc/sys/kernel/yama/ptrace_scope``. To disable stack trace issue command ``sudo echo 1 > /proc/sys/kernel/yama/ptrace_scope``.
 
-Creating simulation
+
+Quick inline help
 --------------------
-To create simulation, one can either use a specialized class of type :yref:`FileGenerator` to create full scene, possibly receiving some parameters. Generators are written in c++ and their role is limited to well-defined scenarios. For instance, to create triaxial test scene:
+All of functions callable from `ipython <http://ipython.scipy.org>`_ shell have a quickly accessible help by appending ``?`` to the function name, or calling ``help(…)`` command on them:
 
 .. ipython::
 	:okexcept:
 
+	In [1]: O.run?
+	run( (Omega)arg1 [, (int)nSteps=-1 [, (bool)wait=False]]) -> None :
+	    Run the simulation. *nSteps* how many steps to run, then stop (if positive); *wait* will cause not returning to python until simulation will have stopped.
+	Type:      instancemethod
+
+	In [1]: help(O.pause)
+
+A quick way to discover available functions is by using the tab-completion mechanism, e.g. type ``O.`` then press tab.
+
+Creating simulation
+--------------------
+To create simulation, one can either use a specialized class of type :yref:`FileGenerator` to create full scene, possibly receiving some parameters. Generators are written in C++ and their role is limited to well-defined scenarios. For instance, to create triaxial test scene:
+
+.. comment: we need to import yade to make following work. The @suppress keyword is from https://ipython.readthedocs.io/en/stable/sphinxext.html#pseudo-decorators
+
+.. ipython::
+	:okexcept:
+
+	@suppress
+	In [1]: import yade
+
 	In [1]: TriaxialTest(numberOfGrains=200).load()
 
-	In [2]: len(O.bodies)
+	In [1]: len(O.bodies)
 	1006
 
 Generators are regular yade objects that support attribute access.
@@ -150,7 +177,7 @@ As explained below, the loop consists in running defined sequence of engines. St
 	In [1]: O.time
 	1e-4
 
-Normal simulations, however, are run continuously. Starting/stopping the loop is done by ``O.run()`` and ``O.pause()``; note that ``O.run()`` returns control to Python and the simulation runs in background; if you want to wait for it finish, use ``O.wait()``. Fixed number of steps can be run with ``O.run(1000)``, ``O.run(1000,True)`` will run and wait. To stop at absolute step number, ``O.stopAtIter`` can be set and ``O.run()`` called normally.
+Normal simulations, however, are run continuously. Starting/stopping the loop is done by ``O.run()`` and ``O.pause()``; note that ``O.run()`` returns control to Python and the simulation runs in background; if you want to wait for it to finish, use ``O.wait()``. Fixed number of steps can be run with ``O.run(1000)``, ``O.run(1000,True)`` will run and wait. To stop at absolute step number, ``O.stopAtIter`` can be set and ``O.run()`` called normally.
 
 .. ipython::
 
@@ -168,6 +195,8 @@ Normal simulations, however, are run continuously. Starting/stopping the loop is
 
 	In [1]: O.stopAtIter=500000
 
+	In [1]: O.run()
+
 	In [1]: O.wait()
 
 	In [1]: O.iter
@@ -180,7 +209,7 @@ Simulation can be saved at any point to a binary file (optionaly compressed if t
 Saving to a XML file is also possible though resulting in larger files and slower save/load, it is used when the filename contains "xml". With some limitations,
 it is generally possible to load the scene later and resume the simulation as if it were not
 interrupted. Note that since the saved scene is a dump of Yade's internal objects, it might not
-(probably will not) open with different Yade version.
+(probably will not) open with different Yade version. This problem can be sometimes solved by migrating the saved file using ".xml" format.
 
 .. ipython::
 
@@ -218,18 +247,27 @@ primary and secondary simulation.
 
 Graphical interface
 --------------------
-Yade can be optionally compiled with qt4-based graphical interface. It can be started by pressing ``F12`` in the command-line, and also is started automatically when running a script.
+Yade can be optionally compiled with `QT <http://qt.io>`_ based graphical interface (qt4 and qt5 are supported). It can be started by pressing ``F12`` in the command-line, and also is started automatically when running a script.
 
+.. _imgQtGui:
 .. image:: fig/qt-gui.png
 
-The windows with buttons is called ``Controller`` (can be invoked by ``yade.qt.Controller()`` from python):
+The control window on the left (fig. imgQtGui_) is called ``Controller`` (can be invoked by ``yade.qt.Controller()`` from python or by pressing ``F12`` key in terminal):
 
 #. The *Simulation* tab is mostly self-explanatory, and permits basic simulation control.
 #. The *Display* tab has various rendering-related options, which apply to all opened views (they can be zero or more, new one is opened by the *New 3D* button).
 #. The *Python* tab has only a simple text entry area; it can be useful to enter python commands while the command-line is blocked by running script, for instance.
 
-3d views can be controlled using mouse and keyboard shortcuts; help is displayed if you press the ``h`` key while in the 3d view. Note that having the 3d view open can slow down running simulation significantly, it is meant only for quickly checking whether the simulation runs smoothly. Advanced post-processing is described in dedicated section.
+Inside the *Inspect* window (on the right in fig. imgQtGui_) all simulation data can be examined and modified in realtime.
 
+#. Clicking left mouse button on any of the blue hyperlinks will open documentation.
+#. Clicking middle mouse button will copy the fully qualified python name into clipboard, which can be pasted into terminal by clicking middle mouse button in the terminal (or pressing ``Ctrl-V``).
+
+.. FIXME currently there is a maximum of only one 3D View window allowed.
+
+3d views can be controlled using mouse and keyboard shortcuts; help is displayed if you press the ``h`` key while in the 3d view. Note that having the 3d view open can slow down running simulation significantly, it is meant only for quickly checking whether the simulation runs smoothly. Advanced post-processing is described in dedicated section :ref:`tutorialDataMining`.
+
+.. FIXED add link to that "dedicated section", I guess it is tutorial-data-mining.html, to write that put .. _tutorialDataMining: on first line in ./doc/sphinx/tutorial-data-mining.rst
 
 Architecture overview
 ======================
@@ -266,24 +304,30 @@ Data components
 Bodies
 """""""
 
-Yade simulation (class ``Scene``, but hidden inside :yref:`Omega` in Python) is represented by :yref:`Bodies<Body>`, their :yref:`Interactions<Interaction>` and resultant generalized :yref:`forces<Omega.forces>` (all stored internally in special containers).
+Yade simulation (class :yref:`Scene`, but hidden inside :yref:`Omega` in Python) is represented by :yref:`Bodies<Body>`, their :yref:`Interactions<Interaction>` and resultant generalized :yref:`forces<Omega.forces>` (all stored internally in special containers).
 
 Each :yref:`Body` comprises the following:
 
-:yref:`Shape`
+:ref:`Shape<inheritanceGraphShape>`
 	represents particle's geometry (neutral with regards to its spatial orientation), such as :yref:`Sphere`, :yref:`Facet` or inifinite :yref:`Wall`; it usually does not change during simulation.
-:yref:`Material`
+:ref:`Material<inheritanceGraphMaterial>`
 	stores characteristics pertaining to mechanical behavior, such as Young's modulus or density, which are independent on particle's shape and dimensions; usually constant, might be shared amongst multiple bodies.
-:yref:`State`
-	contains state variable variables, in particular spatial :yref:`position<State::pos>` and :yref:`orientation<State::ori>`, :yref:`linear<State::vel>` and :yref:`angular<State::angVel>` velocity, :yref:`linear<State::accel>` and :yref:`angular<State::angAccel>` accelerator; it is updated by the :yref:`integrator<NewtonIntegrator>` at every step.
+:ref:`State<inheritanceGraphState>`
+	contains state variables, in particular spatial :yref:`position<State::pos>` and :yref:`orientation<State::ori>`, :yref:`linear<State::vel>` and :yref:`angular<State::angVel>` velocity; it is updated by the :yref:`integrator<NewtonIntegrator>` at every step. The derived classes would contain other information related to current state of this body, e.g. its temperature, :yref:`averaged damage<CpmState::normDmg>` or :yref:`broken links<WireState::numBrokenLinks>` between components.
 
-	Derived classes can hold additional data, e.g. :yref:`averaged damage<Cpm::normDmg>`.
-:yref:`Bound`
+:ref:`Bound<inheritanceGraphBound>`
 	is used for approximate ("pass 1") contact detection; updated as necessary following body's motion. Currently, :yref:`Aabb` is used most often as :yref:`Bound`. Some bodies may have no :yref:`Bound`, in which case they are exempt from contact detection.
 
 (In addition to these 4 components, bodies have several more minor data associated, such as :yref:`Body::id` or :yref:`Body::mask`.)
 
-All these four properties can be of different types, derived from their respective base types. Yade frequently makes decisions about computation based on those types: :yref:`Sphere` + :yref:`Sphere` collision has to be treated differently than :yref:`Facet` + :yref:`Sphere` collision. Objects making those decisions are called :yref:`Dispatcher`'s and are essential to understand Yade's functioning; they are discussed below. 
+.. _img-body-classes:
+.. figure:: fig/body-classes.*
+	:width: 13.8cm
+
+	Examples of concrete classes that might be used to describe a :yref:`Body`: :ref:`State<inheritanceGraphState>`, :yref:`CpmState`, :yref:`ChainedState`, :ref:`Material<inheritanceGraphMaterial>`, :yref:`ElastMat`, :yref:`FrictMat`, :yref:`FrictViscoMat`, :ref:`Shape<inheritanceGraphShape>`, :yref:`Polyhedra`, :yref:`PFacet`, :yref:`GridConnection`, :ref:`Bound<inheritanceGraphBound>`, :yref:`Aabb`.
+
+
+All these four properties can be of different types, derived from their respective base types. Yade frequently makes decisions about computation based on those types: :yref:`Sphere` + :yref:`Sphere` collision has to be treated differently than :yref:`Facet` + :yref:`Sphere` collision. Objects making those decisions are called :ref:`Dispatchers<inheritanceGraphDispatcher>` and are essential to understand Yade's functioning; they are discussed below.
 
 Explicitly assigning all 4 properties to each particle by hand would be not practical; there are utility functions defined to create them with all necessary ingredients. For example, we can create sphere particle using :yref:`yade.utils.sphere`:
 
@@ -298,7 +342,7 @@ Explicitly assigning all 4 properties to each particle by hand would be not prac
    In [7]: s.shape.radius
 
 
-We see that a sphere with material of type :yref:`FrictMat` (default, unless you provide another :yref:`Material`) and bounding volume of type :yref:`Aabb` (axis-aligned bounding box) was created. Its position is at origin and its radius is 1.0. Finally, this object can be inserted into the simulation; and we can insert yet one sphere as well.
+We see that a sphere with material of type :yref:`FrictMat` (default, unless you provide another :yref:`Material`) and bounding volume of type :yref:`Aabb` (axis-aligned bounding box) was created. Its position is at the origin and its radius is 1.0. Finally, this object can be inserted into the simulation; and we can insert yet one sphere as well.
 
 .. ipython::
 
@@ -310,7 +354,7 @@ We see that a sphere with material of type :yref:`FrictMat` (default, unless you
 
 In each case, return value is :yref:`Body.id` of the body inserted. 
 
-Since till now the simulation was empty, its id is 0 for the first sphere and 1 for the second one. Saving the id value is not necessary, unless you want access this particular body later; it is remembered internally in :yref:`Body` itself. You can address bodies by their id:
+Since till now the simulation was empty, its id is 0 for the first sphere and 1 for the second one. Saving the id value is not necessary, unless you want to access this particular body later; it is remembered internally in :yref:`Body` itself. You can address bodies by their id:
 
 .. ipython::
 	:okexcept:
@@ -318,7 +362,7 @@ Since till now the simulation was empty, its id is 0 for the first sphere and 1 
 	In [1]: O.bodies[1].state.pos
 	<Body instance at 0x92e8f60>
 
-	In [2]: O.bodies[100]
+	In [2]: O.bodies[100]    # error because there are only two bodies
 	IndexError: Body id out of range.
 
 Adding the same body twice is, for reasons of the id uniqueness, not allowed:
@@ -326,7 +370,7 @@ Adding the same body twice is, for reasons of the id uniqueness, not allowed:
 .. ipython::
 	:okexcept:
 	
-	In [1]: O.bodies.append(s)
+	In [1]: O.bodies.append(s)  # error because this sphere was already added
 
 Bodies can be iterated over using standard python iteration syntax:
 
@@ -344,25 +388,31 @@ Interactions
 
 :yref:`Interactions<Interaction>` are always between pair of bodies; usually, they are created by the collider based on spatial proximity; they can, however, be created explicitly and exist independently of distance. Each interaction has 2 components:
 
-:yref:`IGeom`
+:ref:`IGeom<inheritanceGraphIGeom>`
 	holding geometrical configuration of the two particles in collision; it is updated automatically as the particles in question move and can be queried for various geometrical characteristics, such as penetration distance or shear strain.
 	
-	Based on combination of types of :yref:`Shapes<Shape>` of the particles, there might be different storage requirements; for that reason, a number of derived classes exists, e.g. for representing geometry of contact between :yref:`Sphere+Sphere<ScGeom>`, :yref:`Cylinder+Sphere<CylScGeom>` etc. Note, however, that it is possible to represent many type of contacts with the basic sphere-sphere geometry (for instance in :yref:`Ig2_Wall_Sphere_ScGeom`).
-:yref:`IPhys`
+	Based on combination of types of :ref:`Shapes<inheritanceGraphShape>` of the particles, there might be different storage requirements; for that reason, a number of derived classes exists, e.g. for representing geometry of contact between :yref:`Sphere+Sphere<ScGeom>`, :yref:`Cylinder+Sphere<CylScGeom>` etc. Note, however, that it is possible to represent many type of contacts with the basic sphere-sphere geometry (for instance in :yref:`Ig2_Wall_Sphere_ScGeom`).
+
+:ref:`IPhys<inheritanceGraphIPhys>`
 	representing non-geometrical features of the interaction; some are computed from :yref:`Materials<Material>` of the particles in contact using some averaging algorithm (such as contact stiffness from Young's moduli of particles), others might be internal variables like damage.
+
+
+.. _img-interaction-classes:
+.. figure:: fig/interaction-classes.*
+	:width: 13.8cm
+
+	Examples of concrete classes that might be used to describe an :yref:`Interaction`: :ref:`IGeom<inheritanceGraphIGeom>`, :yref:`GenericSpheresContact`, :yref:`PolyhedraGeom`, :yref:`CylScGeom`, :ref:`IPhys<inheritanceGraphIPhys>`, :yref:`NormPhys`, :yref:`NormShearPhys`, :yref:`FrictPhys`.
 
 Suppose now interactions have been already created. We can access them by the id pair:
 
 .. ipython::
-	:suppress:
+	:okexcept:
 
+	@suppress
 	In [1]: O.engines=[InteractionLoop([Ig2_Sphere_Sphere_ScGeom()],[Ip2_FrictMat_FrictMat_FrictPhys()],[])]
 
+	@suppress
 	In [2]: utils.createInteraction(0,1);
-
-
-.. ipython::
-	:okexcept:
 
 	In [1]: O.interactions[0,1]
 	<Interaction instance at 0x93f9528>
@@ -380,19 +430,22 @@ Suppose now interactions have been already created. We can access them by the id
 	In [5]: i.phys
 	<ElasticContactInteraction instance at 0x94038d0>
 
-	In [6]: O.interactions[100,10111]
+	In [6]: O.interactions[100,10111]     # asking for non existing interaction throws exception
 	ValueError: No such interaction
 
 
 Generalized forces
 """"""""""""""""""""
 
-Generalized forces include force, torque and forced displacement and rotation; they are stored only temporarliy, during one computation step, and reset to zero afterwards. For reasons of parallel computation, they work as accumulators, i.e. only can be added to, read and reset.
+Generalized forces include force, torque and forced displacement and rotation; they are stored only temporariliy, during one computation step, and reset to zero afterwards. For reasons of parallel computation, they work as accumulators, i.e. only can be added to, read and reset.
 
 .. ipython::
 	:okexcept:
 
 	Yade [1]: O.forces.f(0)
+
+	@suppress
+	Yade [2]: from yade import Vector3
 
 	Yade [2]: O.forces.addF(0,Vector3(1,2,3))
 
@@ -422,8 +475,9 @@ In a typical DEM simulation, the following sequence is run repeatedly:
 
 .. _img-yade-iter-loop:
 .. figure:: fig/yade-iter-loop.*
+	:width: 15.8cm
 
-	Typical simulation loop; each step begins at body-centered bit at 11 o'clock, continues with interaction bit, force application bit, miscillanea and ends with time update.
+	Typical simulation loop; each step begins at body-centered bit at 11 o'clock, continues with interaction bit, force application bit, miscellanea and ends with time update.
 
 Each of these actions is represented by an :yref:`Engine<Engine>`, functional element of simulation. The sequence of engines is called *simulation loop*.
 
@@ -432,7 +486,7 @@ Each of these actions is represented by an :yref:`Engine<Engine>`, functional el
 Engines
 """""""""
 
-Simulation loop, shown at img. img-yade-iter-loop_, can be described as follows in Python (details will be explained later); each of the ``O.engine`` items is instance of a type deriving from :yref:`Engine`:
+Simulation loop, shown at fig. img-yade-iter-loop_, can be described as follows in Python (details will be explained later); each of the ``O.engine`` items is instance of a type deriving from :yref:`Engine`:
 
 .. code-block:: python
  
@@ -455,13 +509,13 @@ Simulation loop, shown at img. img-yade-iter-loop_, can be described as follows 
 
 There are 3 fundamental types of Engines:
 
-:yref:`GlobalEngines<GlobalEngine>`
-	operating on the whole simulation (e.g. :yref:`GravityEngine` looping over all bodies and applying force based on their mass)
+:ref:`GlobalEngines<inheritanceGraphGlobalEngine>`
+	operating on the whole simulation (e.g. :yref:`ForceResetter` which zeroes forces acting on bodies or :yref:`GravityEngine` looping over all bodies and applying force based on their mass)
 
-:yref:`PartialEngine<PartialEngine>`
-	operating only on some pre-selected bodies (e.g. :yref:`ForceEngine` applying constant force to some bodies)
+:ref:`PartialEngine<inheritanceGraphPartialEngine>`
+	operating only on some pre-selected bodies (e.g. :yref:`ForceEngine` applying constant force to some :yref:`selected<ForceEngine::ids>` bodies)
 
-:yref:`Dispatchers<Dispatcher>`
+:ref:`Dispatchers<inheritanceGraphDispatcher>`
 	do not perform any computation themselves; they merely call other functions, represented by function objects, :yref:`Functors<Functor>`. Each functor is specialized, able to handle certain object types, and will be dispatched if such obejct is treated by the dispatcher. 
 
 .. _dispatchers-and-functors:
@@ -469,13 +523,22 @@ There are 3 fundamental types of Engines:
 Dispatchers and functors
 """""""""""""""""""""""""
 
-For approximate collision detection (pass 1), we want to compute :yref:`bounds<Body::bound>` for all :yref:`bodies<Body>` in the simulation; suppose we want bound of type :yref:`axis-aligned bounding box`. Since the exact algorithm is different depending on particular :yref:`shape<Body::shape>`, we need to provide functors for handling all specific cases. The line::
+For approximate collision detection (pass 1), we want to compute :yref:`bounds<Body::bound>` for all :yref:`bodies<Body>` in the simulation; suppose we want bound of type :yref:`axis-aligned bounding box<Aabb>`. Since the exact algorithm is different depending on particular :yref:`shape<Body::shape>`, we need to provide functors for handling all specific cases. In the ``O.engines=[…]`` declared above, the line::
 
 	InsertionSortCollider([Bo1_Sphere_Aabb(),Bo1_Facet_Aabb()])
 
 creates :yref:`InsertionSortCollider` (it internally uses :yref:`BoundDispatcher`, but that is a detail). It traverses all bodies and will, based on :yref:`shape<Shape>` type of each :yref:`body<Body>`, dispatch one of the functors to create/update :yref:`bound<Bound>` for that particular body. In the case shown, it has 2 functors, one handling :yref:`spheres<Sphere>`, another :yref:`facets<Facet>`. 
 	
-The name is composed from several parts: ``Bo`` (functor creating :yref:`Bound`), which accepts ``1`` type :yref:`Sphere` and creates an :yref:`Aabb` (axis-aligned bounding box; it is derived from :yref:`Bound`). The :yref:`Aabb` objects are used by :yref:`InsertionSortCollider` itself. All ``Bo1`` functors derive from :yref:`BoundFunctor`.
+The name is composed from several parts: ``Bo`` (functor creating :yref:`Bound`), which accepts ``1`` type :yref:`Sphere` and creates an :yref:`Aabb` (axis-aligned bounding box; it is derived from :yref:`Bound`). The :yref:`Aabb` objects are used by :yref:`InsertionSortCollider` itself. All ``Bo1`` functors derive from :ref:`BoundFunctor<inheritanceGraphBoundFunctor>`.
+
+
+.. _img-bound-functors:
+.. figure:: fig/bound-functors.*
+	:width: 12cm
+
+	Example :ref:`bound functors<inheritanceGraphBoundFunctor>` producing :yref:`Aabb` accepting various different types, such as :yref:`Sphere`, :yref:`Facet` or :yref:`Cylinder`. In the case shown, the ``Bo1`` functors produce :yref:`Aabb` instances from single specific :yref:`Shape`, hence the number ``1`` in the functor name. Each of those functors uses specific geometry of the :ref:`Shape<inheritanceGraphShape>` i.e. position of nodes in :yref:`Facet` or :yref:`radius of sphere<Sphere::radius>` to calculate the :yref:`Aabb`.
+
+.. comment: FIXME that link :ref:`boundfunctors` or :yref:`bound functors<BoundFunctor>` should point to the place above so that the inheritance graph is visible.
 
 The next part, reading
 
@@ -489,32 +552,60 @@ The next part, reading
 
 hides 3 internal dispatchers within the :yref:`InteractionLoop` engine; they all operate on interactions and are, for performance reasons, put together:
 
-:yref:`IGeomDispatcher`
-	uses the first set of functors (``Ig2``), which are dispatched based on combination of ``2`` :yref:`Shapes<Shape>` objects. Dispatched functor resolves exact collision configuration and creates :yref:`IGeom<Interaction::geom>` (whence ``Ig`` in the name) associated with the interaction, if there is collision. The functor might as well fail on approximate interactions, indicating there is no real contact between the bodies, even if they did overlap in the approximate collision detection.
+:yref:`IGeomDispatcher` which uses :ref:`IGeomFunctor<inheritanceGraphIGeomFunctor>`
+	uses the first set of functors (``Ig2``), which are dispatched based on combination of ``2`` :ref:`Shapes<inheritanceGraphShape>` objects. Dispatched functor resolves exact collision configuration and creates an Interaction Geometry :yref:`IGeom<Interaction::geom>` (whence ``Ig`` in the name) associated with the interaction, if there is collision. The functor might as well determine that there is no real collision even if they did overlap in the approximate collision detection (e.g. the :yref:`Aabb` did overlap, but the shapes did not). In that case the attribute :yref:`<Interaction::isReal>` is set to false and interaction is scheduled for removal.
 
 	#. The first functor, :yref:`Ig2_Sphere_Sphere_ScGeom`, is called on interaction of 2 :yref:`Spheres<Sphere>` and creates :yref:`ScGeom` instance, if appropriate.
 
 	#. The second functor, :yref:`Ig2_Facet_Sphere_ScGeom`, is called for interaction of :yref:`Facet` with :yref:`Sphere` and might create (again) a :yref:`ScGeom` instance.
 
-	All ``Ig2`` functors derive from :yref:`IGeomFunctor` (they are documented at the same place).
+	All ``Ig2`` functors derive from :ref:`IGeomFunctor<inheritanceGraphIGeomFunctor>` (they are documented at the same place).
 
-:yref:`IPhysDispatcher`
-	dispatches to the second set of functors based on combination of ``2`` :yref:`Materials<Material>`; these functors return return :yref:`IPhys` instance (the ``Ip`` prefix). In our case, there is only 1 functor used, :yref:`Ip2_FrictMat_FrictMat_FrictPhys`, which create :yref:`FrictPhys` from 2 :yref:`FrictMat's<FrictMat>`.
+.. comment: Ig2_Sphere_Sphere_ScGeom , Ig2_Wall_Sphere_ScGeom , Ig2_Sphere_PFacet_ScGridCoGeom , Ig2_Sphere_Polyhedra_ScGeom, Ig2_Wall_PFacet_ScGeom, Ig2_PFacet_PFacet_ScGeom
+.. comment: Hmm, there are PFacets on the picture, but in the example above are Facets. Maybe a good occasion for the reader to notice the difference between Facet and PFacet :)
+
+.. _img-shape-functors:
+.. figure:: fig/shape-functors.*
+	:width: 16cm
+
+	Example :ref:`interaction geometry functors<inheritanceGraphIGeomFunctor>` producing :yref:`ScGeom` or :yref:`ScGridCoGeom` accepting two various different types (hence ``2`` in their name ``Ig2``), such as :yref:`Sphere`, :yref:`Wall` or :yref:`PFacet`. Each of those functors uses specific geometry of the :yref:`Shape` i.e. position of nodes in :yref:`PFacet` or :yref:`radius of sphere<Sphere::radius>` to calculate the :yref:`interaction geometry<IGeom>`.
+
+.. comment: FIXME: I don't know how to link to html/yade.wrapper.html#iphysfunctor , the :yref:`IGeomFunctor` html/yade.wrapper.html#yade.wrapper.IGeomFunctor
+
+
+:yref:`IPhysDispatcher` which uses :ref:`IPhysFunctor<inheritanceGraphIPhysFunctor>`
+	dispatches to the second set of functors based on combination of ``2`` :ref:`Materials<inheritanceGraphMaterial>`; these functors return return :yref:`IPhys` instance (the ``Ip`` prefix). In our case, there is only 1 functor used, :yref:`Ip2_FrictMat_FrictMat_FrictPhys`, which create :yref:`FrictPhys` from 2 :yref:`FrictMat's<FrictMat>`.
 	
-	``Ip2`` functors are derived from :yref:`IPhysFunctor`.
+	``Ip2`` functors are derived from :ref:`IPhysFunctor<inheritanceGraphIPhysFunctor>`.
 
-:yref:`LawDispatcher`
-	dispatches to the third set of functors, based on combinations of :yref:`IGeom` and :yref:`IPhys` (wherefore ``2`` in their name again) of each particular interaction, created by preceding functors. The ``Law2`` functors represent "constitutive law"; they resolve the interaction by computing forces on the interacting bodies (repulsion, attraction, shear forces, …) or otherwise update interaction state variables.
 
-	``Law2`` functors all inherit from :yref:`LawFunctor`.
+.. _img-phys-functors:
+.. figure:: fig/phys-functors.*
+	:width: 16cm
+
+	Example :ref:`interaction physics functors<inheritanceGraphIPhysFunctor>` (:yref:`Ip2_FrictMat_CpmMat_FrictPhys`, :yref:`Ip2_FrictMat_FrictMat_FrictPhys` and :yref:`Ip2_FrictMat_FrictViscoMat_FrictViscoPhys`) producing :yref:`FrictPhys` or :yref:`FrictViscoPhys` accepting two various different types of :yref:`Material` (hence ``Ip2``), such as :yref:`CpmMat`, :yref:`FrictMat` or :yref:`FrictViscoMat`.
+
+
+
+:yref:`LawDispatcher` which uses :ref:`LawFunctor<inheritanceGraphLawFunctor>`
+	dispatches to the third set of functors, based on combinations of :ref:`IGeom<inheritanceGraphIGeom>` and :ref:`IPhys<inheritanceGraphIPhys>` (wherefore ``2`` in their name again) of each particular interaction, created by preceding functors. The ``Law2`` functors represent constitutive law; they resolve the interaction by computing forces on the interacting bodies (repulsion, attraction, shear forces, …) or otherwise update interaction state variables.
+
+	``Law2`` functors all inherit from :ref:`LawFunctor<inheritanceGraphLawFunctor>`.
+
+.. _img-law-functors:
+.. figure:: fig/law-functors.*
+	:width: 16cm
+
+	Example :ref:`LawFunctors<inheritanceGraphLawFunctor>` (:yref:`Law2_CylScGeom_FrictPhys_CundallStrack`, :yref:`Law2_ScGeom_FrictPhys_CundallStrack` and :yref:`Law2_ScGridCoGeom_FrictPhys_CundallStrack`) each of them performing calcuation of forces according to selected constitutive law.
+
 
 There is chain of types produced by earlier functors and accepted by later ones; the user is responsible to satisfy type requirement (see img. img-dispatch-loop_). An exception (with explanation) is raised in the contrary case.
 
 .. _img-dispatch-loop:
 .. figure:: fig/dispatch-loop.*
-	:width: 13cm
+	:width: 14.5cm
 
-	Chain of functors producing and accepting certain types. In the case shown, the ``Ig2`` functors produce :yref:`ScGeom` instances from all handled :yref:`Shape` combinations; the ``Ig2`` functor produces :yref:`FrictMat`. The constitutive law functor ``Law2`` accepts the combination of types produced. Note that the types are stated in the functor's class names.
+	Chain of functors producing and accepting certain types. In the case shown, the ``Ig2`` functors produce :yref:`ScGeom` instances from all handled :ref:`Shapes<inheritanceGraphShape>` combinations; the ``Ig2`` functor produces :yref:`FrictMat`. The constitutive law functor ``Law2`` accepts the combination of types produced. Note that the types are stated in the functor's class names.
 
 .. note::
-	When Yade starts, O.engines is filled with a reasonable default list, so that it is not strictly necessary to redefine it when trying simple things. The default scene will handle spheres, boxes, and facets with :yref:`frictional<FrictMat>` properties correctly, and adjusts the timestep dynamically. You can find an example in simple-scene-default-engines.py.
+	When Yade starts, O.engines is filled with a reasonable default list, so that it is not strictly necessary to redefine it when trying simple things. The default scene will handle spheres, boxes, and facets with :yref:`frictional<FrictMat>` properties correctly, and adjusts the timestep dynamically. You can find an example in :ysrc:`examples/simple-scene/simple-scene-default-engines.py`.

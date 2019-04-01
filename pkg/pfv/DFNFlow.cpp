@@ -236,7 +236,7 @@ void DFNFlowEngine::interpolateCrack(Tesselation& Tes,Tesselation& NewTes){
 
 void DFNFlowEngine::trickPermeability(RTriangulation::Facet_circulator& facet,Real aperture,RTriangulation::Finite_edges_iterator& ed_it)
 {
-	const RTriangulation::Facet& currentFacet = *facet; /// seems verbose but facet->first was declaring a junk cell and crashing program (https://bugs.launchpad.net/yade/+bug/1666339)
+	const RTriangulation::Facet& currentFacet = *facet; /// seems verbose but facet->first was declaring a junk cell and crashing program (old site, fixed bug https://bugs.launchpad.net/yade/+bug/1666339)
 	const RTriangulation& Tri = solver->T[solver->currentTes].Triangulation();
 	const CellHandle& cell1 = currentFacet.first;
 	const CellHandle& cell2 = currentFacet.first->neighbor(facet->second);

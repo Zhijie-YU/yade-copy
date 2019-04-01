@@ -12,7 +12,7 @@ import os, sys, thread, time, logging, pipes, socket, xmlrpclib, re, shutil, ran
 # Add search path for yade Python-modules
 # It allows to use both Yade-versions (packaged and self-compiled one).
 # See LP:1254708 for more details
-# https://bugs.launchpad.net/yade/+bug/1254708
+# (old site, fixed bug) https://bugs.launchpad.net/yade/+bug/1254708
 
 
 #socket.setdefaulttimeout(10) 

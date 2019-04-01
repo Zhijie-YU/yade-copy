@@ -108,20 +108,33 @@ class InsertionSortCollider: public Collider{
 	struct VecBounds{
 		// axis set in the ctor
 		int axis;
-		std::vector<Bounds> vec;
 		Real cellDim;
-		// cache vector size(), update at every step in action()
-		long size;
 		// index of the lowest coordinate element, before which the container wraps
-		long loIdx;
-		Bounds& operator[](long idx){ assert(idx<size && idx>=0); return vec[idx]; }
-		const Bounds& operator[](long idx) const { assert(idx<size && idx>=0); return vec[idx]; }
+		size_t loIdx;
+
+		Bounds& operator[](long idx){ assert(idx<long(size()) && idx>=0); return vec[idx]; }
+		const Bounds& operator[](long idx) const { assert(idx<long(size()) && idx>=0); return vec[idx]; }
+
 		// update number of bodies, periodic properties and size from Scene
 		void updatePeriodicity(Scene* );
 		// normalize given index to the right range (wraps around)
-		long norm(long i) const { if(i<0) i+=size; long ret=i%size; assert(ret>=0 && ret<size); return ret;}
-		VecBounds(): axis(-1), size(0), loIdx(0){}
-		void dump(ostream& os){ string ret; for(size_t i=0; i<vec.size(); i++) os<<((long)i==loIdx?"@@ ":"")<<vec[i].coord<<"(id="<<vec[i].id<<","<<(vec[i].flags.isMin?"min":"max")<<",p"<<vec[i].period<<") "; os<<endl;}
+		size_t norm(long i) const { if(i<0) i+=size(); assert(i>=0); size_t ret=i%size(); assert(ret<size()); return ret;}
+		VecBounds(): axis(-1), loIdx(0){}
+		void dump(ostream& os){ string ret; for(size_t i=0; i<vec.size(); i++) os<<(i==loIdx?"@@ ":"")<<vec[i].coord<<"(id="<<vec[i].id<<","<<(vec[i].flags.isMin?"min":"max")<<",p"<<vec[i].period<<") "; os<<endl;}
+
+		size_t size() const { return vec.size(); };
+
+		void clear()                      { vec.clear();                   }
+		void reserve(size_t n)            { vec.reserve(n);                }
+		void push_back(const Bounds&  bb) { vec.push_back(bb);             }
+		// if the line below does not compile on older ubuntu 14.04, then I should add #ifdef guards to check compiler version. This line will make push_back faster when a newer compiler supports it.
+		void push_back(      Bounds&& bb) { vec.push_back(bb);             }
+		void sort()                       { std::sort(vec.begin(),vec.end()); }
+		std::vector<Bounds>::const_iterator cbegin() const { return vec.cbegin();}
+		std::vector<Bounds>::const_iterator cend  () const { return vec.cend  ();}
+
+		private:
+			std::vector<Bounds> vec;
 	};
 	private:
 	//! storage for bounds
@@ -168,7 +181,7 @@ class InsertionSortCollider: public Collider{
 	virtual bool isActivated();
 
 	// force reinitialization at next run
-	virtual void invalidatePersistentData(){ for(int i=0; i<3; i++){ BB[i].vec.clear(); BB[i].size=0; }}
+	virtual void invalidatePersistentData(){ for(int i=0; i<3; i++){ BB[i].clear(); }}
 
 	vector<Body::id_t> probeBoundingVolume(const Bound&);
 
@@ -176,7 +189,7 @@ class InsertionSortCollider: public Collider{
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(InsertionSortCollider,Collider,"\
 		Collider with O(n log(n)) complexity, using :yref:`Aabb` for bounds.\
 		\n\n\
-		At the initial step, Bodies' bounds (along :yref:`sortAxis<InsertionSortCollider.sortAxis>`) are first std::sort'ed along this (sortAxis) axis, then collided. The initial sort has :math:`O(n^2)` complexity, see `Colliders' performance <https://yade-dem.org/index.php/Colliders_performace>`_ for some information (There are scripts in examples/collider-perf for measurements). \
+		At the initial step, Bodies' bounds (along :yref:`sortAxis<InsertionSortCollider.sortAxis>`) are first std::sort'ed along this (sortAxis) axis, then collided. The initial sort has :math:`O(n^2)` complexity, see `Colliders' performance <https://yade-dem.org/wiki/Colliders_performace>`_ for some information (There are scripts in examples/collider-perf for measurements). \
 		\n\n \
 		Insertion sort is used for sorting the bound list that is already pre-sorted from last iteration, where each inversion	calls checkOverlap which then handles either overlap (by creating interaction if necessary) or its absence (by deleting interaction if it is only potential).	\
 		\n\n \

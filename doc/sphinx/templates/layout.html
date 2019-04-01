@@ -15,6 +15,96 @@
 </script>
 {% endblock %}
 
+{% block header %}
+    <div style="display:none">
+    {% raw %}
+    \(
+
+\usepackage{euler} % must be loaded before fontspec for the whole doc (below); this must be kept for pngmath, however
+\usepackage{hyperref}
+\usepackage{amsmath}
+\usepackage{amsbsy}
+%\usepackage{mathabx}
+\usepackage{underscore}
+\usepackage[all]{xy}
+
+% Metadata of the pdf output
+\hypersetup{pdftitle={Yade Documentation}}
+\hypersetup{pdfauthor={Smilauer, V., et al.}}
+\hypersetup{pdfkeywords={Discrete element method, granular materials, contact law, hydromechanical coupling}}
+
+% symbols
+\let\mat\boldsymbol % matrix
+\renewcommand{\vec}{\boldsymbol}
+\let\tens\boldsymbol % tensor
+
+%normalized and locfram here
+\def\normalized#1{\widehat{#1}}
+\def\locframe#1{\widetilde{#1}}
+
+% timestep
+\def\Dt{\Delta t}
+\def\Dtcr{\Dt_{\rm cr}}
+
+% algorithm complexity
+\def\bigO#1{{\mathcal{O}(#1)}}
+
+% variants for greek symbols
+\let\epsilon\varepsilon
+\let\theta\vartheta
+\let\phi\varphi
+
+% shorthands
+\let\sig\sigma
+\let\eps\epsilon
+
+% variables at different points of time
+\def\prev#1{#1^-}
+\def\pprev#1{#1^\ominus}
+\def\curr#1{#1^{\circ}}
+\def\nnext#1{#1^\oplus}
+\def\next#1{#1^+}
+
+% shorthands for geometry
+\def\currn{\curr{\vec{n}}}
+\def\currC{\curr{\vec{C}}}
+\def\uT{\vec{u}_T}
+\def\curruT{\curr{\vec{u}}_T}
+\def\prevuT{\prev{\vec{u}}_T}
+\def\currn{\curr{\vec{n}}}
+\def\prevn{\prev{\vec{n}}}
+
+% motion
+\def\pprevvel{\pprev{\dot{\vec{u}}}}
+\def\nnextvel{\nnext{\dot{\vec{u}}}}
+\def\curraccel{\curr{\ddot{\vec{u}}}}
+\def\prevpos{\prev{\vec{u}}}
+\def\currpos{\curr{\vec{u}}}
+\def\nextpos{\next{\vec{u}}}
+\def\curraaccel{\curr{\dot{\vec{\omega}}}}
+\def\pprevangvel{\pprev{\vec{\omega}}}
+\def\nnextangvel{\nnext{\vec{\omega}}}
+\def\loccurr#1{\curr{\locframe{#1}}}
+
+\def\numCPU{n_{\rm cpu}}
+\DeclareMathOperator{\Align}{Align}
+\DeclareMathOperator{\sign}{sgn}
+
+
+% sorting algorithms
+\def\isleq#1{\currelem{#1}\ar@/^/[ll]^{\leq}}
+\def\isnleq#1{\currelem{#1}\ar@/^/[ll]^{\not\leq}}
+\def\currelem#1{\fbox{$#1$}}
+\def\sortSep{||}
+\def\sortInv{\hbox{\phantom{||}}}
+\def\sortlines#1{\xymatrix@=3pt{#1}}
+\def\crossBound{||\mkern-18mu<}
+
+    \)
+    {% endraw %}
+    </div>
+    {{ super() }}
+{% endblock %}
 
 {% block footer %}
 {{ super() }}

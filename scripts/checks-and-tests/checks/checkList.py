@@ -20,8 +20,10 @@ for script in scriptsToRun:
 			else:
 				print "Status: success"
 			print "___________________________________"
-		except:
-			print script," failure"
+		except Exception as e:
+			resultStatus+=1
+			nFailed=resultStatus
+			print script," failure, caught exception: ",e
 		O.reset()
 	elif (script in skipScripts):
 		print "###################################"

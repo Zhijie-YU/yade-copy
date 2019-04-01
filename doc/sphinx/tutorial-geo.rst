@@ -1,5 +1,5 @@
-Towards geomechanics
-=====================
+Setting up a simulation
+=======================
 
 .. seealso::
 
@@ -38,7 +38,7 @@ Suppose we want to study the influence of :yref:`damping<NewtonIntegrator.dampin
       O.run()               # run forever, until stopped by checkUnbalancedForce()
       utils.waitIfBatch()   # do not finish the script until the simulation ends; does nothing in non-batch mode
 
-The *parameter table* is a simple text-file, where each line specifies a simulation to run::
+The *parameter table* is a simple text-file (e.g. ``params.txt`` ), where each line specifies a simulation to run::
 
 	# comments start with # as in python
 	damping     # first non-comment line is variable name
@@ -48,13 +48,18 @@ The *parameter table* is a simple text-file, where each line specifies a simulat
 
 Finally, the simulation is run using the special batch command::
 
-   user@machine:~\$ yade-batch parameters.table simulation.py
+   user@machine:~\$ yade-batch params.txt simulation.py
 
 .. todo:: Parametric studies need to be described better. Perhaps the behavior should be changed so that in batch mode, :yref:`O.run<Omega.run>` and :yref:`yade.utils.waitIfBatch` are run from the main yade script by default. That would however make it only possible to exit the batch via ``sys.exit(0)``, or by a new function like ``utils.exitBatch()`` (which would call ``sys.exit(0)`` for now anyway)
 
 .. rubric:: Exercises
 
-#. Run the gravity deposition script in batch mode, varying :yref:`damping<NewtonIntegrator.damping>` to take values of ``.2``, ``.4``, ``.6``. See the http://localhost:9080 overview page while the batch is running.
+#. Run the :ref:`gravity-deposition` script in batch mode, varying :yref:`damping<NewtonIntegrator.damping>` to take values of ``.2``, ``.4``, ``.6``.
+#. See the http://localhost:9080 overview page while the batch is running (fig. imgBatchExample_).
+
+.. _imgBatchExample:
+.. image:: fig/batch-example.png
+
 
 
 Boundary
@@ -65,7 +70,7 @@ Particles moving in infinite space usually need some constraints to make the sim
 Supports
 ^^^^^^^^^
 
-So far, supports (unmovable particles) were providing necessary boundary: in the gravity deposition script, :yref:`yade.utils.facetBox` is by internally composed of :yref:`facets <yade.utils.facet>` (triangulation elements), which is ``fixed`` in space; facets are also used for arbitrary triangulated surfaces (see relevant sections of the *User's manual*). Another frequently used boundary is :yref:`yade.utils.wall` (infinite axis-aligned plane).
+So far, supports (unmovable particles) were providing necessary boundary: in the :ref:`gravity-deposition` script the :yref:`yade.geom.facetBox` is internally composed of :yref:`facets <yade.utils.facet>` (triangulation elements), which are ``fixed`` in space; facets are also used for arbitrary triangulated surfaces (see relevant sections of the :ref:`User's manual<refUsersManual>`). Another frequently used boundary is :yref:`yade.utils.wall` (infinite axis-aligned plane).
 
 Periodic
 ^^^^^^^^^
@@ -76,7 +81,7 @@ The periodic cell is described by its :yref:`reference size <Cell.refSize>` of b
  
 Stress and strains can be controlled with :yref:`PeriTriaxController`; it is possible to prescribe mixed strain/stress :yref:`goal<PeriTriaxController.goal>` state using :yref:`PeriTriaxController.stressMask`.
 
-The following creates periodic cloud of spheres and compresses to achieve $\sigma_x$=-10 kPa, $\sigma_y$=-10kPa and $\eps_z$=-0.1. Since stress is specified for $y$ and $z$, :yref:`stressMask<PeriTriaxController.stressMask>` is ``0b011`` (x→1, y→2, z→4, in decimal 1+2=3).
+The following creates periodic cloud of spheres and compresses to achieve $\sigma_x$=-10 kPa, $\sigma_y$=-10kPa and $\eps_z$=-0.1. Since stress is specified for $y$ and $z$, :yref:`stressMask<PeriTriaxController.stressMask>` is binary ``0b011`` (x→1, y→2, z→4, in decimal 1+2=3).
 
 .. ipython::
 
@@ -85,7 +90,7 @@ The following creates periodic cloud of spheres and compresses to achieve $\sigm
 	
 	Yade [1]: sp=pack.SpherePack()
 
-	Yade [1]: sp.makeCloud((1,1,1),(2,2,2),rMean=.2,periodic=True)
+	Yade [1]: sp.makeCloud((1,1,1),(2,2,2),rMean=.16,periodic=True)
 
 	Yade [1]: sp.toSimulation()             # implicitly sets O.periodic=True, and O.cell.refSize to the packing period size
 

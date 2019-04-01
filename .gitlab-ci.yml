@@ -4,6 +4,7 @@ stages:
   - build
   - test
   - doc
+  - pages
 
 cmake:
   stage: cmake
@@ -53,7 +54,7 @@ check:
   dependencies:
     - make
 
-pages:
+doc:
   stage: doc
   only:
     - master
@@ -61,12 +62,23 @@ pages:
   script:
     - cd build
     - xvfb-run -s "-screen 0 1600x1200x24" make doc
-    - mv ../install/share/doc/yade-ci/html ../public
-    - mv ../install/share/doc/yade-ci/Yade.pdf ../public
-    - mv ../install/share/doc/yade-ci/Yade.epub ../public
   dependencies:
     - cmake
     - make
+  artifacts:
+    paths:
+      - install
+      
+pages:
+  stage: pages
+  only:
+    - master
+  script:
+    - mv install/share/doc/yade-ci/html public
+    - mv install/share/doc/yade-ci/Yade.pdf public
+    - mv install/share/doc/yade-ci/Yade.epub public
+  dependencies:
+    - doc
   artifacts:
     paths:
       - public

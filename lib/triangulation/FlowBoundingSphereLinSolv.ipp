@@ -70,7 +70,6 @@ FlowBoundingSphereLinSolv<_Tesselation,FlowType>::~FlowBoundingSphereLinSolv()
 		if (getCHOLMODPerfTimings) gettimeofday (&start, NULL);
 		cholmod_l_free_sparse(&Achol, &com);
 		cholmod_l_free_factor(&L, &com);
-		cholmod_l_free_factor(&M, &com);
 		cholmod_l_free_triplet(&cholT, &com);
 		cholmod_l_finish(&com);
 		if (getCHOLMODPerfTimings){
@@ -176,7 +175,6 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setLinearSystem(Real dt)
 		cholmod_l_free_triplet(&cholT, &com);
 		if (!reuseOrdering) {
 			cholmod_l_free_factor(&L, &com);
-			cholmod_l_free_factor(&M, &com);
 			cholmod_l_finish(&com);
 			if (getCHOLMODPerfTimings){
 				gettimeofday (&end, NULL);
@@ -340,7 +338,6 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setLinearSystem(Real dt)
 				add_T_entry(cholT,is[k]-1, js[k]-1, vs[k]);
 			}
 			Achol = cholmod_l_triplet_to_sparse(cholT, cholT->nnz, &com);
-			//cholmod_l_free_triplet(&T, &com);
 			if (getCHOLMODPerfTimings){
 				cholmod_l_print_sparse(Achol, "Achol", &com);
 				gettimeofday (&end, NULL);
@@ -632,9 +629,8 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::cholmodSolve(Real dt)
 		if (getCHOLMODPerfTimings) gettimeofday (&start, NULL);	
 		if (!reuseOrdering) {
 			L = cholmod_l_analyze(Achol, &com);
-			M = cholmod_l_copy_factor(L, &com);
 		} else { 
-			N = cholmod_l_copy_factor(M, &com);
+			N = cholmod_l_copy_factor(L, &com);
 		}
 		if (getCHOLMODPerfTimings){		
 			gettimeofday(&end,NULL);
@@ -663,12 +659,6 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::cholmodSolve(Real dt)
 			T_x[k] = e_x[k];
 		}
 		copyLinToCells();
-		
-		//if (thermalEngine) {
-			//initializeInternalEnergy();
-			//augmentConductivityMatrix(dt);
-			//setNewCellTemps();
-		//}
 		cholmod_l_free_dense(&ex, &com);
 	}
 	cholmod_l_free_dense(&B, &com);
@@ -683,7 +673,7 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::initializeInternalEnergy(
         RTriangulation& Tri = T[currentTes].Triangulation();
         FiniteCellsIterator cellEnd = Tri.finite_cells_end();
         for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != cellEnd; cell++){
-		if (!cell->info().isGhost) cell->info().internalEnergy = fluidCp*fluidRho*cell->info().temp()*(1./cell->info().invVoidVolume()); // cell->info().volume(); //FIXME: Need to consider void volume(1./cell->info().invVoidVolume());
+		if (!cell->info().isGhost) cell->info().internalEnergy = fluidCp*fluidRho*cell->info().temp()*(1./cell->info().invVoidVolume());
 	}
 }
 

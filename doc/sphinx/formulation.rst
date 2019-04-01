@@ -93,7 +93,7 @@ where $i$ traverses all particles. $L_w$ arrays (sorted sets) contain respective
 
 In the initial step, all lists are sorted (using quicksort, average $\bigO{n\log n}$) and one axis is used to create initial interactions: the range between lower and upper bound for each body is traversed, while bounds in-between indicate potential :yref:`Aabb` overlaps which must be checked on the remaining axes as well.
 
-At each successive step, lists are already pre-sorted. Inversions occur where a particle's coordinate has just crossed another particle's coordinate; this number is limited by numerical stability of simulation and its physical meaning (giving spatio-temporal coherence to the algorithm). The insertion sort algorithm swaps neighboring elements if they are inverted, and has complexity between \bigO{n} and \bigO{n^2}, for pre-sorted and unsorted lists respectively. For our purposes, we need only to handle inversions, which by nature of the sort algorithm are detected inside the sort loop. An inversion might signify: 
+At each successive step, lists are already pre-sorted. Inversions occur where a particle's coordinate has just crossed another particle's coordinate; this number is limited by numerical stability of simulation and its physical meaning (giving spatio-temporal coherence to the algorithm). The insertion sort algorithm swaps neighboring elements if they are inverted, and has complexity between $\bigO{n}$ and $\bigO{n^2}$, for pre-sorted and unsorted lists respectively. For our purposes, we need only to handle inversions, which by nature of the sort algorithm are detected inside the sort loop. An inversion might signify: 
 
 * overlap along the current axis, if an upper bound inverts (swaps) with a lower bound (i.e. that the upper bound with a higher coordinate was out of order in coming before the lower bound with a lower coordinate). Overlap along the other 2 axes is checked and if there is overlap along all axes, a new potential interaction is created.
 * End of overlap along the current axis, if lower bound inverts (swaps) with an upper bound. If there is only potential interaction between the two particles in question, it is deleted.
@@ -105,7 +105,10 @@ Aperiodic insertion sort
 
 Let us show the sort algorithm on a sample sequence of numbers:
 
-.. math:: \sortlines{\sortSep& 3 &\sortInv& 7 &\sortInv& 2 &\sortInv& 4 &\sortSep}
+.. image:: fig/aperiodicpngmath0.*
+	:scale: 42 %
+	:align: center
+
 
 Elements are traversed from left to right; each of them keeps inverting (swapping) with neighbors to the left, moving left itself, until any of the following conditions is satisfied:
 
@@ -118,30 +121,31 @@ Elements are traversed from left to right; each of them keeps inverting (swappin
 
 We start at the leftmost element (the current element is marked $\currelem{i}$)
 
-.. math:: \sortlines{\sortSep& \currelem{3} &\sortInv& 7 &\sortInv& 2 &\sortInv& 4 &\sortSep.}
+.. image:: fig/aperiodicpngmath1.png
+	:scale: 42 %
+	:align: center
+
 
 It obviously immediately satisfies ($||$), and we move to the next element:
 
-.. math:: \sortlines{\sortSep& 3 &\sortInv& \isleq{7} &\sortInv& 2 &\sortInv& 4 &\sortSep.}
+.. image:: fig/aperiodicpngmath2.png
+	:scale: 42 %
+	:align: center
+
 
 Condition ($\leq$) holds, therefore we move to the right. The $\currelem{2}$ is not in order (violating ($\leq$)) and two inversions take place; after that, ($||$) holds:
 
-.. math::
+.. image:: fig/aperiodicpngmath3.png
+	:scale: 40 %
+	:align: center
 
-	\sortlines{
-		\sortSep& 3 &\sortInv& 7 &\sortInv& \isnleq{2} &\sortInv& 4 &\sortSep,  \\
-		\sortSep& 3 &\sortInv& \isnleq{2} &\sortInv& 7 &\sortInv& 4 &\sortSep, \\
-		\sortSep& \currelem{2} &\sortInv& 3 &\sortInv& 7 &\sortInv& 4 &\sortSep.
-	}
 
 The last element $\currelem{4}$ first violates ($\leq$), but satisfies it after one inversion
 
-.. math::
+.. image:: fig/aperiodicpngmath4.png
+	:scale: 42 %
+	:align: center
 
-	\sortlines{ 
-		\sortSep& 2 &\sortInv& 3 &\sortInv& 7 &\sortInv& \isnleq{4} &\sortSep,  \\
-		\sortSep& 2 &\sortInv& 3 &\sortInv& \isleq{4} &\sortInv& 7 &\sortSep.  
-	}
 
 All elements having been traversed, the sequence is now sorted.
 				
@@ -158,12 +162,12 @@ As noted above, [Verlet1967]_ explored the possibility of running the collision 
 				
 In Yade, this is achieved by enlarging :yref:`Aabb` of particles by fixed relative length (or Verlet's distance) in all dimensions $\Delta L$ (:yref:`InsertionSortCollider.sweepLength`). Suppose the collider run last time at step $m$ and the current step is $n$. :yref:`NewtonIntegrator` tracks the cummulated distance traversed by each particle between $m$ and $n$ by comparing the current position with the reference position from time $n$  (:yref:`Bound::refPos`),
 
-.. math:: L_{\rm mn}&=|X^n - X^m|
+.. math:: L_{\rm mn}=|X^n - X^m|
   :label: eq-verlet-l0
 
 triggering the collider re-run as soon as one particle gives:
 
-.. math::  L_{\rm mn}&>\Delta L.
+.. math::  L_{\rm mn}>\Delta L.
   :label: eq-verlet-trigger
 
 :yref:`InsertionSortCollider.targetInterv` is used to adjust $\Delta L$ independently for each particle. Larger $\Delta L$ will be assigned to the fastest ones, so that all particles would ideally reach the edge of their bounds after this "target" number of iterations. Results of using Verlet distance depend highly on the nature of simulation and choice of :yref:`InsertionSortCollider.targetInterv`. Adjusting the sizes independently for each particle is especially efficient if some parts of a problem have high-speed particles will others are not moving. If it is not the case, no significant gain should be expected as compared to targetInterv=0 (assigning the same $\Delta L$ to all particles).
@@ -257,7 +261,7 @@ These quantities are *constant* throughout the life of the interaction and are c
 				
 Distances $d_1$ and $d_2$ define reduced (or expanded) radii of spheres; geometrical radii $r_1$ and $r_2$ are used only for collision detection and may not be the same as $d_1$ and $d_2$, as shown in fig. `fig-sphere-sphere`_. This difference is exploited in cases where the average number of contacts between spheres should be increased, e.g. to influence the response in compression or to stabilize the packing. In such case, interactions will be created also for spheres that do not geometrically overlap based on the *interaction radius* $R_I$, a dimensionless parameter determining „non-locality“ of contact detection. For $R_I=1$, only spheres that touch are considered in contact; the general condition reads
 
-.. math:: d_0&\leq R_I(r_1+r_2).
+.. math:: d_0\leq R_I(r_1+r_2).
 	:label: eq-strain-interaction-radius
 
 The value of $R_I$ directly influences the average number of interactions per sphere (percolation), which for some models is necessary in order to achieve realistic results. In such cases, :yref:`Aabb` (or $\tilde P_i$ predicates in general) must be enlarged accordingly (:yref:`Bo1_Sphere_Aabb.aabbEnlargeFactor`).
@@ -408,11 +412,11 @@ Position
 ----------
 Integrating motion consists in using current acceleration $\curraccel$ on a particle to update its position from the current value $\currpos$ to its value at the next timestep $\nextpos$. Computation of acceleration, knowing current forces $\vec{F}$ acting on the particle in question and its mass $m$, is simply
 
-.. math:: \curraccel&=\vec{F}/m.
+.. math:: \curraccel=\vec{F}/m.
 			
 Using the 2nd order finite difference with step $\Dt$, we obtain
 
-.. math:: \curraccel&\cong\frac{\prevpos-2\currpos+\nextpos}{\Dt^2}
+.. math:: \curraccel\cong\frac{\prevpos-2\currpos+\nextpos}{\Dt^2}
 
 from which we express
 
@@ -423,15 +427,15 @@ from which we express
 
 Typically, $\prevpos$ is already not known (only $\currpos$ is); we notice, however, that
 
-.. math:: \pprevvel&\simeq\frac{\currpos-\prevpos}{\Dt},
+.. math:: \pprevvel\simeq\frac{\currpos-\prevpos}{\Dt},
 
 i.e. the mean velocity during the previous step, which is known. Plugging this approximate into the $(\dagger)$ term, we also notice that mean velocity during the current step can be approximated as
 
-.. math:: \nnextvel&\simeq\pprevvel+\curraccel\Dt,
+.. math:: \nnextvel\simeq\pprevvel+\curraccel\Dt,
 
 which is $(\dagger)$; we arrive finally at
 
-.. math:: \nextpos&=\currpos+\Dt\left(\pprevvel+\curraccel\Dt\right).
+.. math:: \nextpos=\currpos+\Dt\left(\pprevvel+\curraccel\Dt\right).
 
 The algorithm can then be written down by first computing current mean velocity $\nnextvel$ which we need to store for the next step (just as we use its old value $\pprevvel$ now), then computing the position for the next time step $\nextpos$:
 
@@ -450,11 +454,11 @@ Orientation (spherical)
 ------------------------
 Updating particle orientation $\curr{q}$ proceeds in an analogous way to position update. First, we compute current angular acceleration $\curraaccel$ from known current torque $\vec{T}$. For spherical particles where the inertia tensor is diagonal in any orientation (therefore also in current global orientation), satisfying $\vec{I}_{11}=\vec{I}_{22}=\vec{I}_{33}$, we can write
 
-.. math:: \curraaccel_i&=\vec{T}_i/\vec{I}_{11},
+.. math:: \curraaccel_i=\vec{T}_i/\vec{I}_{11},
 
 We use the same approximation scheme, obtaining an equation analogous to :eq:`eq-leapfrog-nextvel`
 
-.. math:: \nnextangvel&=\pprevangvel+\Dt\curraaccel.
+.. math:: \nnextangvel=\pprevangvel+\Dt\curraaccel.
 
 The quaternion $\Delta q$ representing rotation vector $\nnextangvel\Dt$ is constructed, i.e. such that
 
@@ -468,7 +472,7 @@ The quaternion $\Delta q$ representing rotation vector $\nnextangvel\Dt$ is cons
 
 Finally, we compute the next orientation $\next{q}$ by rotation composition
 
-.. math:: \next{q}&=\Delta q\curr{q}.
+.. math:: \next{q}=\Delta q\curr{q}.
 
 Orientation (aspherical)
 ------------------------
@@ -556,6 +560,8 @@ In Yade (class :yref:`Clump`), clump members behave as stand-alone particles dur
 
 Motion of the clump is then integrated, using aspherical rotation integration. Afterwards, clump members are displaced in global space, to keep their initial positions and orientations in the clump's local coordinate system. In such a way, relative positions of clump members are always the same, resulting in the behavior of a rigid aggregate.
 
+.. _NumericalDamping:
+
 Numerical damping
 -----------------
 In simulations of quasi-static phenomena, it it desirable to dissipate kinetic energy of particles. Since most constitutive laws (including :yref:`Law_ScGeom_FrictPhys_Basic` shown above, :ref:`sect-formulation-stress-cundall`) do not include velocity-based damping (such as one in [Addetta2001]_), it is possible to use artificial numerical damping. The formulation is described in [Pfc3dManual30]_, although our version is slightly adapted. The basic idea is to decrease forces which increase the particle velocities and vice versa by $(\Delta F)_d$, comparing the current acceleration sense and particle velocity sense. This is done by component, which makes the damping scheme clearly non-physical, as it is not invariant with respect to coordinate system rotation; on the other hand, it is very easy to compute. Cundall proposed the form (we omit particle indices $i$ since it applies to all of them separately):
@@ -584,7 +590,7 @@ In Yade, damping :eq:`eq-damping-yade` is implemented in the :yref:`NewtonIntegr
 Stability considerations
 ------------------------------------------------------
 ..
-	\def\Dtcr{\Dt_{\rm cr}}
+	\newcommand{\Dtcr}{\Dt_{\rm cr}}
 	% http://en.wikipedia.org/wiki/Harmonic_oscillator
 	% eigenfrequency is (1/2π)√(k/m) for simple harmonic oscillator
 	% Bruno gives √(m/k) 
@@ -646,6 +652,8 @@ This equation can be used for all 6 degrees of freedom (DOF) in translation and 
 
 
 				
+.. _DEMSimulations:
+
 DEM simulations
 """"""""""""""""
 In DEM simulations, per-particle stiffness $\vec{K}_{ij}$ is determined from the stiffnesses of contacts in which it participates.  Suppose each contact has normal stiffness $K_{Nk}$, shear stiffness $K_{Tk}=\xi K_{Nk}$ and is oriented by normal $\vec{n}_{k}$. A translational stiffness matrix $\vec{K}_{ij}$ can be defined as the sum of contributions of all contacts in which it participates (indices $k$), as [Chareyre2005]_.
@@ -838,7 +846,10 @@ The sort algorithm is tracking :yref:`Aabb` extrema along all axes. At the colli
 				
 Let us give an example of coordinate sequence along $x$ axis (in a real case, the number of elements would be even, as there is maximum and minimum value couple for each particle; this demonstration only shows the sorting algorithm, however.)
 
-.. math:: \sortlines{& 4_1 &\sortInv& 12_2 &\sortSep& -1_2 &\sortInv& -2_4 &\sortInv& 5_0 &}
+.. image:: fig/periodicpngmath0.png
+	:scale: 40 %
+	:align: center
+
 
 with cell $x$-size $s_x=10$. The $4_1$ value then means that the real coordinate $x_i$ of this extremum is $x_i+1\cdot10=4$, i.e. $x_i=-4$. The $||$ symbol denotes the periodic cell boundary.
 
@@ -854,50 +865,37 @@ Sorting starts from the first element in the cell, i.e. right of $||$, and inver
 
 In the first step, ($||\bullet$) is applied, and inversion with $12_2$ happens; then we stop because of ($\leq$):
 
-.. math::
+.. image:: fig/periodicpngmath1.png
+	:scale: 40 %
+	:align: center
 
-				\sortlines{
-					& 4_1 &\sortInv& 12_2 &\sortSep& \currelem{-1_2} &\sortInv& -2_4 &\sortInv& 5_0, &  \\
-					& 4_1 &\sortInv& 12_2 &\sortInv& \isnleq{9_1} &\sortSep& -2_4 &\sortInv& 5_0, & \\
-					& 4_1 &\sortInv& \isleq{9_1} &\sortInv& 12_2 &\sortSep& -2_4 &\sortInv& 5_0. &
-				}
 
 We move to next element $\currelem{-2_4}$; first, we apply ($||\bullet$), then invert until ($\leq$):
 
-.. math::
+.. image:: fig/periodicpngmath2.png
+	:scale: 40 %
+	:align: center
 
-				\sortlines{
-					& 4_1 &\sortInv& 9_1 &\sortInv& 12_2 &\sortSep& \currelem{-2_4} &\sortInv& 5_0, & \\
-					& 4_1 &\sortInv& 9_1 &\sortInv& 12_2 &\sortInv& \isnleq{8_3} &\sortSep& 5_0, & \\
-					& 4_1 &\sortInv& 9_1 &\sortInv& \isnleq{8_3} &\sortInv& 12_2 &\sortSep& 5_0, & \\
-					& 4_1 &\sortInv& \isleq{8_3} &\sortInv& 9_1 &\sortInv& 12_2 &\sortSep& 5_0. &
-				}
 
 The next element is $\currelem{5_0}$; we satisfy ($\crossBound$), therefore instead of comparing $12_2>5_0$, we must do $(12_2-s_x)=2_3\leq5$; we adjust periods when swapping over $||$ and apply ($||\circ$), turning $12_2$ into $2_3$; then we keep inverting, until ($\leq$):
 
-.. math::
+.. image:: fig/periodicpngmath3.png
+	:scale: 40 %
+	:align: center
 
-				\sortlines{
-					& 4_1 &\sortInv& 8_3 &\sortInv& 9_1 &\sortInv& 12_2 &\sortSep& \isnleq{5_0}, & \\
-					& 4_1 &\sortInv& 8_3 &\sortInv& 9_1 &\sortInv& \isnleq{5_{-1}} &\sortSep& 2_3, & \\
-					& 4_1 &\sortInv& 8_3 &\sortInv& \isnleq{5_{-1}} &\sortInv& 9_1 &\sortSep& 2_3, & \\
-					& 4_1 &\sortInv& \isleq{5_{-1}} &\sortInv& 8_3 &\sortInv& 9_1 &\sortSep& 2_3. & \\
-				}
 
 We move (wrapping around) to $\currelem{4_1}$, which is ordered:
 
-.. math::
-				\sortlines{
-					& \currelem{4_1}\ar@(dr,dl)[rrrrrrrr]|{\geq} &\sortInv& 5_{-1} &\sortInv& 8_3 &\sortInv& 9_1 &\sortSep& 2_3 &
-				}
+.. image:: fig/periodicpngmath4.png
+	:scale: 40 %
+	:align: center
+
 
 and so is the last element
 
-.. math:: 
-
-				\sortlines{
-					& 4_1 &\sortInv& \isleq{5_{-1}} &\sortInv& 8_3 &\sortInv& 9_1 &\sortSep& 2_3. &
-				}
+.. figure:: fig/periodicpngmath5.png
+	:scale: 40 %
+	:align: center
 
 Computational aspects
 =====================

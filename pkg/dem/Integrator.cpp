@@ -31,7 +31,7 @@ void Integrator::system(const stateVector& currentstates, stateVector& derivativ
 {
 
 	#ifdef YADE_OPENMP
-	//prevent https://bugs.launchpad.net/yade/+bug/923929
+	//prevent (old site, fixed bug) https://bugs.launchpad.net/yade/+bug/923929
 		ensureSync();
 	#endif
 

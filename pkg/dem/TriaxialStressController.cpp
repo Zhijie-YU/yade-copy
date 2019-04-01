@@ -95,7 +95,7 @@ void TriaxialStressController::controlExternalStress(int wall, Vector3r resultan
 	//Don't update position since Newton is doing that starting from bzr2612
 // 	p->se3.position += previousTranslation[wall];
 	externalWork += previousTranslation[wall].dot(getForce(scene,wall_id[wall]));
-	// this is important is using VelocityBins. Otherwise the motion is never detected. Related to https://bugs.launchpad.net/yade/+bug/398089
+	// this is important is using VelocityBins. Otherwise the motion is never detected. Related to (old site, fixed bug) https://bugs.launchpad.net/yade/+bug/398089
 	p->vel=previousTranslation[wall]/scene->dt;
 	//if(log)TRVAR2(previousTranslation,p->se3.position);
 }

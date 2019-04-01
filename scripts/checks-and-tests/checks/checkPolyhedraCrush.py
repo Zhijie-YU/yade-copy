@@ -19,6 +19,7 @@ def printSuccess ():
 def checkForcesBodies(fR, bodNum):
    if (abs(f[2] - fR)/f[2] >  tolerance or len(O.bodies) <> bodNum):
       printWarning (fR, f[2], 4, len(O.bodies))
+      global resultStatus
       resultStatus += 1
    else:
       printSuccess()
@@ -67,4 +68,8 @@ def addPlotData():
 #qt.Controller()
 #V = qt.View()
 
-O.run(166, True); checkForcesBodies(-21.7037, 7)
+O.run(250, True); checkForcesBodies(25.44893, 4)
+O.run(50, True); checkForcesBodies(28.791353, 4)
+O.run(10, True); checkForcesBodies(30.731547, 4)
+O.run(20, True); checkForcesBodies(33.483438, 7)
+

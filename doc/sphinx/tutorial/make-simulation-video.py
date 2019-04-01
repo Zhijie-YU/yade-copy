@@ -35,3 +35,8 @@ def do(n):
 
 def done():
 	utils.makeVideo(plot.savePlotSequence(O.tmpFilename(),title=title+u'\n\n\nVáclav Šmilauer\neu@doxos.eu\nhttp://www.yade-dem.org'),script+'.mpeg',fps=10,kbps=5000)
+
+# FIXME: it seems that this script works now only with 03-oedometric-test.py, start it with: yade make-simulation-video.py, then type:
+#	do(2)  # simulations[2]=='03-oedometric-test.py'
+#	done()
+

@@ -101,7 +101,7 @@ long SpherePack::makeCloud(Vector3r mn, Vector3r mx, Real rMean, Real rRelFuzz, 
 		else LOG_WARN("The volume of the min-max box is null, we will assume that the packing is 2D. If it is not what you want then you defined wrong input values; check that min and max corners are defined correctly.");}
 	int mode=-1; bool err=false;
 	// determine the way we generate radii
-	if(porosity<=0) {LOG_WARN("porosity must be >0, changing it for you. It will be ineffective if rMean>0."); porosity=0.5;}
+	if(porosity<=0 and rMean<=0) {LOG_WARN("porosity or rMean must be >0, setting  porosity=0.5 for you."); porosity=0.5;}
 	//If rMean is not defined, then in will be defined in RDIST_NUM
 	if(rMean>0) mode=RDIST_RMEAN;
 	else if(num>0 && psdSizes.size()==0) {

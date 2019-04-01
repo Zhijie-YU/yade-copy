@@ -102,11 +102,12 @@ def typedEngine(name):
 	return [e for e in Omega().engines if e.__class__.__name__==name][0]
 
 def defaultMaterial():
-	"""Return default material, when creating bodies with :yref:`yade.utils.sphere` and friends, material is unspecified and there is no shared material defined yet. By default, this function returns::
+	"""Return default material, when creating bodies with :yref:`yade.utils.sphere` and friends, material is unspecified and there is no shared material defined yet. By default, this function returns
 
-		.. code-block:: python
+	.. code-block:: python
 
-		  FrictMat(density=1e3,young=1e7,poisson=.3,frictionAngle=.5,label='defaultMat')
+		FrictMat(density=1e3,young=1e7,poisson=.3,frictionAngle=.5,label='defaultMat')
+
 	"""
 	return FrictMat(density=1e3,young=1e7,poisson=.3,frictionAngle=.5,label='defaultMat')
 

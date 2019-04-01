@@ -13,7 +13,7 @@
 class GlobalEngine: public Engine{
 	public :
 		virtual ~GlobalEngine() {};
-	YADE_CLASS_BASE_DOC(GlobalEngine,Engine,"Engine that will generally affect the whole simulation (contrary to PartialEngine).");
+	YADE_CLASS_BASE_DOC(GlobalEngine,Engine,"Engine that will generally affect the whole simulation (contrary to :yref:`PartialEngine`).");
 };
 REGISTER_SERIALIZABLE(GlobalEngine);
 

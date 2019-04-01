@@ -163,7 +163,7 @@ class BlockGen : public FileGenerator
 	
 
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(
-		BlockGen,FileGenerator,"Prepare a scene for triaxial tests. See full documentation at http://yade-dem.org/wiki/TriaxialTest."
+		BlockGen,FileGenerator,"Prepare a scene for triaxial tests. See full documentation at :yref:`TriaxialTest`" // https://yade-dem.org/doc/yade.wrapper.html#yade.wrapper.TriaxialTest
 		,
    		/* public */
 		((Real,dampingMomentum,0.2,,"Coefficient of global damping"))

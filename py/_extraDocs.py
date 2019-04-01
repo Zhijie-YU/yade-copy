@@ -143,8 +143,8 @@ Rigid rotation parallel with the normal is
 	:nowrap:
 
 	\begin{align*}
-		\vec{b}_1&=\begin{cases} r_1 \curr{\vec{n}} & \mbox{with \texttt{noRatch}} \\ \curr{\vec{c}}-\curr{\vec{x}}_1 & \mbox{otherwise} \end{cases} \\
-		\vec{b}_2&=\begin{cases} -r_2\curr{\vec{n}} & \mbox{with \texttt{noRatch}} \\ \curr{\vec{c}}-\curr{\vec{x}}_2 & \mbox{otherwise} \end{cases} \\
+		\vec{b}_1&=\begin{cases} r_1 \curr{\vec{n}} & \mbox{with }\texttt{noRatch} \\ \curr{\vec{c}}-\curr{\vec{x}}_1 & \mbox{otherwise} \end{cases} \\
+		\vec{b}_2&=\begin{cases} -r_2\curr{\vec{n}} & \mbox{with }\texttt{noRatch} \\ \curr{\vec{c}}-\curr{\vec{x}}_2 & \mbox{otherwise} \end{cases} \\
 	\end{align*}
 
 Relative velocity at $\curr{\vec{c}}$ can be computed as 
@@ -159,7 +159,11 @@ Any vector $\vec{a}$ expressed in global coordinates transforms during one times
 
 where the increments have the meaning of relative shear, rigid rotation normal to $\vec{n}$ and rigid rotation parallel with $\vec{n}$. Local coordinate system orientation, rotation matrix $\mat{T}$, is updated by rows, i.e.
 
-.. math:: \curr{\mat{T}}=\begin{pmatrix} \curr{\vec{n}_x} & \curr{\vec{n}_y} & \curr{\vec{n}_z} \\ \multicolumn{3}{c}{\prev{\mat{T}_{1,\bullet}}-\prev{\mat{T}_{1,\bullet}}\times\pprev{\vec{o}_r}-\prev{\mat{T}_{1,\bullet}}\times\pprev{\vec{o}_t}} \\ \multicolumn{3}{c}{\prev{\mat{T}_{2,\bullet}}-\prev{\mat{T}_{2,\bullet}}\times\pprev{\vec{o}_r}-\prev{\mat{T}_{,\bullet}}\times\pprev{\vec{o}_t}} \end{pmatrix}
+.. math:: \curr{\mat{T}}=\begin{pmatrix}
+            \curr{\vec{n}_x}{\hspace{12mm}}\curr{\vec{n}_y}{\hspace{12mm}}\curr{\vec{n}_z} \\
+            {\prev{\mat{T}_{1,\bullet}}-\prev{\mat{T}_{1,\bullet}}\times\pprev{\vec{o}_r}-\prev{\mat{T}_{1,\bullet}}\times\pprev{\vec{o}_t}} \\
+            {\prev{\mat{T}_{2,\bullet}}-\prev{\mat{T}_{2,\bullet}}\times\pprev{\vec{o}_r}-\prev{\mat{T}_{,\bullet}}\times\pprev{\vec{o}_t}} \\
+            \end{pmatrix}
 
 This matrix is re-normalized (unless prevented by :yref:`approxMask<Ig2_Sphere_Sphere_L3Geom.approxMask>`) and mid-step transformation is computed using quaternion spherical interpolation as
 

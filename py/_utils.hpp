@@ -142,7 +142,7 @@ py::list intrsOfEachBody();
 py::list numIntrsOfEachBody();
 
 /* The 5 following setters are used to workaround a long-standing bug in the c++/python binding which produces a memory leak (see two links below).
- * https://bugs.launchpad.net/yade/+bug/1041084
+ * bug report: https://gitlab.com/yade-dev/trunk/issues/15 , old place of this bug report: https://bugs.launchpad.net/yade/+bug/1041084
  * https://answers.launchpad.net/yade/+question/253112
  * It is not in the spirit of Yade Python binding but you can use them if you massively update bodies attributes.
  * TODO : remove them as soon as the bug is solved.

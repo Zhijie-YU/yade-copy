@@ -5,58 +5,61 @@ Programmer's manual
 Build system
 =============
 
-Yade uses `cmake <http://www.cmake.org/>`__ the cross-platform, open-source build 
-system for managing the build process. It takes care of configuration, compilation 
-and installation. CMake is used to control the software compilation process using 
-simple platform and compiler independent configuration files. CMake generates 
-native makefiles and workspaces that can be used in the compiler environment of 
+Yade uses `cmake <http://www.cmake.org/>`__ the cross-platform, open-source build
+system for managing the build process. It takes care of configuration, compilation
+and installation. CMake is used to control the software compilation process using
+simple platform and compiler independent configuration files. CMake generates
+native makefiles and workspaces that can be used in the compiler environment of
 your choice.
 
 
 Building
 -------------
 
-Yade source tree has the following structure (omiting, ``doc``, 
-``examples`` and ``scripts`` which don't participate in the build process); 
+Yade source tree has the following structure (omitting, ``doc``,
+``examples`` and ``scripts`` which don't participate in the build process);
 we shall call each top-level component *module*::
 
 	core/         ## core simulation building blocks
 	extra/        ## miscillanea
 	gui/          ## user interfaces
 	   qt4/          ## graphical user interface based on qt3 and OpenGL
-	   py/           ## python console interface (phased out)
+	   qt5/          ## same, but for qt5
 	lib/          ## support libraries, not specific to simulations
 	pkg/          ## simulation-specific files
 	   common/       ## generally useful classes
 	   dem/          ## classes for Discrete Element Method
 	py/           ## python modules
 
+.. FIXME: what about /pkg/lbm i /pkg/pvf - put them here?
+
 
 Header installation
 ^^^^^^^^^^^^^^^^^^^^
-To allow flexibility in source layout, CMAKE will copy (symlink) all headers into 
-flattened structure within the build directory. First 2 components of the original 
-directory are joind by dash, deeper levels are discarded (in case of ``core`` and 
-``extra``, only 1 level is used). The following table makes gives a few examples:
+CMAKE uses the original source layout and it is advised to use ``#include <module/Class.hpp>``
+style of inclusion rather than ``#include "Class.hpp`` even if you are in the same directory.
+The following table gives a few examples:
 
 ============================================================= =========================
-Original header location											     Included as     
+Original header location                                      Included as     
 ============================================================= =========================
-``core/Scene.hpp``														  ``<core/Scene.hpp>``
-``lib/base/Logging.hpp``												  ``<lib-base/Logging.hpp>``
-``lib/serialization/Serializable.hpp``								  ``<lib-serialization/Serializable.hpp>``
-``pkg/dem/DataClass/SpherePack.hpp``                          ``<pkg-dem/SpherePack.hpp>``
-``gui/qt3/QtGUI.hpp``                                         ``<gui-qt3/QtGUI.hpp>``
+``core/Scene.hpp``                                            ``#include <core/Scene.hpp>``
+``lib/base/Logging.hpp``                                      ``#include <lib/base/Logging.hpp>``
+``lib/serialization/Serializable.hpp``                        ``#include <lib/serialization/Serializable.hpp>``
+``pkg/dem/SpherePack.hpp``                                    ``#include <pkg/dem/SpherePack.hpp>``
 ============================================================= =========================
-
-It is advised to use ``#include<module/Class.hpp>`` style of inclusion rather than ``#include"Class.hpp`` even if you are in the same directory.
 
 
 Automatic compilation
 """"""""""""""""""""""
+
 In the ``pkg/`` directory, situation is different. In order to maximally ease 
 addition of modules to yade, all ``*.cpp`` files are *automatically scanned* by 
-CMAKE and considered for compilation. Each file may contain multiple lines that 
+CMAKE and considered for compilation.
+
+.. FIXME: replace this with info about cmake -DENABLE_Something for #ifdef. Or something ilke that.
+
+Each file may contain multiple lines that 
 declare features that are necessary for this file to be compiled::
 
 	YADE_REQUIRE_FEATURE(vtk);
@@ -102,38 +105,53 @@ these tools in the `development section <https://yade-dem.org/wiki/Yade#Developm
 
 Hosting and versioning
 ----------------------
-The Yade project is kindly hosted at `launchpad <https://launchpad.net/yade/>`__, 
-which is used for source code, bug tracking, planning, package downloads and more. 
+The Yade project is kindly hosted at `Launchpad <https://launchpad.net/yade/>`__
+and `GitLab <https://gitlab.com/yade-dev/>`__:
+
+.. comment Old Version:   which is used for source code, bug tracking, planning, package downloads and more. 
+
+* `source code on gitlab <https://gitlab.com/yade-dev/trunk>`__
+* `issue and bug tracking on gitlab <https://gitlab.com/yade-dev/trunk/issues>`__
+* `package downloads on launchpad <https://launchpad.net/yade/+download>`__
+* `yade-dev mailing list on launchpad <https://launchpad.net/~yade-dev>`__: yade-users@lists.launchpad.net
+* `yade-users mailing list on launchpad <https://launchpad.net/~yade-users>`__: yade-users@lists.launchpad.net
+* `questions and answers on launchpad <https://answers.launchpad.net/yade/>`__
 
 The versioning software used is `GIT <http://git-scm.com/>`__, for which a short
-tutorial can be found in :ref:`yade-github-label`. 
+tutorial can be found in :ref:`yade-github-label`.
 GIT is a distributed revision control system. It is available packaged for all major linux distributions.
 
-The source code is hosted on `GitHub <https://gitlab.com/yade-dev/>`__ , which is periodically
+The `suorce code <https://gitlab.com/yade-dev/>`__ is periodically
 imported to Launchpad for building PPA-packages.
 The repository `can be http-browsed <https://gitlab.com/yade-dev/trunk>`__.
 
 Build robot
 -----------
-A build robot hosted at `3SR lab. <http://www.3s-r.hmg.inpg.fr/3sr/?lang=en>`__ 
-is tracking souce code changes.
-Each time a change in the source code is commited to the main development branch via GIT, 
-the "buildbot" downloads and compiles the new version, and start a series of tests.
+A build robot hosted at `UMS Gricad <https://gricad-gitlab.univ-grenoble-alpes.fr/>`__
+is tracking source code changes via `gitlab pipeline mechanism <https://gitlab.com/yade-dev/trunk/pipelines>`__.
+Each time a change in the source code is committed to the main development branch via GIT,
+or a `Merge Request (MR) <https://gitlab.com/yade-dev/trunk/merge_requests>`__ is submitted
+the "buildbot" downloads and compiles the new version, and then starts a series of tests.
 
-If a compilation error has been introduced, it will be notified to the yade-dev 
-mailing list and to the commiter, thus helping to fix problems quickly.
-If the compilation is successfull, the buildbot starts unit regression tests and 
-"check tests" (see below) and report the results. If all tests are passed, a new 
-version of the documentation is generated and uploaded to the website in 
-`html <https://www.yade-dem.org/doc/>`__ and `pdf <https://yade-dem.org/doc/Yade.pdf>`__ 
-formats. As a consequence, those two links always point to the documentation 
-(the one you are reading now) of the last successfull build, and the delay between 
+If a compilation error has been introduced, it will be notified to the yade-dev
+mailing list and to the committer, thus helping to fix problems quickly.
+If the compilation is successful, the buildbot starts unit regression tests and
+"check tests" (see below) and report the results. If all tests are passed, a new
+version of the documentation is generated and uploaded to the website in
+`html <https://www.yade-dem.org/doc/>`__ and `pdf <https://yade-dem.org/doc/Yade.pdf>`__
+formats. As a consequence, those two links always point to the documentation
+(the one you are reading now) of the last successful build, and the delay between
 commits and documentation updates are very short (minutes).
-The buildbot activity and logs can be `browsed online <https://yade-dem.org/buildbot/>`__.
+The buildbot activity and logs can be `browsed online <https://gitlab.com/yade-dev/trunk/-/jobs>`__.
+
+The output of each particular build is directly accessible by clicking the green `"Passed" button <https://gitlab.com/yade-dev/trunk/-/jobs>`__,
+and then clicking "Browse" in the "Job Artifacts" on the right.
+
+.. _regression-tests:
 
 Regression tests
 ----------------
-Yade contains two types of regression tests, some are unit tests while others are testing more complex simulations. Altough both types can be considered regression tests, the usage is that we name the first simply "regression tests", while the latest are called "check tests".
+Yade contains two types of regression tests, some are unit tests while others are testing more complex simulations. Although both types can be considered regression tests, the usage is that we name the first simply "regression tests", while the latest are called "check tests".
 Both series of tests can be ran at yade startup by passing the options "test" or "check" ::
 
 	yade --test
@@ -141,53 +159,53 @@ Both series of tests can be ran at yade startup by passing the options "test" or
 
 Unit regression tests
 ^^^^^^^^^^^^^^^^^^^^^
-Unit regression tests are testing the output of individual functors and engines in well defined conditions. They are defined in the folder :ysrc:`py/tests/`.
+Unit :ysrc:`regression tests <py/tests/>` are testing the output of individual functors and engines in well defined conditions. They are defined in the folder :ysrc:`py/tests/`.
 The purpose of unit testing is to make sure that the behaviour of the most important classes remains correct during code development. Since they test classes one by one, unit tests can't detect problems coming from the interaction between different engines in a typical simulation. That is why check tests have been introduced. 
 
 Check tests
 ^^^^^^^^^^^
-Check tests perform comparisons of simulation results between different versions of yade, as discussed `here <http://www.mail-archive.com/yade-dev@lists.launchpad.net/msg05784.html>`__. They differ with regression tests in the sense that they simulate more complex situations and combinations of different engines, and usually don't have a mathematical proof (though there is no restriction on the latest). They compare the values obtained in version N with values obtained in a previous version or any other "expected" results. The reference values must be hardcoded in the script itself or in data files provided with the script. Check tests are based on regular yade scripts, so that users can easily commit their own scripts to trunk in order to get some automatized testing after commits from other developers.
+:ysrc:`Check tests <scripts/checks-and-tests/checks>` (also see :ysrc:`README<scripts/checks-and-tests/checks/README>`) perform comparisons of simulation results between different versions of yade, as discussed `here <http://www.mail-archive.com/yade-dev@lists.launchpad.net/msg05784.html>`__. They differ with regression tests in the sense that they simulate more complex situations and combinations of different engines, and usually don't have a mathematical proof (though there is no restriction on the latest). They compare the values obtained in version N with values obtained in a previous version or any other "expected" results. The reference values must be hardcoded in the script itself or in data files provided with the script. Check tests are based on regular yade scripts, so that users can easily commit their own scripts to trunk in order to get some automatized testing after commits from other developers.
 
-Since the check tests history will be mostly based on standard output generated by "yade ---check", a meaningfull checkTest should include some "print" command telling if something went wrong. If the script itself fails for some reason and can't generate an output, the log will contain "scriptName failure". If the script defines differences on obtained and awaited data, it should print some useful information about the problem and increase the value of global variable resultStatus. After this occurs, the automatic test will stop the execution with error message.
+Since the check tests history will be mostly based on standard output generated by ``yade --check``, a meaningfull checkTest should include some "print" command telling if something went wrong. If the script itself fails for some reason and can't generate an output, the log will contain "scriptName failure". If the script defines differences on obtained and awaited data, it should print some useful information about the problem and increase the value of global variable resultStatus. After this occurs, the automatic test will stop the execution with error message.
 
-An example check test can be found in checkTestTriax.py. It shows results comparison, output, and how to define the path to data files using "checksPath".
-Users are encouraged to add their own scripts into the scripts/test/checks/ folder. Discussion of some specific checktests design in users question is welcome. Note that re-compiling is required before that added scripts can be launched by "yade ---check" (or direct changes have to be performed in "lib" subfolders).
-A check test should never need more than a few seconds to run. If your typical script needs more, try and reduce the number of element or the number of steps.
+An example dummy check test :ysrc:`scripts/checks-and-tests/checks/checkTestDummy.py` demonstrates a minimal empty test. A little more functional example check test can be found in :ysrc:`scripts/checks-and-tests/checks/checkTestTriax.py`. It shows results comparison, output, and how to define the path to data files using "checksPath".
+Users are encouraged to add their own scripts into the :ysrc:`scripts/checks-and-tests/checks/` folder. Discussion of some specific checktests design in `questions and answers <https://answers.launchpad.net/yade/>`__ is welcome. Note that re-compiling is required before that added scripts can be launched by ``yade --check`` (or direct changes have to be performed in "lib" subfolders).
+A check test should never need more than a few seconds to run. If your typical script needs more, try to reduce the number of elements or the number of steps.
 
 Conventions
 ============
 
-The following rules that should be respected; documentation is treated separately.
+The following coding rules should be respected; documentation is treated separately.
 
 * general
 
-  * C++ source files have ``.hpp`` and ``.cpp`` extensions (for headers and implementation, respectively).
+  * C++ source files have ``.hpp`` and ``.cpp`` extensions (for headers and implementation, respectively). In rare cases ``.ipp`` is used for pure template code.
   * All header files should have the ``#pragma once`` multiple-inclusion guard.
-  * Try to avoid ``using namespace …`` in header files.
-  * Use tabs for indentation. While this is merely visual in ``c++``, it has semantic meaning in python; inadverently mixing tabs and spaces can result in syntax errors.
+  * Avoid ``using namespace …`` in header files.
+  * Use tabs for indentation. While this is merely visual in ``C++``, it has semantic meaning in python; inadvertently mixing tabs and spaces can result in syntax errors.
 
 * capitalization style
 
-  * Types should be always capitalized. Use CamelCase for composed names (``GlobalEngine``). Underscores should be used only in special cases, such as functor names.
-  * Class data members and methods must not be capitalized, composed names should use use lowercased camelCase (``glutSlices``). The same applies for functions in python modules.
+  * Types should be always capitalized. Use CamelCase for composed class and typenames (``GlobalEngine``). Underscores should be used only in special cases, such as functor names.
+  * Class data members and methods must not be capitalized, composed names should use lowercase camelCase (``glutSlices``). The same applies for functions in python modules.
   * Preprocessor macros are uppercase, separated by underscores; those that are used outside the core take (with exceptions) the form ``YADE_*``, such as :ref:`YADE_CLASS_BASE_DOC`.
 
 * programming style
 
   * Be defensive, if it has no significant performance impact. Use assertions abundantly: they don't affect performance (in the optimized build) and make spotting error conditions much easier.
-  * Use ``YADE_CAST`` and ``YADE_PTR_CAST`` where you want type-check during debug builds, but fast casting in optimized build. 
+  * Use ``YADE_CAST`` and ``YADE_PTR_CAST`` where you want type-check during debug builds, but fast casting in optimized build.
   * Initialize all class variables in the default constructor. This avoids bugs that may manifest randomly and are difficult to fix. Initializing with NaN's will help you find otherwise unitialized variable. (This is taken care of by :ref:`YADE_CLASS_BASE_DOC` macros for user classes)
 
 
 Class naming
 -------------
 
-Although for historial reasons the naming scheme is not completely consistent, these rules should be obeyed especially when adding a new class.
+Although for historical reasons the naming scheme is not completely consistent, these rules should be obeyed especially when adding a new class.
 
-GlobalEngines and PartialEngines
-	GlobalEngines should be named in a way suggesting that it is a performer of certain action (like :yref:`ForceResetter`, :yref:`InsertionSortCollider`, :yref:`Recorder`); if this is not appropriate, append the ``Engine`` to the characteristics (:yref:`GravityEngine`). :yref:`PartialEngines<PartialEngine>` have no special naming convention different from :yref:`GlobalEngines<GlobalEngine>`.
+:ref:`GlobalEngines<inheritanceGraphGlobalEngine>` and :ref:`PartialEngines<inheritanceGraphPartialEngine>`
+	GlobalEngines should be named in a way suggesting that it is a performer of certain action (like :yref:`ForceResetter`, :yref:`InsertionSortCollider`, :yref:`Recorder`); if this is not appropriate, append the ``Engine`` to the characteristics name (e.g. :yref:`GravityEngine`). :ref:`PartialEngines<inheritanceGraphPartialEngine>` have no special naming convention different from :ref:`GlobalEngines<inheritanceGraphGlobalEngine>`.
 
-Dispatchers
+:ref:`Dispatchers<inheritanceGraphDispatcher>`
 	Names of all dispatchers end in ``Dispatcher``. The name is composed of type it creates or, in case it doesn't create any objects, its main characteristics. Currently, the following dispatchers [#opengldispatchers]_ are defined:
 
 .. _dispatcher-names:
@@ -204,7 +222,7 @@ Dispatchers
 
 	Respective abstract functors for each dispatchers are :yref:`BoundFunctor`, :yref:`IGeomFunctor`, :yref:`IPhysFunctor` and :yref:`LawFunctor`.
 
-Functors
+:ref:`Functors<inheritanceGraphFunctor>`
 	Functor name is composed of 3 parts, separated by underscore.
 
 	#. prefix, composed of abbreviated functor type and arity (see table above)

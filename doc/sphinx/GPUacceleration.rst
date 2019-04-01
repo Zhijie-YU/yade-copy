@@ -1,7 +1,7 @@
 .. _GPUacceleration:
 
 =======================================
-Accelerating Yade's PFV scheme with GPU
+Accelerating Yade's FlowEngine with GPU
 =======================================
 
 (Note: we thank Robert Caulk for preparing and sharing this guide)
@@ -101,16 +101,16 @@ Controlling the GPU
 
 The GPU accelerated solver can be activated within Yade by setting ``flow.useSolver=4`` and ``flow.multithread=True``. There are several environment variables that control the allowable memory, allowable GPU matrix size, etc. These are highlighted within the CHOLMOD User Guide, which can be found in ``SuiteSparse/CHOLMOD/Doc``. At the minimum, the user needs to set the environment variable by executing ``export CHOLMOD_USE_GPU=1``. We also recommend you designate half of your available GPU memory with ``export CHOLMOD_GPU_MEM_BYTES=3000000000`` (for a 6GB graphics card), since the multithreaded solver will keep 2 solvers running at a time to improve efficiency. If you have a multi-gpu setup, you can tell Yade to use one (or both GPUs with SuiteSparse-4.6.0-beta) by executing ``export CUDA_VISIBLE_DEVICES=1``, where 1 is the GPU you wish to use. 
 
-Expected performance
+Performance increase
 ====================
 
-[Catalano2012]_ demonstrated the performance of DEM+PFV coupling and highlighted its strengths and weaknesses. A significant strength of the DEM+PFV coupling is the asymptotic nature of triangulation costs, volume calculation costs, and force calculation costs ( [Catalano2012]_, Figure 5.4). In other words, increasing the number of particles beyond ~200k results in negligible additional computational costs. The main weakness of the DEM+PFV coupling is the exponential increase of computational cost of factoring and solving increasingly larger systems of linear equations ( [Catalano2012]_, Figure 5.7). As shown in Fig. `fig-cpuvsgpu`_, the employment of GPU alleviates this weakness (at least for <200k particles) and speeds up the factorization by up to 90%. 
+[Catalano2012]_ demonstrated the performance of DEM+PFV coupling and highlighted its strengths and weaknesses. A significant strength of the DEM+PFV coupling is the asymptotic nature of triangulation costs, volume calculation costs, and force calculation costs ( [Catalano2012]_, Figure 5.4). In other words, increasing the number of particles beyond ~200k results in negligible additional computational costs. The main weakness of the DEM+PFV coupling is the exponential increase of computational cost of factoring and solving increasingly larger systems of linear equations ( [Catalano2012]_, Figure 5.7). As shown in Fig. `fig-cpuvsgpu`_, the employment of Tesla K20 GPU decreases the time cost of factorization by up to 75% for 2.1 million DOFs and 356k particles.
 
 .. _fig-cpuvsgpu:
-.. figure:: fig/particlesVsFactortime.*
-	:scale: 60 %
+.. figure:: fig/particleVsFactortime.*
+	:width: 17 cm
 	:align: center
 
-	Full GPU factorization time and 1-core CPU factorization time for various sized Yade+PFV models
+	Time required to factorize and analyze various sized matrices for 10-core CPU, 1050Ti GPU, and Tesla K20 GPU.
 
-Note: GeForce 1080 GTX 8GB GPU + 10 core Intel i7-6950x (4.4 Hz O.C.) CPU
+Note: Tesla K20 5GB CPU + 10-core Xeon E5 2.8 GHz CPU

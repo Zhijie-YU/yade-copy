@@ -1,6 +1,6 @@
 #
 # grab latest trunk, try building packages for various distributions
-# see http://yade.wikia.com/wiki/DebianPackages for configuration of the pbuilder environment
+# see https://yade-dem.org/wiki/DebianPackages for configuration of the pbuilder environment
 #
 set -x
 TMP=/tmp/pbuild-yade-$$

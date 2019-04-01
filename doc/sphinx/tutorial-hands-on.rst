@@ -10,7 +10,7 @@ Shell basics
 Directory tree
 ^^^^^^^^^^^^^^^
 
-Directory tree is hierarchical way to organize files in operating systems. A typical (reduced) tree looks like this::
+Directory tree is hierarchical way to organize files in operating systems. A typical (reduced) tree in linux looks like this::
 
    /            Root
    ├──boot        System startup
@@ -77,7 +77,7 @@ Useful keys on the command-line are:
 ↑↓            move up and down in the command history
 ^C            interrupt currently running program
 ^\\           kill currently running program
-Shift-PgUp    scroll the screen up (show part output)
+Shift-PgUp    scroll the screen up (show past output)
 Shift-PgDown  scroll the screen down (show future output; works only on quantum computers)
 ============= =========================
 
@@ -96,7 +96,7 @@ When a program is being run (without giving its full path), several directories 
 	/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games
 	user@machine:~\$ which ls       # say what is the real path of ls
 
-The first part of the command-line is the program to be run (``which``), the remaining parts are *arguments* (``ls`` in this case). It is upt to the program which arguments it understands. Many programs can take special arguments called *options* starting with ``-`` (followed by a single letter) or ``--`` (followed by words); one of the common options is ``-h`` or ``--help``, which displays how to use the program (try ``ls --help``).
+The first part of the command-line is the program to be run (``which``), the remaining parts are *arguments* (``ls`` in this case). It is up to the program which arguments it understands. Many programs can take special arguments called *options* starting with ``-`` (followed by a single letter) or ``--`` (followed by words); one of the common options is ``-h`` or ``--help``, which displays how to use the program (try ``ls --help``).
 
 Full documentation for each program usually exists as *manual page* (or *man page*), which can be shown using e.g. ``man ls`` (``q`` to exit)
 
@@ -108,7 +108,7 @@ If yade is installed on the machine, it can be (roughly speaking) run as any oth
 ::
 
 	user@machine:~\$ yade
-	Welcome to Yade bzr2616
+	Welcome to Yade 2019.01a
 	TCP python prompt on localhost:9002, auth cookie `adcusk'
 	XMLRPC info provider on http://localhost:21002
 	[[ ^L clears screen, ^U kills line. F12 controller, F11 3d view, F10 both, F9 generator, F8 plot. ]]
@@ -233,13 +233,13 @@ Mapping from keys to values:
 
 .. ipython::
 
-	Yade [1]: czde={'jedna':'ein','dva':'zwei','tri':'drei'}
+	Yade [1]: ende={'one':'ein' , 'two':'zwei' , 'three':'drei'}
 
-	Yade [1]: de={1:'ein',2:'zwei',3:'drei'}; cz={1:'jedna',2:'dva',3:'tri'}
+	Yade [1]: de={1:'ein' , 2:'zwei' , 3:'drei'}; en={1:'one' , 2:'two' , 3:'three'}
 
-	Yade [1]: czde['jedna']         ## access values
+	Yade [1]: ende['one']         ## access values
 
-	Yade [2]: de[1], cz[2]
+	Yade [2]: de[1], en[2]
 
 
 Functions, conditionals
@@ -251,13 +251,15 @@ Functions, conditionals
 
 	Yade [2]: a=3.1
 
-	Yade [3]: if a<pi: b=0           # conditional statement
-	   ...: else: b=1
+	Yade [3]: if a<10:
+           ...:     b=-2          # conditional statement
+	   ...: else:
+           ...:     b=3
 	   ...:
 
-	Yade [4]: c=0 if a<1 else 1      # conditional expression
+	Yade [4]: c=0 if a<1 else 1      # trenary conditional expression
 
-	Yade [5] b,c:
+	Yade [5]: b,c
 
 	Yade [1]: def square(x): return x**2    # define a new function
 	   ...:
@@ -334,7 +336,7 @@ In order to avoid such tasks, shorthand functions are defined in the :yref:`yade
 
 In the last example, the particle was fixed in space by the ``fixed=True`` parameter to :yref:`yade.utils.sphere`; such a particle will not move, creating a primitive boundary condition.
 
-A particle object is not yet part of the simulation; in order to do so, a special function is called:
+A particle object is not yet part of the simulation; in order to do so, a special function :yref:`O.bodies.append<BodyContainer::append>` (also see :yref:`Omega::bodies` and :yref:`Scene`) is called:
 
 .. ipython::
 
@@ -380,9 +382,9 @@ The simulation can be inspected in several ways. All data can be accessed from p
 
 	Yade [1]: len(O.bodies)
 
-	Yade [1]: O.bodies[1].shape.radius   # radius of body #1 (will give error if not sphere, since only spheres have radius defined)
+	Yade [1]: O.bodies[10].shape.radius   # radius of body #10 (will give error if not sphere, since only spheres have radius defined)
 
-	Yade [1]: O.bodies[2].state.pos      # position of body #2
+	Yade [1]: O.bodies[12].state.pos      # position of body #12
 
 Besides that, Yade says this at startup (the line preceding the command-line)::
 
@@ -393,7 +395,7 @@ Besides that, Yade says this at startup (the line preceding the command-line)::
 :guilabel:`3d view`
 	The 3d view can be opened with F11 (or by clicking on button in the *Controller* -- see below). There is a number of keyboard shortcuts to manipulate it (press ``h`` to get basic help), and it can be moved, rotated and zoomed using mouse.  Display-related settings can be set in the "Display" tab of the controller (such as whether particles are drawn).
 :guilabel:`Inspector`
-	*Inspector* is opened by clicking on the appropriate button in the *Controller*. It shows (and updated) internal data of the current simulation. In particular, one can have a look at engines, particles (*Bodies*) and interactions (*Interactions*). Clicking at each of the attribute names links to the appropriate section in the documentation.
+	*Inspector* is opened by clicking on the appropriate button in the *Controller*. It shows (and updates) internal data of the current simulation. In particular, one can have a look at engines, particles (*Bodies*) and interactions (*Interactions*). Clicking at each of the attribute names links to the appropriate section in the documentation.
 
 
 .. rubric:: Exercises
@@ -429,15 +431,15 @@ Engines define processes undertaken by particles. As we know from the theoretica
 	   ...:        [Ip2_FrictMat_FrictMat_FrictPhys()],
 	   ...:        [Law2_ScGeom_FrictPhys_CundallStrack()]
 	   ...:    ),
-	   ...:    NewtonIntegrator(damping=.2,label='newton')      # define a name under which we can access this engine easily
+	   ...:    NewtonIntegrator(damping=.2,label='newtonCustomLabel')      # define a label newtonCustomLabel under which we can access this engine easily
 	   ...: ]
 	   ...:
 
 	Yade [1]: O.engines
 
-	Yade [1]: O.engines[-1]==newton    # is it the same object?
+	Yade [1]: O.engines[-1]==newtonCustomLabel    # is it the same object?
 
-	Yade [1]: newton.damping
+	Yade [1]: newtonCustomLabel.damping
 
 Instead of typing everything into the command-line, one can describe simulation in a file (*script*) and then run yade with that file as an argument. We will therefore no longer show the command-line unless necessary; instead, only the script part will be shown. Like this::
 
@@ -449,8 +451,8 @@ Instead of typing everything into the command-line, one can describe simulation 
 			 [Ip2_FrictMat_FrictMat_FrictPhys()],
 			 [Law2_ScGeom_FrictPhys_CundallStrack()]
 		),
-		GravityEngine(gravity=(0,0,-9.81)),              # 9.81 is the gravity acceleration, and we say that
-		NewtonIntegrator(damping=.2,label='newton')      # define a name under which we can access this engine easily
+		GravityEngine(gravity=(0,0,-9.81)),                    # 9.81 is the gravity acceleration, and we say that
+		NewtonIntegrator(damping=.2,label='newtonCustomLabel') # define a label under which we can access this engine easily
 	]
 
 Besides engines being run, it is likewise important to define how often they will run. Some engines can run only sometimes (we will see this later), while most of them will run always; the time between two successive runs of engines is *timestep* ($\Dt$). There is a mathematical limit on the timestep value, called *critical timestep*, which is computed from properties of particles. Since there is a function for that, we can just set timestep using :yref:`yade.utils.PWaveTimeStep`::

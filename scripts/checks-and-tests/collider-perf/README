@@ -1,5 +1,5 @@
 This example tests performance of InsertionSortCollider (with and without stride) and
-SpatialQuickSortCollider and was basis for http://yade.wikia.com/wiki/Colliders_performace,
+SpatialQuickSortCollider and was basis for https://yade-dem.org/wiki/Colliders_performace
 which features now-removed PersistentSAPCollider as well.
 
 To run the test, say:

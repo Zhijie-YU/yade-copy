@@ -37,6 +37,7 @@ shared_ptr<Factorable> ClassFactory::createShared( std::string name )
 			if( map.find( name ) == map.end() )
 			{
 				// Well, exception are also a way to return value, right?
+				// Vaclav, this comment is so wrong I don't know where to start. / Janek.
 				// This throws at startup for every .so that doesn't contain class named the same as the library.
 				// I.e. almost everything in yade-libs and some others installed locally...
 				// Don't log that, it would confuse users.

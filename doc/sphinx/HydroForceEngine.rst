@@ -24,8 +24,8 @@ We clearly see the link between the three functions. The idea is to evaluate the
 Application of drag and buoyancy forces (HydroForceEngine::action)
 ==================================================================
 
-By default, when adding HydroForceEngine to the list of engine, it applies drag and buoyancy to all the particles which IDs have been passed in argument to HydroForceEngine through the ids variable. This is done for example, in the example script trunk/examples/HydroForceEngine/, in the engine lists: 
-::
+By default, when adding HydroForceEngine to the list of engine, it applies drag and buoyancy to all the particles which IDs have been passed in argument to HydroForceEngine through the ids variable. This is done for example, in the example script trunk/examples/HydroForceEngine/, in the engine lists::
+
 	O.engines = [
 	ForceResetter(),
 	...
@@ -33,6 +33,7 @@ By default, when adding HydroForceEngine to the list of engine, it applies drag 
 	...
 	NewtonIntegrator(gravity=gravityVector, label='newtonIntegr')
 	] 
+
 where $idApplyForce$ corresponds to a list of particle ID to which the hydrodynamic forces should be applied. The expression of the buoyancy and drag force applied to the particles contained in the id list is detailed below.
 
 In case where the fluid is at rest (HydroForceEngine.steadyFlow = False), HydroForceEngine applies buoyancy on a particle $p$ from the fluid density and the acceleration of gravity $g$ as:
@@ -99,9 +100,10 @@ where the solid variables have been denoted with a superscript $n-1$ as they are
 
 
 .. _fig-scheme:
-.. figure:: fig/schemeNumResolVANS.pdf
-	:scale: 60 %
+.. figure:: fig/schemeNumResolVANS.*
+	:width: 14cm
 	:align: center
+
 	Schematical picture of the numerical fluid resolution and variables definition with a regular mesh. All the definitions still holds for a mesh with variable spatial step. 
 
 All the quantities needed in order to solve the fluid resolution - highlighted in [Maurin2018_VANSfluidResol]_ and recalled in figure `fig-scheme`_ - are now explicited. They can be directly evaluated in YADE with the function HydroForceEngine.averageProfile(). From there, the fluid resolution can be performed over a given time $t_{resol}$ with a given time step $\Delta t$ by calling directly the function HydroForceEngine.fluidResolution ($t _{resol}$,$\Delta t$). This will perform the fluid resolution described in [Maurin2018_VANSfluidResol]_, $N = t_{resol}/\Delta t$ times, with a time step $\Delta t$, considering the vertical profiles of $\beta$, $\left<v_x\right>$ and $\phi$ as constant in time. Therefore, one should not only be carefull about the time step, but also about the period of coupling, which should not be too large in order to avoid unphysical behavior in the DEM due to a drastic change of velocity profile not compensated by an increased transmitted drag force. 

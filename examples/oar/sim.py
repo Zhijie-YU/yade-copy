@@ -1,3 +1,4 @@
+# see https://yade-dem.org/doc/user.html#batch-execution-on-job-based-clusters-oar
 
 readParamsFromTable(unknownOk=True,
 	important=6,

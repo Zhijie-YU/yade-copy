@@ -26,7 +26,11 @@ dispatches=[
 ]
 
 sys.path.append('.')
-import HTML
+try:
+	import HTML
+except:
+	print "\nERROR: This script needs an unpackaged python import from https://www.decalage.info/en/python/html a file HTML.py\n"
+	sys.exit(1)
 outStr=''
 for D in dispatches:
 	functors=yade.system.childClasses(D.basename+'Functor')
@@ -40,7 +44,7 @@ for D in dispatches:
 			dd0=eval(d0+'()')
 			try:
 				f=dispatcher.dispFunctor(dd0)
-				row.append(f.name if f else '-')
+				row.append(f.__class__.__name__ if f else '-')
 			except RuntimeError as strerror:
 				row.append('<b>ambiguous (%s)</b>'%(strerror))
 		table.rows.append(row)
@@ -56,8 +60,9 @@ for D in dispatches:
 				try:
 					f=dispatcher.dispFunctor(dd0,dd1)
 					row.append(f.__class__.__name__ if f else '-')
-				except RuntimeError: # ambiguous
-					row.append('<b>ambiguous</b>')
+				except RuntimeError as strerror: # ambiguous
+					# FIXME - better to see all possible choices in the table.
+					row.append('<b>ambiguous (%s)</b>'%(strerror))
 			table.rows.append(row)
 	else: raise ValueError("Dispatcher must be 1D or 2D, not %dD"%len(D.types))
 	outStr+='\n<h1>%sDispatcher</h1>'%D.basename

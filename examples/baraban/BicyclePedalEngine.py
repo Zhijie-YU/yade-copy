@@ -1,5 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+"""
+Engine applying the linear motion of bicycle pedal e.g. moving points around the axis without rotation
+"""
+
 import time
 
 ## PhysicalParameters 

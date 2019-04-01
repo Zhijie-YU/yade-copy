@@ -252,7 +252,7 @@ bool BlockGen::generate(string& message)
 		getline ( file, value); 
 		int count = 0; 
 		const double PI = std::atan(1.0)*4;
-		/* int boundaryNo = 0; int boundaryCount = 0; int abdCount=0; */  Vector3r planeNormal(0,0,0);  /* int jointNo = 0; double persistenceA=0; double persistenceB=0; */ double spacing = 0; double a,b,c /* d */, l = 0.0;
+		/* int boundaryNo = 0; int boundaryCount = 0; int abdCount=0; */  Vector3r planeNormal(0,0,0);  /* int jointNo = 0; double persistenceA=0; double persistenceB=0; */ double spacing = 0; double a=0,b=0,c=0 /* d */, l = 0.0;
 		while ( file.good() )
 		{
 		    	count ++;
@@ -261,7 +261,7 @@ bool BlockGen::generate(string& message)
 		    	const char *valueChar = value.c_str();
 		    	double valueDouble = atof ( valueChar);
 			
-			double phi_b,phi_r,JRC,JCS,asperity, sigmaC,cohesion, tension = 0.0;
+			double phi_b=0 ,phi_r=0,JRC=0,JCS=0,asperity=0, sigmaC=0,cohesion=0, tension = 0.0;
 			if(count == 1) dip = valueDouble;
 			if(count == 2) dipdir = valueDouble;
 			if(count ==3) {

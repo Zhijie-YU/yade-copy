@@ -85,6 +85,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		void setForceMetis (bool force);
 		bool getForceMetis ();
 		void updateLinearSystem (Solver& flow);
+		void pyResetLinearSystem() { solver->resetLinearSystem(); }
 		#endif
 		void triangulate (Solver& flow);
 		void addBoundary (Solver& flow);
@@ -134,6 +135,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		void clearImposedFlux();
 		void computeViscousForces(Solver& flow);
 		Real getCellFlux(unsigned int cond);
+		Real getCellFluxFromId(unsigned long id);
 		Real getBoundaryFlux(unsigned int boundary) {return solver->boundaryFlux(boundary);}
 		Vector3r fluidForce(unsigned int idSph) {
 			const CGT::CVector& f=solver->T[solver->currentTes].vertex(idSph)->info().forces; return Vector3r(f[0],f[1],f[2]);}
@@ -377,6 +379,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		.def("clearImposedPressure",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::clearImposedPressure,"Clear the list of points with pressure imposed.")
 		.def("clearImposedFlux",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::clearImposedFlux,"Clear the list of points with flux imposed.")
 		.def("getCellFlux",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getCellFlux,(boost::python::arg("cond")),"Get influx in cell associated to an imposed P (indexed using 'cond').")
+		.def("getCellFluxFromId",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getCellFluxFromId,(boost::python::arg("id")),"Get influx in cell.")
 		.def("getBoundaryFlux",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getBoundaryFlux,(boost::python::arg("boundary")),"Get total flux through boundary defined by its body id.\n\n.. note:: The flux may be not zero even for no-flow condition. This artifact comes from cells which are incident to two or more boundaries (along the edges of the sample, typically). Such flux evaluation on impermeable boundary is just irrelevant, it does not imply that the boundary condition is not applied properly.")
 		.def("getConstrictions",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getConstrictions,(boost::python::arg("all")=true),"Get the list of constriction radii (inscribed circle) for all finite facets (if all==True) or all facets not incident to a virtual bounding sphere (if all==False).  When all facets are returned, negative radii denote facet incident to one or more fictious spheres.")
 		.def("getConstrictionsFull",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getConstrictionsFull,(boost::python::arg("all")=true),"Get the list of constrictions (inscribed circle) for all finite facets (if all==True), or all facets not incident to a fictious bounding sphere (if all==False). When all facets are returned, negative radii denote facet incident to one or more fictious spheres. The constrictions are returned in the format {{cell1,cell2}{rad,nx,ny,nz}}")
@@ -401,7 +404,8 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		.def("getPoreTemperature",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getPoreTemperature,(boost::python::arg("pos")),"Measure pore pressure in position pos[0],pos[1],pos[2]")
 		.def("averageSlicePressure",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::averageSlicePressure,(boost::python::arg("posY")),"Measure slice-averaged pore pressure at height posY")
 		.def("averagePressure",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::averagePressure,"Measure averaged pore pressure in the entire volume, the cells adjacent to the boundaries are ignored if includeBoundaries=False")
-		.def("updateBCs",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::updateBCs,"Update the boundary condition to reflect changes of boundary pressure (needed typically after changing :yref:`FlowEngine::bndCondValue`). It is not sufficient to reflect changes of the type of boundary condition (:yref:`FlowEngine::bndCondIsPressure`), in such case re-triangulation is needed (see :yref:`FlowEngine::updateTriangulation`). Conversely, the update is not necessary for point-wise imposed pressure (:yref:`FlowEngine::imposePressure`)")
+		.def("updateBCs",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::updateBCs,"Update the boundary condition to reflect changes of boundary pressure (needed typically after changing :yref:`FlowEngine::bndCondValue`). It is not sufficient to reflect changes of the type of boundary condition (:yref:`FlowEngine::bndCondIsPressure`), in such case re-triangulation or at least updating the linear system is needed (see :yref:`FlowEngine::updateTriangulation` and :yref:`FlowEngine::updateLinearSystem`). Conversely, the update is not necessary for changing the value of point-wise imposed pressure (:yref:`FlowEngine::imposePressure`)")
+		.def("resetLinearSystem",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::pyResetLinearSystem,"trigger rebuild of the linear system while keeping the same triangulation")
 		.def("emulateAction",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::emulateAction,"get scene and run action (may be used to manipulate an engine outside the timestepping loop).")
 		.def("getCell",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getCell,(boost::python::arg("pos")),"get id of the cell containing (X,Y,Z).")
 		.def("getIncidentCells",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getIncidentCells,(boost::python::arg("vertexId")),"get ids of all cells of which vertexId is a vertex. Typical usage is for getting cells indident to a boundary.")

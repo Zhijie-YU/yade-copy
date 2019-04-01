@@ -1,6 +1,6 @@
 #pragma once
 #include<lib/serialization/Serializable.hpp>
-// keep those two here, template instantiation & boost::python gets broken otherwise, e.g. https://bugs.launchpad.net/bugs/618766
+// keep those two here, template instantiation & boost::python gets broken otherwise, e.g. (old site, fixed bug) https://bugs.launchpad.net/bugs/618766
 #include<core/IGeom.hpp> 
 #include<core/IPhys.hpp>
 #include<core/Body.hpp>
@@ -19,6 +19,8 @@ class Interaction: public Serializable{
 		bool isReal() const {return (bool)geom && (bool)phys;}
 		//! If this interaction was just created in this step (for the constitutive law, to know that it is the first time there)
 		bool isFresh(Scene* rb);
+		// FIXME - it is set to true, and never set to false. What is the purpose to have it? just try: grep -E "\<isActive\>" . -rn --include='*pp' --color
+		//         It looks like it can be removed, after stable release.
 		bool isActive;
 
 		Interaction(Body::id_t newId1,Body::id_t newId2);
@@ -59,6 +61,7 @@ class Interaction: public Serializable{
 		,
 		/* ctor */ init(),
 		/*py*/
+		// FIXME - Inspector does not show isReal in GUI, it should be there with Attr::readonly so that we could see it.
 		.add_property("isReal",&Interaction::isReal,"True if this interaction has both geom and phys; False otherwise.")
 		.def_readwrite("isActive",&Interaction::isActive,"True if this interaction is active. Otherwise the forces from this interaction will not be taken into account. True by default.")
 	);

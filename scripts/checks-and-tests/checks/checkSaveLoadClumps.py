@@ -3,7 +3,7 @@
 
 # Script generates clumps and saves them
 # Then it tries to load the saved simulation
-# See https://bugs.launchpad.net/bugs/1560171
+# See (old site, fixed bug) https://bugs.launchpad.net/bugs/1560171
 # Thanks to Bettina Suhr for providing the
 # minimal test script.
 

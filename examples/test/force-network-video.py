@@ -11,7 +11,7 @@ rr.shape,rr.intrPhys=False,True
 def finito():
 	"""This function will be called after 500 steps. Since SnapshotEngine waits for a new 3d view to open,
 	it must run after the script has finished and the command line appears
-	(see https://bugs.launchpad.net/yade/+bug/622669).
+	(see old bug report on old site: https://bugs.launchpad.net/yade/+bug/622669).
 
 	For that reason, O.run() is at the end of the script and this function will be called
 	once we want to exit really.

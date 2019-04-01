@@ -19,7 +19,7 @@ Summary: Platform for discrete numerical modeling
 License: GPL
 Requires: boost python libQGLViewer
 BuildRequires: qt-devel boost-devel scons libXmu libXmu-devel glut-devel ScientificPython python-devel
-Url: http://yade.wikia.com
+Url: https://yade-dem.org
 Source: http://download.berlios.de/yade/yade-0.11.0.tar.gz
 Group: Applications/Engineering
 BuildRoot: %{_tmppath}/%{name}-buildroot
