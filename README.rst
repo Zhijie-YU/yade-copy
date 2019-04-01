@@ -2,9 +2,7 @@
 YADE - Yet Another Dynamic Engine
 ===================================
 
-.. warning::
-	WARNING: the github repository is obsolete. Please git clone from https://gitlab.com/yade-dev/trunk
-
+:Warning: **the github repository is obsolete. Please git clone from** https://gitlab.com/yade-dev/trunk
 
 Extensible open-source framework for discrete numerical models, focused on 
 Discrete Element Method. The computation parts are written in c++ using flexible
