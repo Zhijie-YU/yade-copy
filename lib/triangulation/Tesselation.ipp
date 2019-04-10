@@ -75,7 +75,6 @@ typename _Tesselation<TT>::VertexHandle _Tesselation<TT>::move ( Real x, Real y,
 {
 	bool fictious = vertexHandles[id]->info().isFictious;
 	VertexHandle Vh;
-#warning "It was move_point before CGAL 4.13, does it pass all the tests now?"
 	Vh = Tri->move ( vertexHandles[id], Sphere ( Point ( x,y,z ),pow ( rad,2 ) ) );
 	if ( Vh!=NULL )
 	{

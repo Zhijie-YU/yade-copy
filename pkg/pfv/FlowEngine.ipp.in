@@ -457,7 +457,7 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
 			case ( 3 ) : cell->info().volume() = volumeCellTripleFictious ( cell ); break;
 			default: break; 
 		}
-	if (flow.fluidBulkModulus>0 || thermalEngine) { cell->info().invVoidVolume() = 1 / ( std::abs(cell->info().volume()) - volumeCorrection*flow.volumeSolidPore(cell) ); }
+	if (flow.fluidBulkModulus>0 || thermalEngine || iniVoidVolumes) { cell->info().invVoidVolume() = 1 / ( std::abs(cell->info().volume()) - volumeCorrection*flow.volumeSolidPore(cell) ); }
 	}
 	if (debug) cout << "Volumes initialised." << endl;
 }
@@ -860,6 +860,16 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
         }
 }
 
+template< class _CellInfo, class _VertexInfo, class _Tesselation, class solverT >
+bool TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,solverT>::isCellNeighbor(unsigned int cell1, unsigned int cell2)
+{
+  bool neighbor=false;
+  for (unsigned int i=0;i<4;i++) {
+    if (solver->T[solver->currentTes].cellHandles[cell1]->neighbor(i)->info().id==cell2)
+    {neighbor=true;break;}
+  }
+  return neighbor;
+}
 
 #endif //FLOW_ENGINE
 

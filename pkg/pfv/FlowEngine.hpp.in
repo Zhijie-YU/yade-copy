@@ -113,10 +113,8 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 			
 		boost::python::list getIncidentCells(unsigned vertexId) {
 			RTriangulation& Tri = solver->tesselation().Triangulation();
-        		FiniteCellsIterator cellEnd = Tri.finite_cells_end();
 			unsigned& id = vertexId;
 			if (vertexId >= solver->tesselation().vertexHandles.size()) LOG_ERROR("vertexId exceeds number of vertices");
-// 			vector<unsigned> incidentCells;
 			boost::python::list incidentCells;
 			vector<CellHandle> tmpCells;
 			tmpCells.resize(10000);
@@ -188,6 +186,14 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 				cons.append(csd[k].second[3]);
 				pycsd.append(cons);}
 			return pycsd;}
+		boost::python::list getNeighbors(unsigned int id){ // Temporary function to allow for simulations in Python, can be easily accessed in c++
+		        boost::python::list ids;
+		        const RTriangulation& Tri = solver->tesselation().Triangulation();
+		        if (id>=solver->tesselation().cellHandles.size()) {LOG_ERROR("id out of range, max value is "<<solver->T[solver->currentTes].cellHandles.size()); return ids;}
+		        for (unsigned int i=0;i<4;i++) {
+			        const CellHandle& neighbourCell = solver->tesselation().cellHandles[id]->neighbor(i);
+			        if (!Tri.is_infinite(neighbourCell)) ids.append(neighbourCell->info().id);}
+		        return ids;}
 		
 		template<class Cellhandle>
 		Real volumeCellSingleFictious (Cellhandle cell);
@@ -205,6 +211,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 			return cellBarycenterFromHandle(solver->T[solver->currentTes].cellHandles[id]);}
 		void Oedometer_Boundary_Conditions();
 		void averageRealCellVelocity();
+		bool isCellNeighbor(unsigned int cell1, unsigned int cell2);
 		void saveVtk(const char* folder, bool withBoundaries) {solver->saveVtk(folder,withBoundaries);}
 		vector<Real> avFlVelOnSph(unsigned int idSph) {return solver->averageFluidVelocityOnSphere(idSph);}
 
@@ -220,6 +227,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		CELL_SCALAR_GETTER(Real,.temp(),cellTemperature)
 		CELL_SCALAR_SETTER_EXTRA(double,.p(),setCellPressure,solver->resetRHS())
 		CELL_SCALAR_SETTER(double,.temp(),setCellTemperature)
+		CELL_SCALAR_GETTER(Real,.invVoidV,invInitVoidVolume)
 		CELL_SCALAR_GETTER(bool,.Pcondition,cellPImposed)
 		CELL_SCALAR_GETTER(bool,.Tcondition,cellTImposed)
 		CELL_SCALAR_SETTER_EXTRA(bool,.Pcondition,setCellPImposed,solver->resetLinearSystem())
@@ -354,6 +362,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		((string,blockHook,"",,"Python command to be run when remeshing. Anticipated usage: define blocked cells (see also :yref:`TemplateFlowEngine_@TEMPLATE_FLOW_NAME@.blockCell`), or apply exotic types of boundary conditions which need to visit the newly built mesh"))
 		((int, fixTriUpdatePermInt, -1,,"If positive, triangulation is fixed and DFNFlow trickPermeability is run according to the interval. Activating this automatically sets :yref:`FlowEngine::meshUpdateInt` and :yref:`FlowEngine::defTolerance` to -1 (never retriangulate)."))
 		((bool, thermalEngine, false,,"activate thermalEngine within FlowEngine."))
+		((bool, iniVoidVolumes, false,,"activate the computation of the inverse of the initial void volumes in each cell when pore volumes are initialized."))
 		,
 		/*deprec*/
 		((meanK_opt,clampKValues,"the name changed"))
@@ -411,6 +420,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		.def("getIncidentCells",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getIncidentCells,(boost::python::arg("vertexId")),"get ids of all cells of which vertexId is a vertex. Typical usage is for getting cells indident to a boundary.")
 		.def("getCellBarycenter",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::cellBarycenterFromId,(boost::python::arg("id")),"get barycenter of cell 'id'.")
 		.def("getCellCenter",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::cellCenter,(boost::python::arg("id")),"get voronoi center of cell 'id'.")
+		.def("getCellInvVoidVolume",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::invInitVoidVolume,"get the inverse of the initial void volumes in each cell when pore volumes have been initialized.")
 		.def("getCellPressure",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::cellPressure,(boost::python::arg("id")),"get pressure in cell 'id'.")
 		.def("getCellTemperature",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::cellTemperature,(boost::python::arg("id")),"get pressure in cell 'id'.")
 		.def("setCellPressure",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::setCellPressure,(boost::python::arg("id"),boost::python::arg("pressure")),"set pressure in cell 'id'.")
@@ -422,6 +432,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		.def("nCells",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::nCells,"get the total number of finite cells in the triangulation.")
 		.def("blockCell",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::blockCell,(boost::python::arg("id"),boost::python::arg("blockPressure")),"block cell 'id'. The cell will be excluded from the fluid flow problem and the conductivity of all incident facets will be null. If blockPressure=False, deformation is reflected in the pressure, else it is constantly 0.")
 		.def("getVertices",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getVertices,(boost::python::arg("id")),"get the vertices of a cell")
+		.def("getNeighbors",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getNeighbors,"get 4 neigboring cells")
 		.def("getDiffusionCoeff",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getDiffusionCoeff,(boost::python::arg("cellId"),boost::python::arg("throat")),"get the ratio of throat cross-sectional area and distance between two cells")
 		#ifdef LINSOLV
 		.def("exportMatrix",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::exportMatrix,(boost::python::arg("filename")="matrix"),"Export system matrix to a file with all entries (even zeros will displayed).")
@@ -434,6 +445,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		.def("volume",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getVolume,(boost::python::arg("id")=0),"Returns the volume of Voronoi's cell of a sphere.")
 		.def("averageVelocity",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::averageVelocity,"measure the mean velocity in the period")
 		.def("setBoundaryNormal",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::setBoundaryNormal,"define the unit outward-pointing normal of a boundary (0<=index<=5).")
+		.def("isCellNeighbor",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::isCellNeighbor,(boost::python::arg("cell1_ID"), boost::python::arg("cell2_ID")),"check if cell1 and cell2 are neigbors.")
 		)
 };
 

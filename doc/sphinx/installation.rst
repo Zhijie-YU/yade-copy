@@ -311,15 +311,15 @@ Speed-up compilation
 
 When spliting the compilation on many cores (``make -jN``), ``N`` is limited by the available cores and memory. It is possible to use more cores if remote computers are available, distributing the compilation with `distcc <https://wiki.archlinux.org/index.php/Distcc>`_  (see distcc documentation for configuring slaves and master)::
 
-	export CC=distcc gcc
-	export CXX=distcc g++
+	export CC="distcc gcc"
+	export CXX="distcc g++"
 	cmake [options as usual]
 	make -jN
 
 In addition, and independently of distcc, caching previous compilations with `ccache <https://ccache.samba.org/>`_ can speed up re-compilation::
 
-	export CC=ccache gcc
-	export CXX=ccache g++
+	export CC="ccache gcc"
+	export CXX="ccache g++"
 	cmake [options as usual]
 	
 The two tools can be combined very simply, adding to the above exports::
