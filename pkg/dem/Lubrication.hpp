@@ -34,6 +34,7 @@ class LubricationPhys: public ViscElPhys {
 				// Output
                 ((Real,ue,0.,Attr::readonly,"Surface deflection (ue) at t-dt [m]"))
                 ((Real,u,-1,Attr::readonly,"Interfacial distance (u) at t-dt [m]"))
+                ((Real,ladh,0.,Attr::readonly,"Adhesion relative length. If in contact, contact is maintained while u - eps < ladh. ladh<= 0 desactivate adhesion."))
 				((Real,prev_un,0,Attr::readonly,"Nondeformed distance (un) at t-dt [m]"))
 				((Real,prevDotU,0,Attr::readonly,"du/dt from previous integration - used for trapezoidal scheme (see :yref:`Law2_ScGeom_ImplicitLubricationPhys::resolution` for choosing resolution scheme)"))
                 ((Real,delta,0,Attr::readonly,"$\\log(u)$ - used for scheme with $\\delta=\\log(u)$ variable change"))
@@ -60,6 +61,7 @@ class Ip2_FrictMat_FrictMat_LubricationPhys: public IPhysFunctor{
                 YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(Ip2_FrictMat_FrictMat_LubricationPhys,IPhysFunctor,"Ip2 creating LubricationPhys from two Material instances.",
                         ((Real,eta,1,,"Fluid viscosity [Pa.s]"))
                         ((Real,eps,0.001,,"Roughness: fraction of radius enlargement for contact"))
+                        ((Real,Fadh,0.,,"Adhesion force."))
                                                   ,,
                 );
 };
@@ -77,20 +79,19 @@ class Law2_ScGeom_ImplicitLubricationPhys: public LawFunctor{
 		
 		// integration of the gap by implicit theta method, adaptative sub-stepping is used if solutionless, the normal force is returned
 		// prevDotU, un_prev, and u_prev are modified after execution (and ready for next step)
+			Real normalForce_trapezoidal(LubricationPhys *phys, ScGeom* geom, Real undot, bool isNew /* FIXME: delete those variables */);
 			Real trapz_integrate_u(Real& prevDotU, Real& un_prev, Real& u_prev, Real un_curr,
 							const Real& nu, Real k, const Real& keps, const Real& eps, 
 							Real dt, bool withContact, int depth=0);
 		
-			Real normalForce_trapezoidal(LubricationPhys *phys, ScGeom* geom, Real undot, bool isNew /* FIXME: delete those variables */);
-
-			//Real normalForce_NewtonRafson(LubricationPhys *phys, ScGeom* geom, Real undot, bool isNew);
-			//Real newton_integrate_u(Real const& un, Real const& nu, Real const& dt, Real const& k, Real const& g, Real const& u_prev, Real const& eps, int depth=0);
+			Real normalForce_trpz_adim(LubricationPhys *phys, ScGeom* geom, Real undot, bool isNew);
+			Real trapz_integrate_u_adim(Real const& u_n, Real const& eps, Real const& dt, Real const& prev_d, Real const& ladh, bool const& inContact, Real & prevDotU);
 			
 			Real normalForce_AdimExp(LubricationPhys *phys, ScGeom* geom, Real undot, bool isNew, bool dichotomie);
 			Real NRAdimExp_integrate_u(Real const& un, Real const& eps, Real const& alpha, Real & prevDotU, Real const& dt, Real const& prev_d, Real const& undot, int depth=0);
 
-			Real DichoAdimExp_integrate_u(Real const& un, Real const& eps, Real const& alpha, Real & prevDotU, Real const& dt, Real const& prev_d, Real const& undot);
-			Real ObjF(Real const& un, Real const& eps, Real const& alpha, Real const& prevDotU, Real const& dt, Real const& prev_d, Real const& undot, Real const& d);
+			Real DichoAdimExp_integrate_u(Real const& un, Real const& eps, Real const& alpha, Real & prevDotU, Real const& dt, Real const& prev_d, Real const& undot, Real const& ladh);
+			Real ObjF(Real const& un, Real const& eps, Real const& alpha, Real const& prevDotU, Real const& dt, Real const& prev_d, Real const& undot, Real const& d, Real const& ladh);
 			
 			void shearForce_firstOrder(LubricationPhys *phys, ScGeom* geom);
 			void shearForce_firstOrder_log(LubricationPhys *phys, ScGeom* geom);
@@ -111,7 +112,7 @@ class Law2_ScGeom_ImplicitLubricationPhys: public LawFunctor{
 			((bool,verbose,false,,"Write more debug informations"))
 			((int,maxSubSteps,4,,"max recursion depth of adaptative timestepping in the theta-method, the minimal time interval is thus :yref:`Omega::dt<O.dt>`$/2^{depth}$. If still not converged the integrator will switch to backward Euler."))
 			((Real,theta,0.55,,"parameter of the 'theta'-method, 1: backward Euler, 0.5: trapezoidal rule, 0: not used,  0.55: suggested optimum)"))
-			((int,resolution,2,,"Change normal component resolution method, 0: Iterative exact resolution with substepping (theta method, linear contact), 1: Newton-Rafson dimentionless resolution (theta method, linear contact), 2: (default) Dichotomy dimentionless resolution (theta method, linear contact)"))
+			((int,resolution,3,,"Change normal component resolution method, 0: Iterative exact resolution with substepping (theta method, linear contact), 1: Newton-Rafson dimentionless resolution (theta method, linear contact), 2: (default) Dichotomy dimentionless resolution (theta method, linear contact), 3: Exact dimentionless solution with contact prediction (theta method, linear contact). Method 3 is better if the volumic fraction is not too high. Use 2 otherwise."))
 			((Real, SolutionTol, 1.e-8,,"Tolerance for numerical resolution (Dichotomy and Newton-Rafson)"))
 			((int, MaxIter, 30,,"Maximum iterations for numerical resolution (Dichotomy and Newton-Rafson)"))
 			,// CTOR
