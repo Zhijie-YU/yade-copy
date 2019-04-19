@@ -38,6 +38,8 @@ Welcome to Yade's documentation!
 
   acousticemissions.rst
 
+  FoamCoupling.rst
+
   citing.rst
 
   publications.rst

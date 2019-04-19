@@ -459,7 +459,7 @@ void setBodyColor(int id, Vector3r newColor){
 
 BOOST_PYTHON_MODULE(_utils){
 	YADE_SET_DOCSTRING_OPTS;
-
+	py::def("initMPI", initMPI, "Initialize MPI communicator, for Foam Coupling"); 
 	py::def("PWaveTimeStep",PWaveTimeStep,"Get timestep accoring to the velocity of P-Wave propagation; computed from sphere radii, rigidities and masses.");
 	py::def("RayleighWaveTimeStep",RayleighWaveTimeStep,"Determination of time step according to Rayleigh wave speed of force propagation.");
 	py::def("getSpheresVolume",Shop__getSpheresVolume,(py::arg("mask")=-1),"Compute the total volume of spheres in the simulation, mask parameter is considered");

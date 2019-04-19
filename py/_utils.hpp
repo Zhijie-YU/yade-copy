@@ -12,6 +12,30 @@
 #include<lib/computational-geometry/Hull2d.hpp>
 #include<lib/pyutil/doc_opts.hpp>
 #include<pkg/dem/ViscoelasticPM.hpp>
+#ifdef YADE_MPI
+	#include <mpi.h>
+#endif 
+
+
+#ifdef YADE_MPI
+
+  void initMPI() {
+
+  int threads; int rank; int commSize; 
+  MPI_Init_thread(0,0,MPI_THREAD_SINGLE,&threads); 
+  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+  std::cout  << "myrank = " << rank << std::endl;  
+  MPI_Comm_size(MPI_COMM_WORLD, &commSize);
+  std::cout << "commSize = " << commSize << endl;  
+  int color = 2; //Foam uses 1  
+  MPI_Comm yadeComm; // dummy communicator; 
+  MPI_Comm_split(MPI_COMM_WORLD,color,rank,&yadeComm); }
+
+  #else
+
+  	void initMPI() { return; }
+
+#endif 
 
 namespace py = boost::python;
 

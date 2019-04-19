@@ -170,6 +170,11 @@ x  │x  │x  │   ├── facet-topo.py                      Recompile wi
 x  │x  │x  │   └── triax-identical-results.py         NameError: name 'spheresToFile' is not defined
    │   │   ├── oar
 x  │x  │x  │   └── sim.py                             KeyError: 'Invalid key: description.'
+   │   │   ├── openfoam
+   │   │   │   ├── example_icoFoamYade
+OK │OK │yes│   │   └── scriptYade.py                  https://youtu.be/J_V1ffx71To
+   │   │   │   └── example_pimpleFoamYade
+OK │OK │no │       └── scriptYade.py
    │   │   ├── packs
 OK │OK │YES│   └── packs.py                           https://youtu.be/luGIch9gSdg
    │   │   ├── pfacet

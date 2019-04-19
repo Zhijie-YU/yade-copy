@@ -28,6 +28,7 @@
 #  VECTORIZE: enables vectorization and alignment in Eigen3 library, experimental (OFF by default)
 #  USE_QT5: use QT5 for GUI (ON by default)
 #  CHOLMOD_GPU link Yade to custom SuiteSparse installation and activate GPU accelerated PFV (OFF by default)
+#  ENABLE_MPI : Enable MPI communications in Yade. Used for Yade-OpenFOAM coupling.
 
 project(Yade C CXX)
 cmake_minimum_required(VERSION 2.8.11)
@@ -52,7 +53,7 @@ INCLUDE(GNUInstallDirs)
 INCLUDE_DIRECTORIES (${CMAKE_SOURCE_DIR})
 
 #===========================================================
-# HACK!!! If the version of gcc is 4.8 or greater, we add -ftrack-macro-expansion=0 
+# HACK!!! If the version of gcc is 4.8 or greater, we add -ftrack-macro-expansion=0
 # and -save-temps into compiler to reduce the memory consumption during compilation.
 # See http://bugs.debian.org/726009 for more information
 # Can be removed later, if gcc fixes its regression
@@ -150,13 +151,13 @@ OPTION(ENABLE_POTENTIAL_BLOCKS "Enable PotentialBlocks" OFF)
 OPTION(ENABLE_DEFORM "Enable Deformation Engine" OFF)
 OPTION(CHOLMOD_GPU "Enable GPU acceleration flow engine direct solver" OFF)
 OPTION(ENABLE_THERMAL "Enable thermal engine (experimental)" OFF)
-
+OPTION(ENABLE_MPI "Enable MPI environement and communications, required for coupling Yade with OpenFOAM  " OFF)
 #===========================================================
 # Use Eigen3 by default
 IF (EIGEN3_FOUND)
   INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
   MESSAGE(STATUS "Found Eigen3, version: ${EIGEN3_VERSION}")
-  
+
   # Minimal required version 3.2.1
   IF ((${EIGEN3_MAJOR_VERSION} LESS 2) OR ((${EIGEN3_MAJOR_VERSION} EQUAL 2) AND (${EIGEN3_MINOR_VERSION} LESS 1)))
     MESSAGE(FATAL_ERROR "Minimal required Eigen3 version is 3.2.1, please update Eigen3!")
@@ -168,7 +169,7 @@ IF (EIGEN3_FOUND)
   ELSE (NOT VECTORIZE)
     MESSAGE(STATUS "Enable vectorization")
   ENDIF (NOT VECTORIZE)
-  
+
 ENDIF(EIGEN3_FOUND)
 #===========================================================
 INCLUDE_DIRECTORIES(${BZIP2_INCLUDE_DIR})
@@ -241,7 +242,7 @@ IF(ENABLE_GUI)
   FIND_PACKAGE(OpenGL)
   FIND_PACKAGE(GLUT)
   FIND_PACKAGE(glib2)
-    
+
   IF(USE_QT5)
     MESSAGE(STATUS "USE QT5")
     FIND_PACKAGE(QGLVIEWER-qt5 REQUIRED)
@@ -252,7 +253,7 @@ IF(ENABLE_GUI)
       SET(GUI_LIBS ${GLUT_LIBRARY} ${QGLVIEWER_LIBRARIES})
       SET(GUI_SRC_LIB "lib/opengl/GLUtils.cpp")
       SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DYADE_OPENGL -DYADE_QT5")
-      
+
       MESSAGE(STATUS "Found GUI-Qt5-LIBS")
       SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} GUI-Qt5")
     ELSE(Qt5Widgets_FOUND AND OPENGL_FOUND AND GLUT_FOUND AND GLIB2_FOUND AND QGLVIEWER_FOUND)
@@ -270,7 +271,7 @@ IF(ENABLE_GUI)
       SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DYADE_OPENGL -DYADE_QT4")
       INCLUDE_DIRECTORIES(${GLIB2_INCLUDE_DIRS})
       INCLUDE_DIRECTORIES(${QT_INCLUDES})
-      
+
       MESSAGE(STATUS "Found GUI-LIBS")
       SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} GUI")
     ELSE(QT4_FOUND AND OPENGL_FOUND AND GLUT_FOUND AND GLIB2_FOUND AND QGLVIEWER_FOUND)
@@ -291,18 +292,18 @@ IF(ENABLE_PFVFLOW OR ENABLE_TWOPHASEFLOW)
   ENDIF (NOT ENABLE_CGAL)
 ENDIF(ENABLE_PFVFLOW OR ENABLE_TWOPHASEFLOW)
 #===========================================================
-IF(ENABLE_CGAL)  
+IF(ENABLE_CGAL)
   INCLUDE(FindGMP)
   FIND_PACKAGE(CGAL)
   FIND_PACKAGE(GMP)
   IF(CGAL_FOUND AND GMP_FOUND AND (NOT("${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1}" MATCHES ".*clang"))) #Check for clang should be removed, when CGAL will be compilable by clang
-    
+
     FILE(GLOB CGAL_SRC_LIB "lib/triangulation/*.cpp")
     SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CGAL_DEFINITIONS} -DYADE_CGAL")
     SET(LINKLIBS  "${LINKLIBS};${CGAL_LIBRARIES};${GMP_LIBRARIES};${GMPXX_LIBRARIES};")
     MESSAGE(STATUS "Found CGAL")
     SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} CGAL")
-    
+
     ADD_DEFINITIONS("-DCGAL_DISABLE_ROUNDING_MATH_CHECK -frounding-math")
 
     IF(ENABLE_PFVFLOW)
@@ -371,7 +372,23 @@ ELSE(ENABLE_LINSOLV)
          SET(ENABLE_TWOPHASEFLOW OFF)
       ENDIF(ENABLE_TWOPHASEFLOW)
 ENDIF(ENABLE_LINSOLV)
-
+#===============================================
+IF(ENABLE_MPI)
+  FIND_PACKAGE(MPI)
+  IF (MPI_FOUND)
+    INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DYADE_MPI")
+    SET (LINKLIBS "${LINKLIBS};${MPI_CXX_LIBRARIES};")
+    MESSAGE(STATUS "MPI found")
+    SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} MPI")
+  ELSE(MPI_FOUND)
+    MESSAGE(STATUS "MPI NOT FOUND, YADE-OpenFOAM coupling disabled")
+    SET (DISABLED_FEATS "${DISABLED_FEATS} MPI")
+  ENDIF(MPI_FOUND)
+ELSE(ENABLE_MPI)
+    SET (DISABLED_FEATS "${DISABLED_FEATS} MPI")
+ENDIF(ENABLE_MPI)
+#===============================================
 IF(ENABLE_TWOPHASEFLOW)
 	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTWOPHASEFLOW")
 	SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} TWOPHASEFLOW")
@@ -479,24 +496,24 @@ ENDIF(ENABLE_POTENTIAL_PARTICLES)
 
 
 #===========================================================
-IF(ENABLE_POTENTIAL_BLOCKS)  
+IF(ENABLE_POTENTIAL_BLOCKS)
   INCLUDE(FindCLP)
   FIND_PACKAGE(OpenBlas REQUIRED)
   FIND_PACKAGE(LAPACK REQUIRED)
-  IF(CLP_FOUND AND OPENBLAS_FOUND AND LAPACK_FOUND) 
+  IF(CLP_FOUND AND OPENBLAS_FOUND AND LAPACK_FOUND)
     ADD_DEFINITIONS("-DYADE_POTENTIAL_BLOCKS")
     INCLUDE_DIRECTORIES(${CLP_INCLUDE_DIR} ${CLP2_INCLUDE_DIR} )
     SET(LINKLIBS  "${LINKLIBS};${CLP_LIBRARY};${CLP2_LIBRARY};${CLP3_LIBRARY};${OPENBLAS_LIBRARY};${LAPACK_LIBRARY}")
     MESSAGE(STATUS "Found CLP")
     SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} PotentialBlocks")
-  ELSE(CLP_FOUND AND OPENBLAS_FOUND AND LAPACK_FOUND) 
+  ELSE(CLP_FOUND AND OPENBLAS_FOUND AND LAPACK_FOUND)
     MESSAGE(STATUS "CLP NOT found")
     SET(DISABLED_FEATS "${DISABLED_FEATS} PotentialBlocks")
     SET(ENABLE_POTENTIAL_BLOCKS OFF)
-  ENDIF(CLP_FOUND AND OPENBLAS_FOUND AND LAPACK_FOUND) 
-ELSE(ENABLE_POTENTIAL_BLOCKS)  
+  ENDIF(CLP_FOUND AND OPENBLAS_FOUND AND LAPACK_FOUND)
+ELSE(ENABLE_POTENTIAL_BLOCKS)
   SET(DISABLED_FEATS "${DISABLED_FEATS} PotentialBlocks")
-ENDIF(ENABLE_POTENTIAL_BLOCKS)  
+ENDIF(ENABLE_POTENTIAL_BLOCKS)
 #===========================================================
 
 
@@ -672,7 +689,7 @@ MESSAGE(STATUS "===========================================================")
 ADD_CUSTOM_TARGET(doc)
 FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/doc)
 FILE(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/doc/sphinx)
-ADD_CUSTOM_COMMAND( 
+ADD_CUSTOM_COMMAND(
                   TARGET doc PRE_BUILD
                   COMMAND rm -rf ${CMAKE_BINARY_DIR}/doc/sphinx/_build
                   COMMAND cp -r ${CMAKE_CURRENT_SOURCE_DIR}/doc/* ${CMAKE_BINARY_DIR}/doc
@@ -680,14 +697,14 @@ ADD_CUSTOM_COMMAND(
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc/sphinx
                   DEPENDS ${YADE_EXEC_PATH}/yade${SUFFIX}
                   )
-ADD_CUSTOM_COMMAND( 
+ADD_CUSTOM_COMMAND(
                   TARGET doc POST_BUILD
                   COMMAND xelatex Yade.tex
                   COMMAND xelatex Yade.tex
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc/sphinx/_build/latex
                   DEPENDS ${YADE_EXEC_PATH}/yade${SUFFIX} ${CMAKE_BINARY_DIR}/doc/sphinx/_build/latex/Yade.tex
                   )
-ADD_CUSTOM_COMMAND( 
+ADD_CUSTOM_COMMAND(
                   TARGET doc POST_BUILD
                   COMMAND rm -rf ${YADE_DOC_PATH}/html
                   COMMAND mv ${CMAKE_BINARY_DIR}/doc/sphinx/_build/html ${YADE_DOC_PATH}/html
@@ -695,7 +712,7 @@ ADD_CUSTOM_COMMAND(
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc/sphinx/_build/latex
                   DEPENDS ${YADE_EXEC_PATH}/yade${SUFFIX} ${CMAKE_BINARY_DIR}/doc/sphinx/_build/latex/Yade.tex
                   )
-ADD_CUSTOM_COMMAND( 
+ADD_CUSTOM_COMMAND(
                   TARGET doc POST_BUILD
                   COMMAND mv ${CMAKE_BINARY_DIR}/doc/sphinx/_build/epub/Yade.epub ${YADE_DOC_PATH}/ || true
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc/sphinx/_build/latex
@@ -704,7 +721,7 @@ ADD_CUSTOM_COMMAND(
 #===========================================================
 #Building manpage
 ADD_CUSTOM_TARGET(manpage)
-ADD_CUSTOM_COMMAND( 
+ADD_CUSTOM_COMMAND(
                   TARGET manpage POST_BUILD
                   COMMAND help2man ${YADE_EXEC_PATH}/yade${SUFFIX} > yade${SUFFIX}.1
                   COMMAND help2man ${YADE_EXEC_PATH}/yade${SUFFIX}-batch > yade${SUFFIX}-batch.1
@@ -716,7 +733,7 @@ ADD_CUSTOM_COMMAND(
 #===========================================================
 #Execute standard checks
 ADD_CUSTOM_TARGET(check)
-ADD_CUSTOM_COMMAND( 
+ADD_CUSTOM_COMMAND(
                   TARGET check POST_BUILD
                   COMMAND ${YADE_EXEC_PATH}/yade${SUFFIX} --test
                   COMMAND ${YADE_EXEC_PATH}/yade${SUFFIX} --check
@@ -724,5 +741,3 @@ ADD_CUSTOM_COMMAND(
                   DEPENDS ${YADE_EXEC_PATH}/yade${SUFFIX}
                   )
 #===========================================================
-
-

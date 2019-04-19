@@ -12,20 +12,23 @@ Citing the Yade Project as a whole (the lazy citation method)
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 If it is not possible to choose the right chapter (but please try), you may cite the documentation [yade:doc2]_ as a whole (a `(pdf version) <https://www.yade-dem.org/publi/documentation_2nd_ed/YadeBook.pdf>`_ is available):
 
-	V. Šmilauer et al. (2015), Yade Documentation 2nd ed. The Yade Project. DOI 10.5281/zenodo.34073 (http://yade-dem.org/doc/)
+- \ V. Šmilauer et al. (2015), Yade Documentation 2nd ed. The Yade Project. DOI 10.5281/zenodo.34073 (http://yade-dem.org/doc/)
 
 Citing chapters of Yade Documentation
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The second edition of Yade documentation is seen as a collection with the three volumes (or "chapters") listed below, and edited by V. Šmilauer, B. Chareyre, and A. Gladky. Please cite the chapter that is the most relevant in your case. For instance, a paper using one of the documented contact laws will cite the reference documentation [yade:reference2]_; if programing concepts are discussed, Yade's manual [yade:manual2]_ will be cited; the theoretical background [yade:background2]_ can be used as the refence for contact detection, time-step determination, or periodic boundary conditions.
 
-* The reference documentation includes details on equations and algorithms found at the highest levels of Yade (contact laws, boundary conditions controllers, pre- and post-processing modules,...) `(pdf version) <https://www.yade-dem.org/publi/documentation_2nd_ed/YadeReference.pdf>`__:
-	V. Šmilauer et al. (2015), Reference manual. In Yade Documentation 2nd ed. The Yade Project , DOI 10.5281/zenodo.34045 (http://yade-dem.org/doc/)
+The reference documentation includes details on equations and algorithms found at the highest levels of Yade (contact laws, boundary conditions controllers, pre- and post-processing modules,...) `(pdf version) <https://www.yade-dem.org/publi/documentation_2nd_ed/YadeReference.pdf>`__:
 
-* Software design, user's and programmer's manuals are in `(pdf version) <https://www.yade-dem.org/publi/documentation_2nd_ed/YadeManuals.pdf>`__:
-	V. Šmilauer et al. (2015), Using and programming. In Yade Documentation 2nd ed. The Yade Project , DOI 10.5281/zenodo.34043 (http://yade-dem.org/doc/)
+- \ V. Šmilauer et al. (2015), Reference manual. In Yade Documentation 2nd ed. The Yade Project , DOI 10.5281/zenodo.34045 (http://yade-dem.org/doc/)
 
-* Fundamentals of the DEM as implemented in Yade are explained in `(pdf version) <https://www.yade-dem.org/publi/documentation_2nd_ed/YadeTheory.pdf>`__:
-	V. Šmilauer et al. (2015), Dem formulation. In Yade Documentation 2nd ed. The Yade Project , DOI 10.5281/zenodo.34044 (http://yade-dem.org/doc/)
+Software design, user's and programmer's manuals are in `(pdf version) <https://www.yade-dem.org/publi/documentation_2nd_ed/YadeManuals.pdf>`__:
+
+- \ V. Šmilauer et al. (2015), Using and programming. In Yade Documentation 2nd ed. The Yade Project , DOI 10.5281/zenodo.34043 (http://yade-dem.org/doc/)
+
+Fundamentals of the DEM as implemented in Yade are explained in `(pdf version) <https://www.yade-dem.org/publi/documentation_2nd_ed/YadeTheory.pdf>`__:
+
+- \ V. Šmilauer et al. (2015), Dem formulation. In Yade Documentation 2nd ed. The Yade Project , DOI 10.5281/zenodo.34044 (http://yade-dem.org/doc/)
 
 Plain bibtex items can be `found here <https://gitlab.com/yade-dev/trunk/blob/master/doc/citing_yade.bib>`_.
 

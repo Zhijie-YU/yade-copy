@@ -27,6 +27,11 @@ If you wish to contribute, please contact rob.caulk@gmail.com. Questions about i
 
 Archive
 =======
+Pirnia, Pouyan; Duhaime Francois; Ethier Yannic; Dubé, Jean-Sébastien (2019), COMSOL-Yade Interface (ICY) instruction guide. *Yade Technical Archive*. 
+`download full text <https://yade-dem.org/publi/YadeTechnicalArchive/ICYinstructionguide.pdf>`__, 
+send an email seyed-pouyan.pirnia.1@ens.etsmtl.ca
+, `download helper files <https://www.yade-dem.org/publi/YadeTechnicalArchive/ICYInstructionGuide.zip>`__
+
 Maurin, Raphael (2018), YADE 1D vertical VANS fluid resolution: Numerical
 resolution details. *Yade Technical Archive*. 
 `download full text <https://yade-dem.org/publi/YadeTechnicalArchive/Yade1DFluidVANS_NumericalResolution.pdf>`__, 

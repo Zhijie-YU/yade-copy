@@ -135,6 +135,8 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		Real getCellFlux(unsigned int cond);
 		Real getCellFluxFromId(unsigned long id);
 		Real getBoundaryFlux(unsigned int boundary) {return solver->boundaryFlux(boundary);}
+		Real getBoundaryVolume(unsigned int boundary, Real dt) {return -1.0*solver->boundaryFlux(boundary)*dt;}
+		Real getCellInVolumeFromId(unsigned long id, Real dt) {return -1.0*getCellFluxFromId(id)*dt;}
 		Vector3r fluidForce(unsigned int idSph) {
 			const CGT::CVector& f=solver->T[solver->currentTes].vertex(idSph)->info().forces; return Vector3r(f[0],f[1],f[2]);}
 		Vector3r averageVelocity();
@@ -389,7 +391,9 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		.def("clearImposedFlux",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::clearImposedFlux,"Clear the list of points with flux imposed.")
 		.def("getCellFlux",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getCellFlux,(boost::python::arg("cond")),"Get influx in cell associated to an imposed P (indexed using 'cond').")
 		.def("getCellFluxFromId",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getCellFluxFromId,(boost::python::arg("id")),"Get influx in cell.")
+		.def("getCellInVolumeFromId",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getCellInVolumeFromId,(boost::python::arg("id")),(boost::python::arg("dt")),"Get total volume flowing inside the cell in current timestep dt.")
 		.def("getBoundaryFlux",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getBoundaryFlux,(boost::python::arg("boundary")),"Get total flux through boundary defined by its body id.\n\n.. note:: The flux may be not zero even for no-flow condition. This artifact comes from cells which are incident to two or more boundaries (along the edges of the sample, typically). Such flux evaluation on impermeable boundary is just irrelevant, it does not imply that the boundary condition is not applied properly.")
+		.def("getBoundaryVolume",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getBoundaryVolume,(boost::python::arg("boundary")),(boost::python::arg("dt")),"Get total volume flowing through boundary defined by its body id in current timestep dt.\n\n.. note:: The volume may be not zero even for no-flow condition. This artifact comes from cells which are incident to two or more boundaries (along the edges of the sample, typically). Such volume evaluation on impermeable boundary is just irrelevant, it does not imply that the boundary condition is not applied properly.")
 		.def("getConstrictions",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getConstrictions,(boost::python::arg("all")=true),"Get the list of constriction radii (inscribed circle) for all finite facets (if all==True) or all facets not incident to a virtual bounding sphere (if all==False).  When all facets are returned, negative radii denote facet incident to one or more fictious spheres.")
 		.def("getConstrictionsFull",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getConstrictionsFull,(boost::python::arg("all")=true),"Get the list of constrictions (inscribed circle) for all finite facets (if all==True), or all facets not incident to a fictious bounding sphere (if all==False). When all facets are returned, negative radii denote facet incident to one or more fictious spheres. The constrictions are returned in the format {{cell1,cell2}{rad,nx,ny,nz}}")
 		.def("edgeSize",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::edgeSize,"Return the number of interactions.")
