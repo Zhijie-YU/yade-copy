@@ -4,6 +4,8 @@
 """
 Functions for accessing yade's internals; only used internally.
 """
+from __future__ import print_function
+from builtins import object
 import sys
 from yade import wrapper
 from yade._customConverters import *
@@ -92,8 +94,8 @@ def updateScripts(scripts):
 		"An all-in-one multiple string substitution class; adapted to match only whole words"
 		def _make_regex(self): 
 			"Build a regular expression object based on the keys of the current dictionary"
-			return re.compile(r"(\b%s\b)" % "|".join(self.keys()))  ## adapted here 
-		def __call__(self, mo): 
+			return re.compile(r"(\b%s\b)" % "|".join(list(self.keys())))  ## adapted here
+		def __call__(self, mo):
 			"This handler will be invoked for each regex match"
 			# Count substitutions
 			self.count += 1 # Look-up string
@@ -106,16 +108,16 @@ def updateScripts(scripts):
 			return self._make_regex().sub(self, text)
 	# use the _deprecated dictionary for translation, but only when matching on words boundary
 	xlator=Xlator(_deprecated)
-	if len(scripts)==0: print "No scripts given to --update. Nothing to do."
+	if len(scripts)==0: print("No scripts given to --update. Nothing to do.")
 	for s in scripts:
 		if not s.endswith('.py'): raise RuntimeError("Refusing to do --update on file '"+s+"' (not *.py)")
 		txt=open(s).read()
 		txt2=xlator.xlat(txt)
-		if xlator.count==0: print "%s: already up-to-date."%s
+		if xlator.count==0: print("%s: already up-to-date."%s)
 		else:
 			os.rename(s,s+'~')
 			out=open(s,'w'); out.write(txt2); out.close()
-			print "%s: %d subtitution%s made, backup in %s~"%(s,xlator.count,'s' if xlator.count>1 else '',s)
+			print("%s: %d subtitution%s made, backup in %s~"%(s,xlator.count,'s' if xlator.count>1 else '',s))
 
 
 def cxxCtorsDict(proxyNamespace=__builtins__):
@@ -136,8 +138,8 @@ def cxxCtorsDict(proxyNamespace=__builtins__):
 		except KeyError: pass # not registered properly
 
 	# deprecated names
-	for oldName in _deprecated.keys():
-		class warnWrap:
+	for oldName in list(_deprecated.keys()):
+		class warnWrap(object):
 			def __init__(self,_old,_new):
 				# assert(proxyNamespace.has_key(_new))
 				self.old,self.new=_old,_new

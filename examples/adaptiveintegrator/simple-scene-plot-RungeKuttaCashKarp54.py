@@ -6,6 +6,7 @@
 #	Bursa Technical University
 #
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 import matplotlib
 matplotlib.use('TkAgg')
 
@@ -56,10 +57,10 @@ def myAddPlotData():
 	sph=O.bodies[1]
 	## store some numbers under some labels
 	plot.addData(t=O.time,i=O.iter,z_sph=sph.state.pos[2],z_sph_half=.5*sph.state.pos[2],v_sph=sph.state.vel.norm())
-print "Now calling plot.plot() to show the figures. The timestep is artificially low so that you can watch graphs being updated live."
+print("Now calling plot.plot() to show the figures. The timestep is artificially low so that you can watch graphs being updated live.")
 plot.liveInterval=.2
 plot.plot(subPlots=False)
-print "Number of threads ", os.environ['OMP_NUM_THREADS']
+print("Number of threads ", os.environ['OMP_NUM_THREADS'])
 O.run(int(5./O.dt));
 #plot.saveGnuplot('/tmp/a')
 ## you can also access the data in plot.data['i'], plot.data['t'] etc, under the labels they were saved.

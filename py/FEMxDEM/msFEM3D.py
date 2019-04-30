@@ -1,3 +1,8 @@
+from __future__ import print_function
+from builtins import input
+from builtins import zip
+from builtins import range
+from builtins import object
 __author__="Ning Guo, ceguo@connect.ust.hk"
 __supervisor__="Jidong Zhao, jzhao@ust.hk"
 __institution__="The Hong Kong University of Science and Technology"
@@ -30,7 +35,7 @@ def get_pool(mpi=False,threads=1):
       from multiprocessing import Pool
       pool = Pool(processes=threads)
    else:
-      raise RuntimeError,"Wrong arguments: either mpi=True or threads>1."
+      raise RuntimeError("Wrong arguments: either mpi=True or threads>1.")
    return pool
 
 class MultiScale(object):
@@ -64,10 +69,10 @@ class MultiScale(object):
             self.__pde.getSolverOptions().setSolverMethod(SolverOptions.DIRECT)
       except:
             #import time
-            print "======================================================================="
-            print "For better performance compile python-escript with direct solver method"
-            print "======================================================================="
-            raw_input("Press Enter to continue...")
+            print("=======================================================================")
+            print("For better performance compile python-escript with direct solver method")
+            print("=======================================================================")
+            input("Press Enter to continue...")
             #time.sleep(5)
       self.__pde.setSymmetryOn()
       #self.__pde.getSolverOptions().setTolerance(rtol**2)
@@ -76,13 +81,13 @@ class MultiScale(object):
       self.__rtol=rtol
       self.__verbose=verbose
       self.__pool=get_pool(mpi=useMPI,threads=np)
-      self.__scenes=self.__pool.map(initLoad,range(ng))
+      self.__scenes=self.__pool.map(initLoad,list(range(ng)))
       self.__strain=escript.Tensor(0,escript.Function(self.__domain))
       self.__stress=escript.Tensor(0,escript.Function(self.__domain))
       self.__S=escript.Tensor4(0,escript.Function(self.__domain))
       
       st = self.__pool.map(getStressAndTangent,self.__scenes)
-      for i in xrange(ng):
+      for i in range(ng):
          self.__stress.setValueOfDataPoint(i,st[i][0])
          self.__S.setValueOfDataPoint(i,st[i][1])
                      
@@ -112,30 +117,30 @@ class MultiScale(object):
    def getCurrentPacking(self,pos=(),time=0,prefix=''):
       if len(pos) == 0:
          # output all Gauss points packings
-         self.__pool.map(outputPack,zip(self.__scenes,repeat(time),repeat(prefix)))
+         self.__pool.map(outputPack,list(zip(self.__scenes,repeat(time),repeat(prefix))))
       else:
          # output selected Gauss points packings
          scene = [self.__scenes[i] for i in pos]
-         self.__pool.map(outputPack,zip(scene,repeat(time),repeat(prefix)))
+         self.__pool.map(outputPack,list(zip(scene,repeat(time),repeat(prefix))))
    
    def getLocalVoidRatio(self):
       void=escript.Scalar(0,escript.Function(self.__domain))
       e = self.__pool.map(getVoidRatio,self.__scenes)
-      for i in xrange(self.__numGaussPoints):
+      for i in range(self.__numGaussPoints):
          void.setValueOfDataPoint(i,e[i])
       return void
    
    def getLocalAvgRotation(self):
       rot=escript.Vector(0,escript.Function(self.__domain))
       r = self.__pool.map(avgRotation,self.__scenes)
-      for i in xrange(self.__numGaussPoints):
+      for i in range(self.__numGaussPoints):
          rot.setValueOfDataPoint(i,r[i])
       return rot
 
    def getLocalFabric(self):
       fabric=escript.Tensor(0,escript.Function(self.__domain))
       f = self.__pool.map(getFabric,self.__scenes)
-      for i in xrange(self.__numGaussPoints):
+      for i in range(self.__numGaussPoints):
          fabric.setValueOfDataPoint(i,f[i])
       return fabric
  
@@ -183,7 +188,7 @@ class MultiScale(object):
       converged=(err<rtol)
       while (not converged) and (iterate<iter_max):
          if self.__verbose:
-            print "Not converged after %d iteration(s)! Relative error: %e"%(iterate,err)
+            print("Not converged after %d iteration(s)! Relative error: %e"%(iterate,err))
          iterate+=1
          self.__domain.setX(x_safe+u)
          self.__pde.setValue(A=update_s,X=-update_stress,r=escript.Data())
@@ -210,7 +215,7 @@ class MultiScale(object):
       self.__strain+=D
       self.__scenes=update_scenes
       if self.__verbose:
-         print "Convergence reached after %d iteration(s)! Relative error: %e"%(iterate,err)
+         print("Convergence reached after %d iteration(s)! Relative error: %e"%(iterate,err))
       return u
       
    """
@@ -222,9 +227,9 @@ class MultiScale(object):
       st = numpy.array(st).reshape(-1,9)
       stress = escript.Tensor(0,escript.Function(self.__domain))
       S = escript.Tensor4(0,escript.Function(self.__domain))
-      scenes = self.__pool.map(shear,zip(self.__scenes,st))
+      scenes = self.__pool.map(shear,list(zip(self.__scenes,st)))
       st = self.__pool.map(getStressAndTangent,scenes)      
-      for i in xrange(self.__numGaussPoints):
+      for i in range(self.__numGaussPoints):
          stress.setValueOfDataPoint(i,st[i][0])
          S.setValueOfDataPoint(i,st[i][1])
       return stress,S,scenes

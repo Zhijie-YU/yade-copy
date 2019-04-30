@@ -3,17 +3,29 @@
 #
 # module documentation
 #
-import sys,os,os.path
-reload(sys)
-sys.setdefaultencoding('utf8')
 
-outDir=sys.argv[2] if len(sys.argv)>2 else '_build'
+from builtins import range
+import sys,os,os.path
+try: #for python 3.4+
+	from importlib import reload
+except:
+	pass
+reload(sys)
+try: #for python2
+	sys.setdefaultencoding('utf8')
+except:
+	pass
+
+writer=sys.argv[1]
+print("Running yadeSphinx.py with writer ==",writer)
+
+outDir=sys.argv[2] if len(sys.argv)>2 else os.getcwd()+'/_build'
 for d in (outDir,outDir+'/latex',outDir+'/html'):
     if not os.path.exists(d):
         os.mkdir(d)
 
 def moduleDoc(module,submodules=[]):
-    f=open('yade.'+module+'.rst','w')
+    f=open('yade.'+module+'.rst','w',encoding="utf8")
     modFmt=""".. automodule:: yade.%s
     :members:
     :undoc-members:
@@ -54,11 +66,11 @@ mods={
     }
 #
 # generate documentation, in alphabetical order
-mm=mods.keys(); mm.sort()
+mm=list(mods.keys()); mm.sort()
 for m in mm: moduleDoc(m,mods[m])
 
-with open('modules.rst','w') as f:
-    f.write("Yade modules\n=============\n\n.. toctree::\n\t:maxdepth: 2\n\n")
+with open('modules.rst','w',encoding="utf8") as f:
+    f.write("Yade modules reference\n=============\n\n.. toctree::\n\t:maxdepth: 2\n\n")
     for m in mm: f.write('\tyade.%s.rst\n\n'%m)
 
 
@@ -129,10 +141,10 @@ def inheritanceDiagram(klass,willBeLater):
         except NameError:
             pass
     # https://www.graphviz.org/doc/info/attrs.html , http://www.sphinx-doc.org/en/master/usage/extensions/graphviz.html , http://www.markusz.io/posts/drafts/graphviz-sphinx/
-    # margin size is in inches. The text area on page in .pdf is 6.3in by 9.8in. I'll use a default that each class uses one fourth of page width. If maxDepth>=5 then the image just gets smaller.
+    # margin size is in inches. The text area on page in .pdf is 6.3in by 9.8in. I'll use a default that each class uses one fifth of page width. If maxDepth>=6 then the image just gets smaller.
     pageWidth=6.3
-    pageFraction=4
-    fixPdfMargin=(pageWidth/pageFraction)*max(0,pageFraction-maxDepth)
+    pageFraction=5
+    fixPdfMargin=(pageWidth/pageFraction)*max(0,pageFraction-maxDepth)/2
     ret=""
     extraCaption=["",0]
     extraPdfCaptionSet=set()
@@ -168,7 +180,7 @@ def inheritanceDiagram(klass,willBeLater):
     if(extraPdfCaption[1] >= 2):  extraPdfCaption[0] = " See also: "+extraPdfCaption[0][:-1]+"."
     if(writer=='html'): extraPdfCaption[0] = ""
 
-    head=".. graphviz::"+("\n\t:caption: Inheritance graph of %s"%(klass))+extraCaption[0]+extraPdfCaption[0]+"\n\n\tdigraph %s {"%klass+("\n\t\tdpi=300;" if writer!='html' else "")+"\n\t\trankdir=RL;\n\t\tmargin="+("\"%0.1f,0.05\""%(0.2 if writer=='html' else fixPdfMargin))+";\n"+mkNode(klass)
+    head=".. graphviz::"+("\n\t:caption: Inheritance graph of %s"%(klass))+extraCaption[0]+extraPdfCaption[0]+"\n\n\tdigraph %s {"%klass + "\n\t\trankdir=RL;\n\t\tmargin="+("\"%0.1f,0.05\""%(0.2 if writer=='html' else fixPdfMargin))+";\n"+('\t\tsize="'+str(pageWidth-2*fixPdfMargin)+',999!";\n' if writer!='html' else "")+mkNode(klass)
     return head+ret+'\t}\n\n'
 
 
@@ -180,11 +192,11 @@ def sect(title,text,tops,reverse=False,willBeLater=set()):
 def genWrapperRst():
     global docClasses
     docClasses=set() # reset globals
-    wrapper=file('yade.wrapper.rst','w')
+    wrapper=open('yade.wrapper.rst','w',encoding="utf8")
     wrapper.write(""".. _yade.wrapper::
 
-Class reference (yade.wrapper module)
-=======================================
+Yade wrapper class reference
+============================
 
 .. toctree::
   :maxdepth: 2
@@ -223,12 +235,12 @@ def makeBaseClassesClickable(f,writer):
     out=[]
     import re,shutil
     changed=False
-    for l in open(f):
+    for l in open(f,encoding="utf8"):
         if writer=='html':
-            if not '(</big><em>inherits ' in l:
+            if not '(</span><em>inherits ' in l:
                 out.append(l)
                 continue
-            m=re.match(r'(^.*\(</big><em>inherits )([a-zA-Z0-9_ →]*)(</em><big>\).*$)',l)
+            m=re.match(r'(^.*\(</span><em>inherits )([a-zA-Z0-9_ →]*)(</em><span class="sig-paren">\).*$)',l)
             if not m:
                 out.append(l)
                 continue
@@ -239,7 +251,11 @@ def makeBaseClassesClickable(f,writer):
             bbb=' → '.join(['<a class="reference external" href="yade.wrapper.html#yade.wrapper.%s">%s</a>'%(b,b) for b in bb])
             out.append(m.group(1)+bbb+m.group(3))
         elif writer=='latex':
-            if not (r'\pysiglinewithargsret{\sphinxstrong{class }\code{yade.wrapper.}\bfcode{' in l and r'\emph{inherits' in l):
+            if(     (not (r'\pysiglinewithargsret{\sphinxstrong{class }\sphinxcode{yade.wrapper.}\sphinxbfcode{' in l and r'\emph{inherits' in l)) # debian stretch, devuan ascii
+                and (not (r'\pysiglinewithargsret{\strong{class }\code{yade.wrapper.}\bfcode{' in l and r'\emph{inherits' in l)) # ubuntu xenial 16.04
+                and (not (r'\pysiglinewithargsret{\sphinxbfcode{class }\sphinxcode{yade.wrapper.}\sphinxbfcode{' in l and r'\emph{inherits' in l)) # ubuntu bionic 18.04
+                and (not (r'\pysiglinewithargsret{\sphinxbfcode{\sphinxupquote{class }}\sphinxcode{\sphinxupquote{yade.wrapper.}}\sphinxbfcode{\sphinxupquote{' in l and r'\emph{inherits' in l)) #  debian buster, ubuntu cosmic 18.10, ubuntu disco, debian sid
+            ):
                 out.append(l)
                 continue
             #print l
@@ -254,7 +270,7 @@ def makeBaseClassesClickable(f,writer):
         changed=True
     if changed:
         shutil.move(f,f+'_')
-        ff=open(f,'w')
+        ff=open(f,'w',encoding="utf8")
         for l in out:
             ff.write(l)
         ff.close()
@@ -265,8 +281,8 @@ def processTemplate(f1,f2):
     def doEval(match):
         import bib2rst
         return str(eval(match.group(1)))
-    ff2=open(f2,'w')
-    for l in open(f1):
+    ff2=open(f2,'w',encoding="utf8")
+    for l in open(f1,encoding="utf8"):
         ff2.write(re.sub(r'@([^@]*)@',doEval,l))
 
 def genReferences():
@@ -281,44 +297,32 @@ genReferences()
 for bib in ('references','yade-articles','yade-theses','yade-conferences','yade-docref'):
     shutil.copyfile('../%s.bib'%bib,outDir+'/latex/%s.bib'%bib)
 
-global writer
-writer=None
+# NOTE: for some unexplained reason, all code after the sphinx.main() invocation will not be executed (python exits) on docker images (gitlab), despite the try: except: statements.
+# Workaround: launch this script as many times as needed (3 times for doc compilations and 1 time for post workarounds), see CMakeLists.txt.
+if(writer != "workarounds"):
+	genWrapperRst()
+	# HACK: must rewrite sys.argv, since reference generator in conf.py determines if we output latex/html by inspecting it
+	sys.argv=['sphinx-build','-a','-v','-T','-P','-E','-b','%s'%writer,'-d',outDir+'/doctrees','.',outDir+'/%s'%writer]
+	try:
+		sphinx.main(sys.argv)
+	except  Exception:
+		pass
+else:
+	#HTML FIXES:
+	makeBaseClassesClickable((outDir+'/html/yade.wrapper.html'),"html")
+	if (os.path.exists('/usr/share/javascript/jquery/jquery.js')): #Check, whether jquery.js installed in system
+	    os.system('rm '+ outDir+'/html/_static/jquery.js')
+	    os.system('cp /usr/share/javascript/jquery/jquery.js '+ outDir+'/html/_static/jquery.js')
 
-for writer in ['html','latex','epub']:
-    genWrapperRst()
-    # HACK: must rewrite sys.argv, since reference generator in conf.py determines if we output latex/html by inspecting it
-    sys.argv=['sphinx-build','-a','-E','-b','%s'%writer,'-d',outDir+'/doctrees','.',outDir+'/%s'%writer]
-    try:
-        sphinx.main(sys.argv)
-    except SystemExit:
-        pass
-    if writer=='html':
-        makeBaseClassesClickable((outDir+'/html/yade.wrapper.html'),writer)
-    elif writer=='latex':
-        makeBaseClassesClickable((outDir+'/latex/Yade.tex'),writer)
-    if (os.path.exists('/usr/share/javascript/jquery/jquery.js')): #Check, whether jquery.js installed in system
-        os.system('rm '+ outDir+'/html/_static/jquery.js')
-        os.system('cp /usr/share/javascript/jquery/jquery.js '+ outDir+'/html/_static/jquery.js')
-
-    # HACK!!!!==========================================================================
-    # New sphinx-python versions (hopefully) are producing empty "verbatim"-environments.
-    # That is why xelatex crashes.
-    # The following "script" removes all empty environments. Needs to be fixed in python-sphinx.
-    if (writer=='latex'):
-        infile = open(outDir+'/latex/Yade.tex',"r")
-        lines = infile.readlines()
-        infile.close()
-
-        out=[]
-        for i in range(0,len(lines)):
-            if (i<>len(lines) and
-                    lines[i].strip()=="\\begin{Verbatim}[commandchars=\\\\\{\\}]" and
-                    lines[i+1].strip()=="\\end{Verbatim}"):
-                    lines[i]=''; lines[i+1]=''
-            else:
-                out.append(lines[i])
-        file(outDir+'/latex/Yade.tex','w').write('')
-        for i in out:
-            file(outDir+'/latex/Yade.tex','a').write(i)
-    # HACK!!!!==========================================================================
+	#LATEX FIXES:
+	makeBaseClassesClickable((outDir+'/latex/Yade.tex'),"latex")
+	###HACK: sphinx sometimes produces lots of backslashes in tex source on ipython outs (with are '\PYGZbs{}' in the source) -> remove them all.
+	import re
+	find_tex_backslashes=re.compile(r'^(\\PYG{g\+go}{)(\\PYGZbs{})*')
+	with open(outDir+'/latex/Yade.tex','r',encoding="utf8") as f:
+		lines=f.readlines()
+	with open(outDir+'/latex/Yade.tex','w',encoding="utf8") as f:
+		for l in lines:
+			f.write(find_tex_backslashes.sub(r'\1',l))
+	###HACK
 sys.exit()

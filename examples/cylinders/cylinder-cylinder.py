@@ -39,17 +39,17 @@ O.materials.append( FrictMat( young=E,poisson=0.3,density=1000,frictionAngle=rad
 nodesIds=[]
 cylIds=[]
 cylinder((0,0,0),(L,0,0),radius=r,nodesIds=nodesIds,cylIds=cylIds,
-				 fixed=True,color=[1,0,0],intMaterial='cMat',extMaterial='fMat')
+				fixed=True,color=[1,0,0],intMaterial='cMat',extMaterial='fMat')
 cylinder((L/4,2*L/3,L),(L/4,-L/3,L),radius=r,nodesIds=nodesIds,cylIds=cylIds,
-				 fixed=False,color=[0,1,0],intMaterial='cMat',extMaterial='fMat')
+				fixed=False,color=[0,1,0],intMaterial='cMat',extMaterial='fMat')
 cylinder((0,2*L/3,L),(0,-L/3,L),radius=r,nodesIds=nodesIds,cylIds=cylIds,
-				 fixed=False,color=[0,1,0],intMaterial='cMat',extMaterial='fMat')
+				fixed=False,color=[0,1,0],intMaterial='cMat',extMaterial='fMat')
 cylinder((L/2,L/2,L),(L/2,-L/2,L),radius=r,nodesIds=nodesIds,cylIds=cylIds,
-				 fixed=False,color=[0,1,1],intMaterial='cMat',extMaterial='fMat')
+				fixed=False,color=[0,1,1],intMaterial='cMat',extMaterial='fMat')
 cylinder((3*L/4,L/3,L),(3*L/4,-2*L/3,L),radius=r,nodesIds=nodesIds,cylIds=cylIds,
-				 fixed=False,color=[0,0,1],intMaterial='cMat',extMaterial='fMat')
+				fixed=False,color=[0,0,1],intMaterial='cMat',extMaterial='fMat')
 cylinder((L,L/3,L),(L,-2*L/3,L),radius=r,nodesIds=nodesIds,cylIds=cylIds,
-				 fixed=False,color=[0,0,1],intMaterial='cMat',extMaterial='fMat')
+				fixed=False,color=[0,0,1],intMaterial='cMat',extMaterial='fMat')
 
 #### For viewing ####
 from yade import qt

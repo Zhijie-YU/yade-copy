@@ -16,6 +16,7 @@
 	
 	Buoyancy is included with an additional force 
 	F_buo = -volumeOfDisplacedWater*fluidDensity*gravityAcceleration.'''
+from __future__ import print_function
 
 #define material properties:
 shearModulus			= 3.2e10
@@ -81,12 +82,12 @@ def applyBuoyancy():
 			zMin = b.state.pos[2] - rad
 			dh = min((waterLevel - zMin),2*rad)	#to get sure, that dh is not bigger than 2*radius
 		elif b.isClump:				#determine rad, zMin and zMax for clumps:
-			for ii in b.shape.members.keys():
+			for ii in list(b.shape.members.keys()):
 				pos = O.bodies[ii].state.pos
 				zMin = min(zMin,pos[2]-O.bodies[ii].shape.radius)
 				zMax = max(zMax,pos[2]+O.bodies[ii].shape.radius)
 			#get equivalent radius from clump mass:
-			rad = ( 3*b.state.mass/(4*pi*O.bodies[b.shape.members.keys()[0]].mat.density) )**(1./3.)		
+			rad = ( 3*b.state.mass/(4*pi*O.bodies[list(b.shape.members.keys())[0]].mat.density) )**(1./3.)
 			#get dh relative to equivalent sphere, but acting when waterLevel is between clumps z-dimensions zMin and zMax:
 			dh = min((waterLevel - zMin)*2*rad/(zMax - zMin),2*rad)		
 		else:
@@ -97,14 +98,14 @@ def applyBuoyancy():
 
 #STEP1: reduce overlaps from replaceByClumps() method:
 O.dt=1e-6 #small time step for preparation steps via calm()
-print '\nSTEP1 in progress. Please wait a minute ...\n'
+print('\nSTEP1 in progress. Please wait a minute ...\n')
 O.engines=O.engines+[PyRunner(iterPeriod=10000,command='calm()',label='calmRunner')]
 O.run(100000,True)
 
 #STEP2: let particles settle down
 calmRunner.dead=True
 O.dt=2e-5
-print '\nSTEP2 in progress. Please wait a minute ...\n'
+print('\nSTEP2 in progress. Please wait a minute ...\n')
 O.run(50000,True)
 
 #start PyRunner engine to apply buoyancy:
@@ -131,6 +132,6 @@ from yade import qt
 qt.Controller()
 v=qt.View()
 v.eyePosition=(-7,0,2); v.upVector=(0,0,1); v.viewDir=(1,0,-.1); v.axes=True; v.sceneRadius=1.9
-print '\nSTEP3 started ...\n'
+print('\nSTEP3 started ...\n')
 
 O.run(70000)

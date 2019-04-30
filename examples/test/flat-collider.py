@@ -1,3 +1,4 @@
+from __future__ import print_function
 # this script demonstrates how to benchmark using timingEnabled: how to measure how much time each module takes.
 from yade import pack,timing
 #O.bodies.append([	sphere((0.2,0,0),.5,fixed=True), sphere((0.2,0.0,1.01),.5), ])

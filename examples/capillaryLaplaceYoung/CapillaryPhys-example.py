@@ -8,6 +8,7 @@ in the same folder as you run this script in console!
 This script shows how to use Law2_ScGeom_CapillaryPhys_Capillarity. The user can switch between hertz and 
 linear model by setting "model_type"
 """
+from __future__ import print_function
 
 model_type		= 1	#1=Hertz model with capillary forces, else linear model with capillary model
 

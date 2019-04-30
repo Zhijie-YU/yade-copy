@@ -2,9 +2,9 @@
 Introduction
 =============
 
-Slides `Yade: past, present and future <http://beta.arcig.cz/~eudoxos/dresden2011/pres-3s.pdf>`__ (updated version)
+The chapter :ref:`IntroductionStart` is summarized in following presentation `Yade: past, present and future <https://yade-dem.org/w/images/b/b5/Eudoxos2011-yade-past-present-future-updated-version.pdf>`__ with some additional different examples. This presentation is from year 2011 and does not include latest additions. As of year 2019 it is factually correct.
 
-
-.. todo:: Put link to the `Yade: past, present and future <https://yade-dem.org/w/images/5/59/Eudoxos2010-yade-past-present-future.pdf>`__, or adapt it to give more general intro to particle models.
+.. todo:: Put link to the `Yade: past, present and future <https://yade-dem.org/w/images/b/b5/Eudoxos2011-yade-past-present-future-updated-version.pdf>`__, or adapt it to give more general intro to particle models.
 
 .. todo:: Think about what is the scope of the introduction.
+

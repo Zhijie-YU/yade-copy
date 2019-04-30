@@ -2,6 +2,9 @@
 
 # to import with yade/python/ipython solveLaplace_uc.py, or with execfile('solveLaplace_uc.py',globals()) once inside a yade/python/ipython session
 
+from past.builtins import execfile
+
+from builtins import range
 execfile('solveLiqBridge.py',globals())
 
 def solveLaplace_uc(theta,rRatio,uStar,delta1Cons,deltaZ,save):
@@ -85,9 +88,9 @@ def solveLaplace_uc(theta,rRatio,uStar,delta1Cons,deltaZ,save):
         # Stab data: only the stable configurations, i.e. biggest volumes
         nameFile = 'capDataStab_r'+ str(rRatio)+'_theta'+str(theta)+'_ucStar'+str(uStar)+'.txt'
         head_woE = 'dist*\tuc*\tV*\tF*\tdelta1 (deg)\tdelta2(deg)\tn11 (-)\tn33 (-)\t'+strDz+'\n'
-        columns = range(6) # just an intermediate variable for below, as range(5).extend([7,8]) is impossible..
+        columns = list(range(6)) # just an intermediate variable for below, as range(5).extend([7,8]) is impossible..
         columns.extend([7,8]) # columns.extend() as an argument of numpy.ix() would fail
-        writeFile(nameFile,head_woE,stabSol[ numpy.ix_( range(stabSol.shape[0]) , columns ) ])
+        writeFile(nameFile,head_woE,stabSol[ numpy.ix_( list(range(stabSol.shape[0])) , columns ) ])
 
     # --------------------------------------------------
     return stabSol

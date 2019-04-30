@@ -6,6 +6,8 @@
 
 # definition of a predicate for use of randomDensePack() function
 
+from __future__ import print_function
+from past.builtins import execfile
 from yade import pack
 dimModele = 10.0
 pred = pack.inAlignedBox((0,0,0),(dimModele,dimModele,dimModele))
@@ -17,13 +19,13 @@ def mat(): return JCFpmMat(type=1,young=1e8,poisson=0.3,frictionAngle=radians(30
 nSpheres = 3000.0
 poros=0.13
 rMeanSpheres = dimModele * pow(3.0/4.0*(1-poros)/(pi*nSpheres),1.0/3.0)
-print ''
-print 'Creating a cubic sample of spheres (may take some time and cause warnings)'
-print ''
+print('')
+print('Creating a cubic sample of spheres (may take some time and cause warnings)')
+print('')
 sp = pack.randomDensePack(pred,radius=rMeanSpheres,rRelFuzz=0.3,memoizeDb='/tmp/gts-triax-packings.sqlite',returnSpherePack=True)
 sp.toSimulation(color=(0.9,0.8,0.6),wire=False,material=mat)
-print ''
-print 'Sample created !'
+print('')
+print('Sample created !')
 
 
 # Definition of the facets for joint's geometry
@@ -64,21 +66,29 @@ ysup=dim[1][1]
 zinf=dim[0][2]
 zsup=dim[1][2]
 
-e=2*rMeanSpheres
+e=2.5*rMeanSpheres
+
+refPoint=None
 
 for o in O.bodies:
-   if isinstance(o.shape,Sphere):
-      o.shape.color=(0.9,0.8,0.6)
-      ## to fix boundary particles on ground
-      if o.state.pos[2]<(zinf+2*e) :
-	 o.state.blockedDOFs+='xyz'
-	 o.shape.color=(1,1,1)
+	if isinstance(o.shape,Sphere):
+		o.shape.color=(0.9,0.8,0.6)
+		## to fix boundary particles on ground
+		if o.state.pos[2]<(zinf+2*e) :
+			o.state.blockedDOFs+='xyz'
+			o.shape.color=(1,1,1)
 
-      ## to identify indicator on top
-      if o.state.pos[2]>(zsup-e) and o.state.pos[0]>(xsup-e) and o.state.pos[1]>((yinf+ysup-e)/2.0) and o.state.pos[1]<((yinf+ysup+e)/2) : 
-	refPoint=o.id
+	## to identify indicator on top
+	## FIXME - should always find something.
+	if o.state.pos[2]>(zsup-e) and o.state.pos[0]>(xsup-e) and o.state.pos[1]>((yinf+ysup-e)/2.0) and o.state.pos[1]<((yinf+ysup+e)/2) : 
+		print("indicator on top: "+str(o.id))
+		refPoint=o.id
 
-O.bodies[refPoint].shape.highlight=True
+if refPoint:
+	O.bodies[refPoint].shape.highlight=True
+else:
+	print("ERROR: could not find 'indicator on top' in the randomly generated sample. Try again, or fix this script.")
+	input("Press Enter to continue...")
 
 #### Engines definition
 O.engines=[
@@ -110,18 +120,18 @@ stableIter=1000
 stableVel=0.001
 degrade=True
 def jointStrengthDegradation():
-    global degrade
-    if degrade and O.iter>=stableIter and abs(O.bodies[refPoint].state.vel[2])<stableVel :
-	print 'Equilibrium reached \nJoint cohesion canceled now !', ' | iteration=', O.iter
-	degrade=False
+	global degrade
+	if degrade and O.iter>=stableIter and abs(O.bodies[refPoint].state.vel[2])<stableVel :
+		print('Equilibrium reached \nJoint cohesion canceled now !', ' | iteration=', O.iter)
+		degrade=False
 	for i in O.interactions:
-	    if i.phys.isOnJoint : 
-		if i.phys.isCohesive:
-		  i.phys.isCohesive=False
-		  i.phys.FnMax=0.
-		  i.phys.FsMax=0.
+		if i.phys.isOnJoint : 
+			if i.phys.isCohesive:
+				i.phys.isCohesive=False
+				i.phys.FnMax=0.
+				i.phys.FsMax=0.
 
-print 'Seeking after an initial equilibrium state'
-print ''
+print('Seeking after an initial equilibrium state')
+print('')
 O.run(10000)
 plot.plot()# note the straight trajectory (z(x) plot)during sliding step (before free fall) despite the discretization of joint plane with spheres

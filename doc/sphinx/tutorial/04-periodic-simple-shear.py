@@ -13,6 +13,7 @@
 
 
 # setup the periodic boundary
+from __future__ import print_function
 O.periodic=True
 O.cell.refSize=(2,2,2)
 
@@ -68,7 +69,7 @@ def checkStress():
 	# stress tensor as the sum of normal and shear contributions
 	# Matrix3.Zero is the intial value for sum(...)
 	stress=sum(normalShearStressTensors(),Matrix3.Zero)
-	print 'mean stress',stress.trace()/3.
+	print('mean stress',stress.trace()/3.)
 	# if mean stress is below (bigger in absolute value) limitMeanStress, start shearing
 	if stress.trace()/3.<limitMeanStress:
 		# apply constant-rate distorsion on the periodic cell

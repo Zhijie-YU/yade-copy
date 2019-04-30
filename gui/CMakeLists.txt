@@ -24,7 +24,7 @@ IF(${ENABLE_GUI})
           )
     
     EXECUTE_PROCESS(
-          COMMAND "pyuic5" "-o" "${CMAKE_BINARY_DIR}/ui_controller.py" "controller.ui"
+          COMMAND "pyuic5" "--from-imports" "-o" "${CMAKE_BINARY_DIR}/ui_controller.py" "controller.ui"
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/qt5
           RESULT_VARIABLE rv
           )
@@ -48,7 +48,7 @@ IF(${ENABLE_GUI})
           )
     
     EXECUTE_PROCESS(
-          COMMAND "pyuic5" "-o" "${CMAKE_BINARY_DIR}/ui_controller.py" "controller.ui"
+          COMMAND "pyuic5"  "--from-imports" "-o" "${CMAKE_BINARY_DIR}/ui_controller.py" "controller.ui"
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/qt5
           RESULT_VARIABLE rv
           )
@@ -79,7 +79,7 @@ IF(${ENABLE_GUI})
           )
     
     EXECUTE_PROCESS(
-          COMMAND "pyuic4" "-o" "${CMAKE_BINARY_DIR}/ui_controller.py" "controller.ui"
+          COMMAND "pyuic4"  "--from-imports" "-o" "${CMAKE_BINARY_DIR}/ui_controller.py" "controller.ui"
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/qt4
           RESULT_VARIABLE rv
           )

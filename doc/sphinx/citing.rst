@@ -4,7 +4,7 @@
 Acknowledging Yade
 ##################
 
-In order to let users cite Yade consistently in publications, we provide a list of bibliographic references for the different parts of the documentation, as in the citation model pushed by `CGAL <http://www.cgal.org/bibliography.html>`_. This way of acknowledging Yade is also a way to make developments and documentation of Yade more attractive for researchers, who are evaluated on the basis of citations of their work by others. We therefore kindly ask users to cite Yade as accurately as possible in their papers. A more detailed discussion of the citation model and its application to Yade can be found `here <https://yade-dem.org/w/images/c/c9/AcknowledgingYADE.pdf>`_.
+In order to let users cite Yade consistently in publications, we provide a list of bibliographic references for the different parts of the documentation, as in the citation model pushed by `CGAL <https://doc.cgal.org/latest/Manual/how_to_cite_cgal.html>`_. This way of acknowledging Yade is also a way to make developments and documentation of Yade more attractive for researchers, who are evaluated on the basis of citations of their work by others. We therefore kindly ask users to cite Yade as accurately as possible in their papers. A more detailed discussion of the citation model and its application to Yade can be found `here <https://yade-dem.org/w/images/c/c9/AcknowledgingYADE.pdf>`_.
 
 If new developments are presented and explained in self-contained papers (at the end of a PhD, typically), we will be glad to include them in the documentation and to reference them in the list below. Any other substantial improvement is welcome and can be discussed in the `yade-dev <https://www.yade-dem.org/wiki/Contact>`_ mailing list.
 

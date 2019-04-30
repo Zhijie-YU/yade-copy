@@ -1,3 +1,4 @@
+from __future__ import print_function
 ################################################################################
 #
 # Triaxial test. Axial strain rate is prescribed and transverse prestress.
@@ -5,6 +6,7 @@
 # An independent c++ engine may be created from this script in the future.
 #
 ################################################################################
+from builtins import range
 from yade import pack, plot
 import os
 
@@ -77,8 +79,8 @@ for s in top:
 facets = []
 if testType == 'cyl':
 	rCyl2 = .5*width / cos(pi/float(nw))
-	for r in xrange(nw):
-		for h in xrange(nh):
+	for r in range(nw):
+		for h in range(nh):
 			v1 = Vector3( rCyl2*cos(2*pi*(r+0)/float(nw)), rCyl2*sin(2*pi*(r+0)/float(nw)), height*(h+0)/float(nh) )
 			v2 = Vector3( rCyl2*cos(2*pi*(r+1)/float(nw)), rCyl2*sin(2*pi*(r+1)/float(nw)), height*(h+0)/float(nh) )
 			v3 = Vector3( rCyl2*cos(2*pi*(r+1)/float(nw)), rCyl2*sin(2*pi*(r+1)/float(nw)), height*(h+1)/float(nh) )
@@ -88,8 +90,8 @@ if testType == 'cyl':
 			facets.extend((f1,f2))
 elif testType == 'cube':
 	nw2 = nw/4
-	for r in xrange(nw2):
-		for h in xrange(nh):
+	for r in range(nw2):
+		for h in range(nh):
 			v11 = Vector3( -.5*width + (r+0)*width/nw2, -.5*width, height*(h+0)/float(nh) )
 			v12 = Vector3( -.5*width + (r+1)*width/nw2, -.5*width, height*(h+0)/float(nh) )
 			v13 = Vector3( -.5*width + (r+1)*width/nw2, -.5*width, height*(h+1)/float(nh) )
@@ -150,12 +152,12 @@ def stopIfDamaged(maxEps=5e-3):
 	if O.iter < 1000 or s > .5*extremum and e < maxEps:
 		return
 	f = os.path.join(exportDir,fileName)
-	print 'gnuplot',plot.saveGnuplot(f,term='png')
+	print('gnuplot',plot.saveGnuplot(f,term='png'))
 	if runGnuplot:
 		import subprocess
 		os.chdir(exportDir)
 		subprocess.Popen(['gnuplot',f+'.gnuplot']).wait()
-	print 'Simulation finished'
+	print('Simulation finished')
 	O.pause()
 	#sys.exit(0) # results in some threading exception
 

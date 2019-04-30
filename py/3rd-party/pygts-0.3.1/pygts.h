@@ -32,11 +32,11 @@
 #define PYGTS_DEBUG 1
 #endif /* PYGTS_DEBUG */
 
-#include <Python.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
 
+#include <Python.h>
 #include <structmember.h>
 
 /* Defined for arrayobject.h which is only included where needed */
@@ -44,6 +44,14 @@
 
 #include <glib.h>
 #include <gts.h>
+
+// https://codeyarns.com/2014/03/11/how-to-selectively-ignore-a-gcc-warning/
+// https://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Pragmas.html
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
+#pragma GCC diagnostic ignored "-Wstrict-aliasing"
+// Code that generates this warning, Note: we cannot do this trick in yade. If we have a warning in yade, we have to fix it! See also https://gitlab.com/yade-dev/trunk/merge_requests/73
+// This method will work once g++ bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53431#c34 is fixed.
 
 #include "object.h"
 #include "point.h"
@@ -55,5 +63,21 @@
 #include "surface.h"
 
 #include "cleanup.h"
+
+#pragma GCC diagnostic pop
+
+// used in several cpp files without having any good header for it
+// defined in pygts.cpp
+FILE* FILE_from_py_file__raises(PyObject *f_, const char* mode);
+
+// helpers for py3k compatibility
+#if PY_MAJOR_VERSION < 3
+	#ifndef PyLong_AsLong
+	   #define PyLong_AsLong PyInt_AsLong
+	#endif
+#endif
+
+
+
 
 #endif /* __PYGTS_H__ */

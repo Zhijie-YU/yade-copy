@@ -1,9 +1,10 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# encoding: utf-8
 
 # This example shows, how matchmaker can be used to
 # set the parameters of ViscoElastic model.
 
+from __future__ import print_function
 from yade import utils, plot
 o = Omega()
 fr = 0.5;rho=2000
@@ -61,9 +62,9 @@ O.step()
 from yade import qt
 qt.View()
 
-print "Friction coefficient for id11 and id12 is %g"%(math.atan(O.interactions[id11,id12].phys.tangensOfFrictionAngle))
-print "Friction coefficient for id21 and id22 is %g"%(math.atan(O.interactions[id21,id22].phys.tangensOfFrictionAngle))
-print "Friction coefficient for id31 and id32 is %g"%(math.atan(O.interactions[id31,id32].phys.tangensOfFrictionAngle))
+print("Friction coefficient for id11 and id12 is %g"%(math.atan(O.interactions[id11,id12].phys.tangensOfFrictionAngle)))
+print("Friction coefficient for id21 and id22 is %g"%(math.atan(O.interactions[id21,id22].phys.tangensOfFrictionAngle)))
+print("Friction coefficient for id31 and id32 is %g"%(math.atan(O.interactions[id31,id32].phys.tangensOfFrictionAngle)))
 
 O.run(100000, True)
 #plot.saveGnuplot('sim-data_')

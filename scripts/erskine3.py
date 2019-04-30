@@ -7,7 +7,11 @@ This program should really be run by the erskine3-apply.sh script
 Erskine is Watt's colleague in the house of Mr. Nutting.
 
 """
+from __future__ import print_function
 
+from builtins import filter
+from builtins import map
+from builtins import range
 import sys,pprint,string,os
 from logging import *
 from os.path import *
@@ -37,7 +41,7 @@ defaultEnv='env'
 currentPro='[none]'
 
 allEnvs=[defaultEnv]
-for t in targetEnv.keys():
+for t in list(targetEnv.keys()):
 	if not targetEnv[t] in allEnvs: allEnvs.append(targetEnv[t])
 allSystemLibs=['glut','boost_date_time','boost_filesystem','boost_thread']
 
@@ -98,7 +102,7 @@ def parseProject(proFile,inheritedVariables={}):
 			v=m.group(1)
 			if v[0]=='{':
 				v=v[1:-1]
-				if os.environ.has_key(v):
+				if v in os.environ:
 					repl=os.environ[v]
 					info("Substituting environment variable `%s` → `%s`"%(v,repl))
 				else:
@@ -106,10 +110,10 @@ def parseProject(proFile,inheritedVariables={}):
 					repl=''
 			else:
 				if v[0]=='(': v=v[1:-1]
-				if vars.has_key(v): repl=vars[v]
+				if v in vars: repl=vars[v]
 				else:
 					if not v in undefOK:
-						if os.environ.has_key(v):
+						if v in os.environ:
 							repl=os.environ[v]
 							if not v in replaceOK: warning2("Undefined internal variable `%s', using environment variable instead."%(v))
 						else:
@@ -133,7 +137,7 @@ def parseProject(proFile,inheritedVariables={}):
 			param,action,val=assign.group(1,2,3)
 			val=sub('\s+$','',val)
 			val=splitgroup(sub('\s+',' ',val))
-			if not vars.has_key(param): vars[param]=[]
+			if param not in vars: vars[param]=[]
 			if action =='=' or action=='+=':	vars[param]+=val
 		elif call:
 			func,rest=call.group(1,2)
@@ -149,14 +153,14 @@ def proProcess(filename,_vars={},dir='.',nest=0):
 	posterityVars=[]
 	vars=deepcopy(_vars)
 	for l in localVars:
-		if vars.has_key(l): del vars[l] # these are NOT propagated to sub-builds
+		if l in vars: del vars[l] # these are NOT propagated to sub-builds
 	childVars=parseProject(open(filename,'r'),vars)
 	childVars['PROJECT']=filename
-	assert(childVars.has_key('TEMPLATE')) # otherwise the file is broken
+	assert('TEMPLATE' in childVars) # otherwise the file is broken
 	assert(len(childVars['TEMPLATE'])==1) # dtto
 	template=childVars['TEMPLATE'][0]
 	if template=='subdirs': #
-		if not childVars.has_key('SUBDIRS'):
+		if 'SUBDIRS' not in childVars:
 			#warning("Template is `subdirs' but SUBDIRS is empty.")
 			return None
 		for subdir in childVars['SUBDIRS']:
@@ -167,7 +171,7 @@ def proProcess(filename,_vars={},dir='.',nest=0):
 	elif template=='app' or 'lib':
 		guessedTarget=os.path.split(filename)[-1].split('.')[0] # garbage/foo.pro -> foo
 		explicitTarget=None
-		if childVars.has_key('TARGET'): explicitTarget=os.path.split(childVars['TARGET'][0])[1].split('.')[0]
+		if 'TARGET' in childVars: explicitTarget=os.path.split(childVars['TARGET'][0])[1].split('.')[0]
 		if explicitTarget: childVars['TARGET']=explicitTarget
 		else: childVars['TARGET']=guessedTarget
 		#if oldTarget!=newTarget: warning("Old and new target differ: `%s' vs. `%s' (using new one)."%(oldTarget,newTarget))
@@ -221,16 +225,16 @@ def scriptGen(v,dir):
 	###################
 	### SOURCES
 
-	if v.has_key('SOURCES'): sources=v['SOURCES']
+	if 'SOURCES' in v: sources=v['SOURCES']
 	else: sources=[];
-	if v.has_key('FORMS'): sources+=v['FORMS']
+	if 'FORMS' in v: sources+=v['FORMS']
 	#if v.has_key('IDLS'): sources+=v['IDLS']
 	sources=listUnique(sources)
 
 	###################
 	### LIBRARIES
 	
-	def prependDirFile(d,f): return map(lambda x: join(d,x),f)
+	def prependDirFile(d,f): return [join(d,x) for x in f]
 	def listLibs(ll):
 		ret=[]
 		for l in ll:
@@ -240,13 +244,13 @@ def scriptGen(v,dir):
 				warning2("Unknown LIBS item `%s'."%l)
 		return ret
 	libs=[]
-	if v.has_key('LIBS'): libs=listLibs(v['LIBS'])
+	if 'LIBS' in v: libs=listLibs(v['LIBS'])
 
 	###################
 	### INCLUDE PATHS
 
 	# waf/scons don't compile from the current directory, make sure it is there; duplicata removed later
-	if not v.has_key('INCLUDEPATH'): includePath=['.']
+	if 'INCLUDEPATH' not in v: includePath=['.']
 	else:	includePath=v['INCLUDEPATH']+['.']
 	includePath=listUnique(includePath)
 	#print "relPath=%s,INCLUDEPATH=%s"%(relPath,includePath)
@@ -254,7 +258,7 @@ def scriptGen(v,dir):
 		def prepIf(ff):
 			if not isabs(ff) and ff[0]!='$': return join(d,ff)
 			return ff
-		return map(prepIf,f)
+		return list(map(prepIf,f))
 	includePath=prependDirFileIfRelative(relPath,includePath)
 	# filter out non-existent paths; without warning, it could be a short lambda...
 	def DelAndWarnNonexistentPath(x):
@@ -262,10 +266,10 @@ def scriptGen(v,dir):
 			warning2("Include path `%s' is invalid, removed!"%(normpath(join(dirAbsPath,x))))
 			return False
 		return True
-	includePath=filter(DelAndWarnNonexistentPath,includePath)
+	includePath=list(filter(DelAndWarnNonexistentPath,includePath))
 	includePath=[normpath(p) for p in includePath]
 	# remove duplicates... http://stinkpot.afraid.org:8080/tricks/index.php/2006/05/find-all-the-unique-elements-in-a-python-list/
-	includePath=dict([(i,1) for i in includePath]).keys()
+	includePath=list(dict([(i,1) for i in includePath]).keys())
 
 
 
@@ -273,7 +277,7 @@ def scriptGen(v,dir):
 	ret="## %s\n"%v['PROJECT']
 
 	if template=='lib': 
-		if v.has_key('CONFIG') and 'dll' in v['CONFIG']: targetType='shlib'
+		if 'CONFIG' in v and 'dll' in v['CONFIG']: targetType='shlib'
 		else: targetType='staticlib'
 	elif template=='app': targetType='program'
 
@@ -314,7 +318,7 @@ def scriptGen(v,dir):
 		if target in targetEnv: env=targetEnv[target]
 		ret+="%s.%s('%s',%s%s"%(env,{'program':'Program','shlib':'SharedLibrary','staticlib':'StaticLibrary'}[targetType],
 			target,fieldSep,toStr(prependDirFile(relPath,sources)))
-		if installable.has_key((env,targetType)): installable[(env,targetType)].append(pythonicTarget(target))
+		if (env,targetType) in installable: installable[(env,targetType)].append(pythonicTarget(target))
 		else: installable[(env,targetType)]=[pythonicTarget(target),]
 		if len(libs)>0:
 			ret+=",%sLIBS=%s['LIBS']+%s"%(fieldSep,env,toStr(libs))
@@ -327,7 +331,7 @@ def scriptGen(v,dir):
 			ret+=",%sCPPPATH=%s['CPPPATH']+%s"%(fieldSep,env,toStr(includePath))
 		ret+=')'
 		instDir=installDirs[targetType]
-		if instDirTargets.has_key((env,instDir)): instDirTargets[(env,instDir)].append((ret,target))
+		if (env,instDir) in instDirTargets: instDirTargets[(env,instDir)].append((ret,target))
 		else: instDirTargets[(env,instDir)]=[(ret,target)]
 		
 	else: raise ValueError('buildEngine must be waf or scons (--waf or --scons)');
@@ -346,7 +350,7 @@ def masterScriptGen(V,dir):
 	if buildEngine=='scons':
 		s+="Import('*')\n"
 		processVars(V,dir) # return value of processVars discarded, results passed in instDirTarget instead
-		for env,dir in instDirTargets.keys():
+		for env,dir in list(instDirTargets.keys()):
 			idt=instDirTargets[(env,dir)]
 			#binary targets are handles specially: they install under _filename_ postfixed
 			if match('.*/bin$',dir): ## warhing: this is OS-specific to tell binary target!
@@ -388,5 +392,4 @@ installable={} # hash indexed by (env,targetType)->pythonicTargetName
 instDirTargets={} # hash indexed by (env,targetDir)->str_target_spec
 installDirs={'shlib':join('$PREFIX','lib','yade$POSTFIX',string.split(scriptDir,os.sep)[-1]),'staticlib':join('$PREFIX','lib','yade$POSTFIX'),'program':join('$PREFIX','bin')}
 
-print masterScriptGen(allVars,scriptDir)
-
+print(masterScriptGen(allVars,scriptDir))

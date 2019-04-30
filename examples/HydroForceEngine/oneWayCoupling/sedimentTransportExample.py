@@ -1,3 +1,4 @@
+from __future__ import print_function
 #########################################################################################################################################################################
 # Author: Raphael Maurin, raphael.maurin@imft.fr
 # 24/11/2017
@@ -16,6 +17,8 @@
 ############################################################################################################################################################################
 
 #Import libraries
+
+from builtins import range
 from yade import pack, plot
 import math
 import random as rand
@@ -95,8 +98,8 @@ O.bodies.append([lowPlane,WaterSurface]) #add to simulation
 
 
 # Regular arrangement of spheres sticked at the bottom with random height
-L = range(0,int(length/(diameterPart))) #The length is divided in particle diameter
-W = range(0,int(width/(diameterPart))) #The width is divided in particle diameter
+L = list(range(0,int(length/(diameterPart)))) #The length is divided in particle diameter
+W = list(range(0,int(width/(diameterPart)))) #The width is divided in particle diameter
 
 for x in L: #loop creating a set of sphere sticked at the bottom with a (uniform) random altitude comprised between 0.5 (diameter/12) and 5.5mm (11diameter/12) with steps of 0.5mm. The repartition along z is made around groundPosition.
 	for y in W:
@@ -132,10 +135,10 @@ O.engines = [
 	InsertionSortCollider([Bo1_Sphere_Aabb(), Bo1_Wall_Aabb(),Bo1_Facet_Aabb(),Bo1_Box_Aabb()],label='contactDetection',allowBiggerThanPeriod = True),
 	# Calculate the different interactions
 	InteractionLoop(
-   	[Ig2_Sphere_Sphere_ScGeom(), Ig2_Box_Sphere_ScGeom()],
-   	[Ip2_ViscElMat_ViscElMat_ViscElPhys()],
-   	[Law2_ScGeom_ViscElPhys_Basic()]
-	,label = 'interactionLoop'),				
+	[Ig2_Sphere_Sphere_ScGeom(), Ig2_Box_Sphere_ScGeom()],
+	[Ip2_ViscElMat_ViscElMat_ViscElPhys()],
+	[Law2_ScGeom_ViscElPhys_Basic()]
+	,label = 'interactionLoop'),
 	#Apply an hydrodynamic force to the particles
 	HydroForceEngine(densFluid = densFluidPY,viscoDyn = kinematicViscoFluid*densFluidPY,zRef = groundPosition,gravity = gravityVector,deltaZ = dz,expoRZ = expoDrag_PY,nCell = ndimz,vCell = length*width*dz ,vxFluid = vxFluidPY,phiPart = phiPartPY,vxPart = vxPartPY,ids = idApplyForce, label = 'hydroEngine', dead = True),
 	#Measurement, output files
@@ -167,7 +170,7 @@ def gravityDeposition(lim):
 	else :		
 		print('\n Gravity deposition finished, apply fluid forces !\n')
 		newtonIntegr.damping = 0.0	# Set the artificial numerical damping to zero
-	   	gravDepo.dead = True	# Remove the present engine for the following
+		gravDepo.dead = True	# Remove the present engine for the following
 
 		hydroEngine.dead = False	# Activate the HydroForceEngine
 		hydroEngine.vxFluid = vxFluidPY # Send the fluid velocity vector used to apply the drag fluid force on particles in HydroForceEngine (see c++ code)
@@ -232,7 +235,7 @@ if saveData==1:	#If saveData option is activated, requires a folder data
 	if os.path.exists(scriptPath +'/data/')==False:
 		os.mkdir(scriptPath +'/data/')
 	else:
-		print '\n!! Save data: overwrite the files contains in the folder data/ !!\n'
+		print('\n!! Save data: overwrite the files contains in the folder data/ !!\n')
 #Function to save global variables in a python file which can be re-executed for post-processing
 def Save(filePathName, globalVariables):
 	f = open(filePathName,'w')
@@ -431,6 +434,6 @@ vxFluidPY = np.array([ 0.        ,  0.06156562,  0.08728988,  0.10283756,  0.110
         2.6963033 ,  2.69634954,  2.69637016,  2.69633447,  2.69633447])
 
 if ndimz!=len(vxFluidPY):
-	print '\n Bug: ndimz should necessarily be equal to the length of the imposed fluid profile vxFluidPY !\n'
+	print('\n Bug: ndimz should necessarily be equal to the length of the imposed fluid profile vxFluidPY !\n')
 	exit()
 

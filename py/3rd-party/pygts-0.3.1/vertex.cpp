@@ -514,7 +514,7 @@ static PyMethodDef methods[] = {
 static GtsObject * parent(GtsVertex *v1);
 
 static PyObject *
-new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+new_(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
   PyObject *o;
   PygtsObject *obj;
@@ -576,8 +576,7 @@ init(PygtsVertex *self, PyObject *args, PyObject *kwds)
 
 /* Methods table */
 PyTypeObject PygtsVertexType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                       /* ob_size */
+    PyVarObject_HEAD_INIT(NULL,0)
     "gts.Vertex",            /* tp_name */
     sizeof(PygtsVertex),     /* tp_basicsize */
     0,                       /* tp_itemsize */
@@ -615,7 +614,7 @@ PyTypeObject PygtsVertexType = {
     0,                       /* tp_dictoffset */
     (initproc)init,          /* tp_init */
     0,                       /* tp_alloc */
-    (newfunc)new             /* tp_new */
+    (newfunc)new_             /* tp_new */
 };
 
 
@@ -648,7 +647,7 @@ pygts_vertex_check(PyObject* o)
       check = TRUE;
       for(i=0;i<N;i++) {
 	obj = PyTuple_GET_ITEM(o,i);
-	if(!PyFloat_Check(obj) && !PyInt_Check(obj)) {
+	if(!PyFloat_Check(obj) && !PyLong_Check(obj)) {
 	  check = FALSE;
 	}
       }
@@ -787,22 +786,22 @@ pygts_vertex_from_sequence(PyObject *tuple) {
   for(i=0;i<N;i++) {
     obj = PyTuple_GET_ITEM(tuple,i);
 
-    if(!PyFloat_Check(obj) && !PyInt_Check(obj)) {
+    if(!PyFloat_Check(obj) && !PyLong_Check(obj)) {
       PyErr_SetString(PyExc_TypeError,"expected a list or tuple of floats");
       Py_DECREF(tuple);
       return NULL;
     }
     if(i==0) {
       if(PyFloat_Check(obj)) x = PyFloat_AsDouble(obj);
-      else  x = (double)PyInt_AsLong(obj);
+      else  x = (double)PyLong_AsLong(obj);
     }
     if(i==1) {
       if(PyFloat_Check(obj)) y = PyFloat_AsDouble(obj);
-      else  y = (double)PyInt_AsLong(obj);
+      else  y = (double)PyLong_AsLong(obj);
     }
     if(i==2) {
       if(PyFloat_Check(obj)) z = PyFloat_AsDouble(obj);
-      else  z = (double)PyInt_AsLong(obj);
+      else  z = (double)PyLong_AsLong(obj);
     }
   }
   Py_DECREF(tuple);
@@ -839,7 +838,7 @@ pygts_parent_segment_class(void)
       (GtsArgSetFunc) NULL,
       (GtsArgGetFunc) NULL
     };
-    klass = gts_object_class_new(gts_object_class(),
+    klass = (GtsSegmentClass*)gts_object_class_new(gts_object_class(),
 				 &pygts_parent_segment_info);
   }
 
@@ -866,7 +865,7 @@ pygts_parent_vertex_class(void)
       (GtsArgSetFunc) NULL,
       (GtsArgGetFunc) NULL
     };
-    klass = gts_object_class_new(gts_object_class(),
+    klass = (GtsVertexClass*)gts_object_class_new(gts_object_class(),
 				 &pygts_parent_vertex_info);
   }
 

@@ -5,6 +5,7 @@
 Motion of a "sinusoidal" beam made of cylinders. The test checks the position and velocity of the free end of the bending beam subjected to gravitational load. It is similar to scripts/test/chained-cylinder-spring.py but with less elements. positions and velocity are compared during the transient oscillations, only positions are compared for the larger time since residual velocity is compiler-dependent (see https://lists.launchpad.net/yade-dev/msg06178.html).
 '''
 
+from builtins import range
 import unittest
 import random
 from yade.wrapper import *

@@ -11,6 +11,8 @@ How to run this script:
     /path/to/yade ./retainingSmooth.py
 Please amend these instructions if you find that they do not work.
 """
+
+from builtins import range
 from esys.escript import *
 from esys.finley import Rectangle
 from esys.weipa import saveVTK
@@ -38,7 +40,7 @@ mydomain = Rectangle(l0=B,l1=H,n0=nx,n1=ny,order=2,integrationOrder=2)
 dim = mydomain.getDim()
 k = kronecker(mydomain)
 numg = 4*nx*ny; nump = 16;
-packNo=range(0,numg,16)
+packNo=list(range(0,numg,16))
 
 disp = Vector(0.,Solution(mydomain))
 

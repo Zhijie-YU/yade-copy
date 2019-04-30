@@ -1,5 +1,6 @@
 # -*- coding: utf-8
 
+from builtins import range
 from yade import pack,export,qt,geom
 import gts,os,random,itertools
 from numpy import *
@@ -23,12 +24,12 @@ Rs=0.1 # particle radius
 box = O.bodies.append(geom.facetBox((0,0,0),(1,1,1),wallMask=31,material=facetMat))
 
 # Create clumps...
-for j in xrange(10):
-	clpId,sphId=O.bodies.appendClumped([sphere(Vector3(0,Rs*2*i,(j+1)*Rs*2),Rs,material=dfltSpheresMat) for i in xrange(4)])
+for j in range(10):
+	clpId,sphId=O.bodies.appendClumped([sphere(Vector3(0,Rs*2*i,(j+1)*Rs*2),Rs,material=dfltSpheresMat) for i in range(4)])
 	
 
 # ... and spheres
-sphAloneId=O.bodies.append( [sphere( Vector3(0.5,Rs*2*i,(j+1)*Rs*2), Rs, material=dfltSpheresMat) for i in xrange(4) ] )
+sphAloneId=O.bodies.append( [sphere( Vector3(0.5,Rs*2*i,(j+1)*Rs*2), Rs, material=dfltSpheresMat) for i in range(4) ] )
 
 # Create engines
 O.engines=[

@@ -2,8 +2,11 @@
 # -*- coding: utf-8 -*-
 
 '''This example shows usage of releaseFromClump() and clump().'''
+from __future__ import print_function
 
 #define material for all bodies:
+from builtins import input
+from builtins import range
 id_Mat=O.materials.append(FrictMat(young=1e6,poisson=0.3,density=1000,frictionAngle=1))
 Mat=O.materials[id_Mat]
 
@@ -48,10 +51,10 @@ for ii in bodyList2:
 def getClumpInfo():
 	for b in O.bodies:
 		if b.isClump:
-			print 'Clump ',b.id,' has following members:'
-			keys = b.shape.members.keys()
+			print('Clump ',b.id,' has following members:')
+			keys = list(b.shape.members.keys())
 			for ii in range(0,len(keys)):
-				print '- Body ',keys[ii]
+				print('- Body ',keys[ii])
 
 O.dt=1e-6
 
@@ -59,18 +62,18 @@ O.dt=1e-6
 #### show how to use releaseFromClump():
 
 
-print '\nSTATE before releasing spheres from clump ------------'
+print('\nSTATE before releasing spheres from clump ------------')
 getClumpInfo()
 
-raw_input('\nPress Play button ... and look what happens.\n Then press Pause button and press ENTER on console!')
+input('\nPress Play button ... and look what happens.\n Then press Pause button and press ENTER on console!')
 
 for ii in bodyList2:
 	if ii > max(bodyList2)-2:
 		clId = O.bodies[ii].clumpId
 		O.bodies.releaseFromClump(ii,clId)
-		print 'Sphere ',ii,' released from clump ',clId
+		print('Sphere ',ii,' released from clump ',clId)
 
-print '\nSTATE after releasing spheres from clump ------------'
+print('\nSTATE after releasing spheres from clump ------------')
 getClumpInfo()
 
-print '\nPress Play button again ... '
+print('\nPress Play button again ... ')

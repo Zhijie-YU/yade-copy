@@ -58,10 +58,13 @@ This example can be found in examples/concrete/uniax-post.py ::
  pylab.show()
 
 """
+from builtins import zip
+from builtins import range
+from builtins import object
 from yade.wrapper import *
 from minieigen import *
 
-class Flatten:
+class Flatten(object):
 	"""Abstract class for converting 3d point into 2d. Used by post2d.data2d."""
 	def __init__(self): pass
 	def __call__(self,b):

@@ -22,6 +22,7 @@
 # and the stage is done.
 #
 
+from __future__ import print_function
 sigmaIso=-1e5
 
 #import matplotlib
@@ -101,6 +102,6 @@ def compactionFinished():
 	triax.maxUnbalanced=10
 
 def triaxFinished():
-	print 'Finished'
+	print('Finished')
 	O.pause()
 

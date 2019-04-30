@@ -1,7 +1,8 @@
 #!/usr/bin/python
+from __future__ import print_function
 import os,re,sys,os.path
 
-if not os.path.exists('SConstruct'): raise 'Must be run from the top-level source directory'
+if not os.path.exists('SConstruct'): raise AssertionError('Must be run from the top-level source directory')
 oldClass,newClass=sys.argv[1],sys.argv[2]
 replCnt,moveCnt,moveDirCnt=0,0,0
 
@@ -18,7 +19,7 @@ for root, dirs, files in os.walk('.'):
 			else: new.append(l)
 		# write back the file if it was modified
 		if modified:
-			print 'Updated: ',root+'/'+name
+			print('Updated: ',root+'/'+name)
 			f=open(root+'/'+name,'w')
 			for l in new: f.write(l)
 			f.close()
@@ -36,12 +37,12 @@ for root, dirs, files in os.walk('.'):
 			os.system('bzr mv %s/%s %s/%s'%(root,oldClass,root,newClass))
 			moveDirCnt+=1
 
-print "Replaced %d occurences, moved %d files and %d directories"%(replCnt,moveCnt,moveDirCnt)
-print "Update python scripts (if wanted) by running: perl -pi -e 's/\\b%s\\b/%s/g' `ls **/*.py **/*.rst |grep -v py/system.py`"%(oldClass,newClass)
+print("Replaced %d occurences, moved %d files and %d directories"%(replCnt,moveCnt,moveDirCnt))
+print("Update python scripts (if wanted) by running: perl -pi -e 's/\\b%s\\b/%s/g' `ls **/*.py **/*.rst |grep -v py/system.py`"%(oldClass,newClass))
 import time,pwd,socket
 # update python deprecation records
 if replCnt+moveCnt+moveDirCnt==0:
-	print "No replaces, not updating py/system.py deprecated names map."
+	print("No replaces, not updating py/system.py deprecated names map.")
 if True:
 	new=[]
 	for l in open('py/system.py'):

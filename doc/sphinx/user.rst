@@ -146,7 +146,7 @@ For this case the function :yref:`clump()<BodyContainer.clump>` can be used. One
 	   ...:    bodyList.append(O.bodies.append(sphere([ii,0,1],.5)))#create a "chain" of 5 spheres
 	   ...:
 
-	Yade [3]: print bodyList
+	Yade [3]: print(bodyList)
 
 	Yade [4]: idClump=O.bodies.clump(bodyList)
 	
@@ -177,7 +177,7 @@ Additionally YADE allows to achieve the :yref:`roundness<BodyContainer.getRoundn
 
 	Yade [5]: RC=O.bodies.getRoundness()
 
-	Yade [3]: print RC
+	Yade [3]: print(RC)
 	
 -> :yref:`getRoundness()<BodyContainer.getRoundness>` returns roundness coefficient RC of a packing or a part of the packing
 
@@ -725,13 +725,13 @@ Motion constraints
 
      Yade [1]: b1.dynamic = False #... at a constant velocity
 
-     Yade [1]: print b1.state.blockedDOFs, b1.state.vel
+     Yade [1]: print(b1.state.blockedDOFs, b1.state.vel)
      
      Yade [1]: # oops, velocity has been reset when setting dynamic=False
      
      Yade [1]: b1.state.vel = (1,0,0) # we can still assign it now
 
-     Yade [1]: print b1.state.blockedDOFs, b1.state.vel
+     Yade [1]: print(b1.state.blockedDOFs, b1.state.vel)
 
      Yade [1]: b2 = sphere([0,0,0],1,dynamic=True) #another try
 
@@ -739,7 +739,7 @@ Motion constraints
 
      Yade [1]: b2.state.blockedDOFs = "xyzXYZ" #this time we assign blockedDOFs directly, velocity is unchanged
 
-     Yade [1]: print b2.state.blockedDOFs, b2.state.vel
+     Yade [1]: print(b2.state.blockedDOFs, b2.state.vel)
 
   
   
@@ -934,7 +934,7 @@ A special engine :yref:`PyRunner` can be used to periodically call python code, 
 
 For instance, to print kinetic energy (using :yref:`kineticEnergy<yade._utils.kineticEnergy>`) every 5 seconds, the following engine will be put to ``O.engines``::
 
-	PyRunner(command="print 'kinetic energy',kineticEnergy()",realPeriod=5)
+	PyRunner(command="print('kinetic energy',kineticEnergy())",realPeriod=5)
 
 For running more complex commands, it is convenient to define an external function and only call it from within the engine. Since the ``command`` is run in the script's namespace, functions defined within scripts can be called. Let us print information on interaction between bodies 0 and 1 periodically::
 
@@ -942,10 +942,10 @@ For running more complex commands, it is convenient to define an external functi
 		try:
 			i=O.interactions[id1,id2]
 			# assuming it is a CpmPhys instance
-			print id1,id2,i.phys.sigmaN
+			print (d1,id2,i.phys.sigmaN)
 		except:
 			# in case the interaction doesn't exist (yet?)
-			print "No interaction between",id1,id2
+			print("No interaction between",id1,id2)
 	O.engines=[...,
 		PyRunner(command="intrInfo(0,1)",realPeriod=5)
 	]
@@ -1189,10 +1189,10 @@ Arbitrary functions can be periodically checked, and they can also use history o
 		currSig=plot.data['sigma'][-1] # last sigma value
 		maxSig=max(plot.data['sigma']) # maximum sigma value
 		# print something in any case, so that we know what is happening
-		print plot.data['eps'][-1],currSig
+		print(plot.data['eps'][-1],currSig)
 		if currSig<.5*maxSig:
-			print "Damaged, stopping"
-			print 'gnuplot',plot.saveGnuplot(O.tags['id'])
+			print("Damaged, stopping")
+			print('gnuplot',plot.saveGnuplot(O.tags['id']))
 			import sys
 			sys.exit(0)
 	
@@ -1328,7 +1328,7 @@ In the simulation file, we read parameters from table, at the beginning of the s
 		noTableOk=True     # use default values if not run in batch
 	)
 	from yade.params.table import *
-	print gravity, density, initialVelocity
+	print(gravity, density, initialVelocity)
 
 after the call to :yref:`readParamsFromTable<yade.utils.readParamsFromTable>`, corresponding python variables are created in the ``yade.params.table`` module and can be readily used in the script, e.g.
 
@@ -1421,7 +1421,7 @@ Frequently, it is desirable to obtain single figure for all jobs in the batch, f
 
 Data are collected in usual way during the simulation (using :yref:`yade.plot.addData`) and saved to gnuplot file via :yref:`yade.plot.saveGnuplot` (it creates 2 files: gnuplot command file and compressed data file). The batch system *scans*, once the job is finished, log file for line of the form ``gnuplot [something]``. Therefore, in order to print this *magic line* we put::
 
-	print 'gnuplot',plot.saveGnuplot(O.tags['id'])
+	print('gnuplot',plot.saveGnuplot(O.tags['id']))
 
 and the end of the script (even after waitIfBatch()) , which prints::
 
@@ -1661,8 +1661,8 @@ Then you need to make your yadeimport.py findable by Python. You can export PYTH
 	sys.path.append('/path/where/you/want/yadeimport')
 	from yadeimport import *
 
-	print Matrix3(1,2,3, 4,5,6, 7,8,9)
-	print O.bodies
+	print(Matrix3(1,2,3, 4,5,6, 7,8,9))
+	print(O.bodies)
 	# any other Yade code
 
 .. perhaps turn this section into a list of FAQs on python as gathered from the yade-users list?
@@ -1739,6 +1739,8 @@ Reporting bugs
 Bugs are general name for defects (functionality shortcomings, misdocumentation, crashes) or feature requests. They are tracked at https://gitlab.com/yade-dev/trunk/issues.
 
 When reporting a new bug, be as specific as possible; state version of yade you use, system version and so on, as explained in the above section on crashes.
+
+.. _getting-help:
 
 Getting help
 =============

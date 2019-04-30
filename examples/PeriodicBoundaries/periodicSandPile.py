@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # © 2012 Bruno Chareyre <bruno.chareyre@hmg.inpg.fr>
 """Script showing how large bodies can be combined with periodic boundary conditions using InsertioSortCollider::allowBiggerThanPeriod=True (1)."""
+from __future__ import print_function
 
 from yade import pack
 from pylab import rand
@@ -14,8 +15,8 @@ width=0.2
 thickness=0.01
 
 O.cell.hSize=Matrix3(length, 0, 0,
-		     0 ,3.*height, 0,
-		    0, 0, width)
+			0 ,3.*height, 0,
+			0, 0, width)
 
 O.materials.append(FrictMat(density=1,young=1e5,poisson=0.3,frictionAngle=radians(30),label='boxMat'))
 lowBox = box( center=(length/2.0,height-thickness/2.0,width/2.0), extents=(length*1000.0,thickness/2.0,width*1000.0) ,fixed=True,wire=False)

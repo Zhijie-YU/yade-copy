@@ -1,7 +1,10 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 from __future__ import division
+from __future__ import print_function
 
+from future import standard_library
+standard_library.install_aliases()
 from yade import plot,pack
 import time, sys, os, copy
 
@@ -56,22 +59,22 @@ readParamsFromTable(noTableOk=True, # unknownOk=True,
 
 from yade.params.table import *
 
-if 'description' in O.tags.keys(): O.tags['id']=O.tags['id']+O.tags['description']
+if 'description' in list(O.tags.keys()): O.tags['id']=O.tags['id']+O.tags['description']
 
 packingFile='periCube.pickle'
 # got periodic packing? Memoization not (yet) supported, so just generate it if there is not the right file
 # Save and reuse next time.
 if not os.path.exists(packingFile):
-	sp=pack.randomPeriPack(radius=.05e-3,rRelFuzz=0.,initSize=Vector3(1.5e-3,1.5e-3,1.5e-3))
+	sp=pack.randomPeriPack(radius=.1e-3,rRelFuzz=0.,initSize=Vector3(1.5e-3,1.5e-3,1.5e-3))
 	dd=dict(cell=(sp.cellSize[0],sp.cellSize[1],sp.cellSize[2]),spheres=sp.toList())
-	import cPickle as pickle
-	pickle.dump(dd,open(packingFile,'w'))
+	import pickle as pickle
+	pickle.dump(dd,open(packingFile,'wb'))
 #
 # load the packing (again);
 #
-import cPickle as pickle
+import pickle as pickle
 concreteId=O.materials.append(CpmMat(young=young, frictionAngle=frictionAngle, density=4800, sigmaT=sigmaT, relDuctility=relDuctility, epsCrackOnset=epsCrackOnset, poisson=poisson, isoPrestress=isoPrestress))
-sphDict=pickle.load(open(packingFile))
+sphDict=pickle.load(open(packingFile,'rb'))
 from yade import pack
 sp=pack.SpherePack()
 sp.fromList(sphDict['spheres'])
@@ -109,7 +112,7 @@ O.engines=[
 #O.miscParams=[Gl1_CpmPhys(dmgLabel=False,colorStrain=False,epsNLabel=False,epsT=False,epsTAxes=False,normal=False,contactLine=True)]
 
 # plot stresses in ¼, ½ and ¾ if desired as well; too crowded in the graph that includes confinement, though
-plot.plots={'eps':('sigma','sig1','sig2','|||','eps','eps1','eps2'),'eps_':('sigma','|||','relResid',),} #'sigma.25','sigma.50','sigma.75')}
+plot.plots={'eps':('sigma','sig1','sig2',None,'eps','eps1','eps2'),'eps_':('sigma',None,'relResid',),} #'sigma.25','sigma.50','sigma.75')}
 plot.maxDataLen=4000
 
 O.saveTmp('initial');
@@ -119,11 +122,11 @@ mode='tension' if doModes & 1 else 'compression'
 
 def initTest():
 	global mode
-	print "init"
+	print("init")
 	if O.iter>0:
 		O.wait();
 		O.loadTmp('initial')
-		print "Reversing plot data"; plot.reverseData()
+		print("Reversing plot data"); plot.reverseData()
 	maxStrainRate=Vector3(1,1,1);
 	goal=Vector3(1,1,1);
 	if not biaxial: # uniaxial
@@ -144,47 +147,47 @@ def initTest():
 		renderer.scaleDisplacements=True
 		renderer.displacementScale=(1000,1000,1000) if mode=='tension' else (100,100,100)
 	except ImportError: pass
-	print "init done, will now run."
+	print("init done, will now run.")
 	O.step(); O.step(); # to create initial contacts
 	# now reset the interaction radius and go ahead
 	ss2d3dg.interactionDetectionFactor=-1.
 	is2aabb.aabbEnlargeFactor=-1.
-	O.run()
+	O.run(wait=True)
 
 def stopIfDamaged():
 	global mode
-	if O.iter<2 or not plot.data.has_key('sigma'): return # do nothing at the very beginning
+	if O.iter<2 or 'sigma' not in plot.data: return # do nothing at the very beginning
 	sigma,eps=plot.data['sigma'],plot.data['eps']
-	extremum=max(sigma) if (strainer.maxStrainRate>0) else min(sigma)
+	extremum=max(sigma) if (strainer.maxStrainRate[axis]>0) else min(sigma)
 	# FIXME: only temporary, should be .5
 	minMaxRatio=0.5 if mode=='tension' else 0.5
 	if extremum==0: return
-	print O.tags['id'],mode,strainer.strain[axis],sigma[-1]
+	print(O.tags['id'],mode,strainer.strain[axis],sigma[-1])
 	#print 'strain',strainer['strain'],'stress',strainer['stress']
 	import sys;	sys.stdout.flush()
 	if abs(sigma[-1]/extremum)<minMaxRatio or abs(strainer.strain[axis])>6e-3:
 		if mode=='tension' and doModes & 2: # only if compression is enabled
 			mode='compression'
 			#O.save('/tmp/uniax-tension.xml.bz2')
-			print "Damaged, switching to compression... "; O.pause()
+			print("Damaged, switching to compression... "); O.pause()
 			# important! initTest must be launched in a separate thread;
 			# otherwise O.load would wait for the iteration to finish,
 			# but it would wait for initTest to return and deadlock would result
-			import thread; thread.start_new_thread(initTest,())
+			import _thread; _thread.start_new_thread(initTest,())
 			return
 		else:
-			print "Damaged, stopping."
+			print("Damaged, stopping.")
 			ft,fc=max(sigma),min(sigma)
-			print 'Strengths fc=%g, ft=%g, |fc/ft|=%g'%(fc,ft,abs(fc/ft))
-			title=O.tags['description'] if 'description' in O.tags.keys() else O.tags['params']
-			print 'gnuplot',plot.saveGnuplot(O.tags['id'],title=title)
-			print 'Bye.'
-			# O.pause()
-			sys.exit(0)
+			print('Strengths fc=%g, ft=%g, |fc/ft|=%g'%(fc,ft,abs(fc/ft)))
+			title=O.tags['description'] if 'description' in list(O.tags.keys()) else O.tags['params']
+			print('gnuplot',plot.saveGnuplot(O.tags['id'],title=title))
+			print('Bye.')
+			O.pause()
 		
 def addPlotData():
 	yade.plot.addData(t=O.time,i=O.iter,eps=strainer.strain[axis],eps_=strainer.strain[axis],sigma=strainer.stress[axis]+isoPrestress,eps1=strainer.strain[ax1],eps2=strainer.strain[ax2],sig1=strainer.stress[ax1],sig2=strainer.stress[ax2],relResid=updater.avgRelResidual)
 
 initTest()
 waitIfBatch()
+sys.exit(0)
 

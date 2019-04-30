@@ -1,3 +1,6 @@
 # necessary for our docstrings containing unicode characters
 import sys
-sys.setdefaultencoding('utf-8')
+try: #for python2
+	sys.setdefaultencoding('utf8')
+except:
+	pass

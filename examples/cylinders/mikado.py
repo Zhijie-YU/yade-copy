@@ -1,6 +1,7 @@
 # encoding: utf-8
 "An example showing how two create cylinders with random length."
 
+from builtins import range
 from yade.gridpfacet import *
 
 #### Parameters ####
@@ -57,7 +58,7 @@ for i in range(0,n):
 		L=Lmin+dL*random.random()
 		color=[random.random(),random.random(),random.random()]
 		cylinder((x,y,2*r),(x,y,L+2*r),radius=r,nodesIds=nodesIds,cylIds=cylIds,
-					 fixed=False,color=color,intMaterial='cMat',extMaterial='fMat')
+					fixed=False,color=color,intMaterial='cMat',extMaterial='fMat')
 
 #### Creat ground with pFacets ####
 color=[255./255.,102./255.,0./255.]

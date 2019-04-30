@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+from __future__ import print_function
 from yade import utils, plot, qt, ymport
 o = Omega()
 
@@ -26,7 +27,7 @@ id1 = O.bodies.append(ymport.gmsh("box.mesh", scale=scaleF, material=mat2, color
 
 d = 15.0*scaleF
 
-print d
+print(d)
 idSpheres = O.bodies.append(
   pack.regularHexa(
     pack.inAlignedBox(
@@ -34,7 +35,7 @@ idSpheres = O.bodies.append(
     (1000*scaleF, 200*scaleF,  50.0*scaleF)),
     radius=d,gap=0.001*d, material=mat1, mask=3, color=(0,1,1)))
 
-print len(idSpheres)
+print(len(idSpheres))
 
 # Add engines
 o.engines = [
@@ -58,7 +59,7 @@ def addPlotData():
 plot.plots={'t':('Ekin')}; plot.plot()
 
 enlargeF = h/Rad*1.1
-print "enlargeF = %g"%enlargeF
+print("enlargeF = %g"%enlargeF)
 is2aabb.aabbEnlargeFactor = enlargeF
 ss2sc.interactionDetectionFactor = enlargeF
 

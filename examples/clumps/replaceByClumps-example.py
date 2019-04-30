@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 '''This example shows usage of clumpTemplate(), replaceByClumps() and getRoundness().'''
+from __future__ import print_function
 
 #define material for all bodies:
 id_Mat=O.materials.append(FrictMat(young=1e7,poisson=0.3,density=1000,frictionAngle=1))
@@ -32,8 +33,8 @@ sp=pack.SpherePack()
 sp.makeCloud(minCorner=(-1.5,-1.5,.1),maxCorner=(1.5,1.5,2),rMean=.2,rRelFuzz=.5,num=100,periodic=False)
 O.bodies.append([sphere(c,r,material=Mat) for c,r in sp])
 
-print len(sp),' particles generated.'
-print 'Roundness coefficient without clumps is: ',O.bodies.getRoundness()
+print(len(sp),' particles generated.')
+print('Roundness coefficient without clumps is: ',O.bodies.getRoundness())
 
 
 #### show how to use makeClumpTemplate():
@@ -73,18 +74,18 @@ for b in O.bodies:
 	if b.isStandalone:
 		standaloneList.append(b.id)
 
-print 'Roundness coefficient for spheres and clumps is: ',O.bodies.getRoundness()
-print 'Roundness coefficient just for clumps is: ',O.bodies.getRoundness(standaloneList)
+print('Roundness coefficient for spheres and clumps is: ',O.bodies.getRoundness())
+print('Roundness coefficient just for clumps is: ',O.bodies.getRoundness(standaloneList))
 
 O.dt=1e-6
 
 #NOTE, that after replacing some overlaps may occur.
 #So after replacing calm() function may be helpful:
 if 0:
-	print '\nPlease wait a minute ...\n'
+	print('\nPlease wait a minute ...\n')
 	O.engines=O.engines+[PyRunner(iterPeriod=10000,command='calm()',label='calmRunner')]
 	O.run(1000000,True)
 	calmRunner.dead=True
 
-print '\nPress Play button ... '
+print('\nPress Play button ... ')
                 

@@ -27,6 +27,11 @@ If you wish to contribute, please contact rob.caulk@gmail.com. Questions about i
 
 Archive
 =======
+Chareyre, Bruno; Caulk, Robert; Chèvremont, William; Guntz, Thomas; Kneib, François; Kunhappen, Deepak; Pourroy, Jean (2019), Calcul distribué MPI pour la dynamique de systèmes particulaires. *Yade Technical Archive*.
+`download full text <https://www.yade-dem.org/publi/YadeTechnicalArchive/YadeMPIhackathon.pdf>`__
+, `watch video summary <https://www.yade-dem.org/publi/YadeTechnicalArchive/hackathonvideo.avi>`__
+, `read the poster summary <https://www.yade-dem.org/publi/YadeTechnicalArchive/hackathonposter.pdf>`__
+
 Pirnia, Pouyan; Duhaime Francois; Ethier Yannic; Dubé, Jean-Sébastien (2019), COMSOL-Yade Interface (ICY) instruction guide. *Yade Technical Archive*. 
 `download full text <https://yade-dem.org/publi/YadeTechnicalArchive/ICYinstructionguide.pdf>`__, 
 send an email seyed-pouyan.pirnia.1@ens.etsmtl.ca

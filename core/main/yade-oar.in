@@ -1,3 +1,4 @@
+from __future__ import print_function
 #!${pyExecutable}
 # encoding: utf-8
 #
@@ -7,7 +8,12 @@
 # This script is to be used with OAR task scheduler. May be an example to use use with other task scheduler for clusters
 # Adapted from yade-batch
 
-import os, sys, thread, time, logging, pipes, socket, xmlrpclib, re, shutil, random
+from future import standard_library
+standard_library.install_aliases()
+
+from builtins import range
+from builtins import object
+import os, sys, _thread, time, logging, pipes, socket, xmlrpc.client, re, shutil, random
 
 # Add search path for yade Python-modules
 # It allows to use both Yade-versions (packaged and self-compiled one).
@@ -20,7 +26,7 @@ import os, sys, thread, time, logging, pipes, socket, xmlrpclib, re, shutil, ran
 # Setup executable
 
 ## replaced by scons automatically
-prefix,suffix='${runtimePREFIX}' if not os.environ.has_key('YADE_PREFIX') else os.environ['YADE_PREFIX'],'${SUFFIX}'
+prefix,suffix='${runtimePREFIX}' if 'YADE_PREFIX' not in os.environ else os.environ['YADE_PREFIX'],'${SUFFIX}'
 
 libPATH='${LIBRARY_OUTPUT_PATH}'
 if (libPATH[1:] == '{LIBRARY_OUTPUT_PATH}'): libPATH='lib'
@@ -44,7 +50,7 @@ except ImportError: # argparse not present, print error message
 	raise RuntimeError("\n\nPlease install 'python-argparse' package.\n")
 
 
-class JobInfo():
+class JobInfo(object):
 	def __init__(self,num,id,command,log,nCores,script,table,lineNo,affinity,oarprop):
 		self.started,self.finished,self.duration,self.durationSec,self.exitStatus=None,None,None,None,None # duration is a string, durationSec is a number
 		self.command=command; self.num=num; self.log=log; self.id=id; self.nCores=nCores; self.cores=set(); self.infoSocket=None
@@ -88,11 +94,11 @@ args = opts.args
 logFormat,lineList,nice,executable,dryRun,globalLog,project, walltime=opts.logFormat,opts.lineList,opts.nice,opts.executable,opts.dryRun,opts.globalLog,opts.oar_p,opts.oar_t
 
 if opts.version:
-	print 'Yade version: %s, features: %s'%(version,','.join(features))
+	print('Yade version: %s, features: %s'%(version,','.join(features)))
 	sys.exit(0)
 
 if globalLog:
-	print 'Redirecting all output to',globalLog
+	print('Redirecting all output to',globalLog)
 	sys.stderr=open(globalLog,"w")
 	sys.stdout=sys.stderr
 
@@ -108,7 +114,7 @@ else:
 	sys.exit(1)
 	
 if opts.oar_script == '' :
-        print '--oar_script is mandatory';
+        print('--oar_script is mandatory');
         sys.exit(1);
 
 pynotifyAvailable = False
@@ -121,21 +127,21 @@ if not opts.disablePynotify:
 	except ImportError:
 		pynotifyAvailable = False
 
-print "Will run simulation(s) %s using `%s', nice value %d"%(scripts,executable,nice)
+print("Will run simulation(s) %s using `%s', nice value %d"%(scripts,executable,nice))
 
 if table:
 	reader=yade.utils.TableParamReader(table)
 	params=reader.paramDict()
-	availableLines=params.keys()
+	availableLines=list(params.keys())
 
-	print "Will use table `%s', with available lines"%(table),', '.join([str(i) for i in availableLines])+'.'
+	print("Will use table `%s', with available lines"%(table),', '.join([str(i) for i in availableLines])+'.')
 
 	if lineList:
 		useLines=[]
 		def numRange2List(s):
 			ret=[]
 			for l in s.split(','):
-				if "-" in l: ret+=range(*[int(s) for s in l.split('-')]); ret+=[ret[-1]+1]
+				if "-" in l: ret+=list(range(*[int(s) for s in l.split('-')])); ret+=[ret[-1]+1]
 				else: ret+=[int(l)]
 			return ret
 		useLines0=numRange2List(lineList)
@@ -143,9 +149,9 @@ if table:
 			if l not in availableLines: logging.warn('Skipping unavailable line %d that was requested from the command line.'%l)
 			else: useLines+=[l]
 	else: useLines=availableLines
-	print "Will use lines ",',\n '.join([str(i)+' (%s)'%params[i]['description'] for i in useLines])+'.'
+	print("Will use lines ",',\n '.join([str(i)+' (%s)'%params[i]['description'] for i in useLines])+'.')
 else:
-	print "Running %d stand-alone simulation(s) in batch mode."%(len(scripts))
+	print("Running %d stand-alone simulation(s) in batch mode."%(len(scripts)))
 	useLines=[]
 	params={}
 	for i,s in enumerate(scripts):
@@ -169,7 +175,7 @@ for i,l in enumerate(useLines):
 	jobCount=opts.timing
 	walltime = opts.oar_t
 	oarprops = opts.oar_prop
-	for col in params[l].keys():
+	for col in list(params[l].keys()):
 		if col[0]!='!': continue
 		val=params[l][col]
 		if col=='!OMP_NUM_THREADS' or col=='!THREADS': nCores=int(val)
@@ -202,17 +208,17 @@ for i,l in enumerate(useLines):
 		if table: env+='%s:%d'%(os.path.abspath(table),l) # keep YADE_BATCH empty (but still defined) if running a single simulation
 		cmd=' %s%s -j %i -x %s 2>&1'%(jobExecutable,' --nice=%s'%nice if nice!=None else '',nCores,os.path.abspath(script))
 		desc=params[l]['description']
-		if '!SCRIPT' in params[l].keys(): desc=script+'.'+desc # prepend filename if script is specified explicitly
+		if '!SCRIPT' in list(params[l].keys()): desc=script+'.'+desc # prepend filename if script is specified explicitly
 		if opts.timing>0: desc+='[%d]'%j
 		jobs.append(JobInfo(jobNum,desc,env+cmd,os.path.abspath('tmp/'+str(os.getpid())+'/'+logFile2),nCores,script=os.path.abspath(script),table=table,lineNo=l,affinity=jobAffinity,oarprop=oarprops))
 
 if not os.path.exists('tmp/'+str(os.getpid())):
     os.makedirs('tmp/'+str(os.getpid()));
 
-print "Job summary:"
+print("Job summary:")
 i = 0
 for job in jobs:
-	print '   #%d (%s%s):'%(job.num,job.id,'' if job.nCores==1 else '/%d'%job.nCores),job.command
+	print('   #%d (%s%s):'%(job.num,job.id,'' if job.nCores==1 else '/%d'%job.nCores),job.command)
 	if not dryRun:
 		# Create script file from model
 		scriptname = 'tmp/'+str(os.getpid())+'/'+opts.oar_script.split('/')[-1]+'.'+str(i)
@@ -236,7 +242,7 @@ for job in jobs:
 			prop+=' -t besteffort'
 
 
-		os.chmod(scriptname,0744);
+		os.chmod(scriptname,0o744);
 		#os.system('%s'%(scriptname));
 		os.system('oarsub --project=%s %s -l/cpu=1/core=%i,walltime=%s -O %s -E %s.err %s\n'%(project, prop, job.nCores, walltime, job.log,job.log,scriptname));
 

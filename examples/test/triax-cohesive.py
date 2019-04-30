@@ -2,6 +2,7 @@
 # 2012 ©Bruno Chareyre <bruno.chareyre@hmg.inpg.fr>
 # This variant of triax-basic.py shows the usage of cohesive contact laws and moments at contacts
 
+from __future__ import print_function
 from yade import pack
 
 sp=pack.SpherePack()
@@ -60,16 +61,16 @@ O.engines=[
 from yade import plot
 O.engines=O.engines[0:5]+[PyRunner(iterPeriod=20,command='history()',label='recorder')]+O.engines[5:7]
 def history():
-  	plot.addData(e11=-O.engines[4].strain[0], e22=-O.engines[4].strain[1], e33=-O.engines[4].strain[2],
-		    s11=-O.engines[4].stress(0)[0],
-		    s22=-O.engines[4].stress(2)[1],
-		    s33=-O.engines[4].stress(4)[2],
-		    i=O.iter)
+	plot.addData(e11=-O.engines[4].strain[0], e22=-O.engines[4].strain[1], e33=-O.engines[4].strain[2],
+		s11=-O.engines[4].stress(0)[0],
+		s22=-O.engines[4].stress(2)[1],
+		s33=-O.engines[4].stress(4)[2],
+		i=O.iter)
 
 plot.plots={'i':(('e11',"bo"),('e22',"ro"),('e33',"go"),None,('s11',"bx"),('s22',"rx"),('s33',"gx"))}
 plot.plot()
 
-print "computing, be patient..."
+print("computing, be patient...")
 #First run without moment and without cohesion
 O.run(7000,True)
 

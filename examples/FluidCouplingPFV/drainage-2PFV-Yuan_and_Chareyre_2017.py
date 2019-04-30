@@ -3,6 +3,7 @@
 # The script was used to generate the result and supplementary material (video) of [1]. The only difference is the problem size (40k particles in the paper vs. 1k (default) in this version)
 # [1] Yuan, C., & Chareyre, B. (2017). A pore-scale method for hydromechanical coupling in deformable granular media. Computer Methods in Applied Mechanics and Engineering, 318, 1066-1079. (http://www.sciencedirect.com/science/article/pii/S0045782516307216)
 
+
 import matplotlib; matplotlib.rc('axes',grid=True)
 from yade import pack
 import pylab
@@ -91,14 +92,14 @@ from yade import plot
 O.engines=O.engines+[PyRunner(iterPeriod=20,command='history()',dead=1,label='recorder')]
 
 def history():
-  	plot.addData(e11=-triax.strain[0]-ei0, e22=-triax.strain[1]-ei1, e33=-triax.strain[2]-ei2,
-		    s11=-triax.stress(0)[0]-si0,
-		    s22=-triax.stress(2)[1]-si1,
-		    s33=-triax.stress(4)[2]-si2,
-		    pc=-unsat.bndCondValue[2],
-		    sw=unsat.getSaturation(False),
-		    i=O.iter
-		    )
+	plot.addData(e11=-triax.strain[0]-ei0, e22=-triax.strain[1]-ei1, e33=-triax.strain[2]-ei2,
+		s11=-triax.stress(0)[0]-si0,
+		s22=-triax.stress(2)[1]-si1,
+		s33=-triax.stress(4)[2]-si2,
+		pc=-unsat.bndCondValue[2],
+		sw=unsat.getSaturation(False),
+		i=O.iter
+		)
 
 plot.plots={'pc':('sw',None,'e22')}
 plot.plot()

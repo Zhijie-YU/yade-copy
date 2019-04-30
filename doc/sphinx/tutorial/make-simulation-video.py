@@ -7,6 +7,7 @@
 #
 # plotting should be set up as usual
 
+from past.builtins import execfile
 import matplotlib
 matplotlib.use('Agg') # headless backend, makes rendering plots after the simulation _much_ faster (and more reliable)
 

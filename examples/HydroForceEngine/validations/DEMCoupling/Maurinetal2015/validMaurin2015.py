@@ -1,3 +1,4 @@
+from __future__ import print_function
 #########################################################################################################################################################################
 # Author: Raphael Maurin, raphael.maurin@imft.fr
 # 24/11/2017
@@ -15,6 +16,8 @@
 ############################################################################################################################################################################
 
 #Import libraries
+
+from builtins import range
 from yade import pack, plot
 import math
 import random as rand
@@ -61,7 +64,7 @@ elif sim20==1:
 	Nlayer = 7.30	#nb of layer of particle, in diameter
 	nbSim=20
 else:
-	print '\n At least one of the option sim6, sim14 or sim20 should be equal to 1 !! Exit !\n'
+	print('\n At least one of the option sim6, sim14 or sim20 should be equal to 1 !! Exit !\n')
 	exit()
 
 saveData = 1	#If put to 1, at each execution of function measure() save the sediment transport rate, fluid velocity, solid volume fraction and velocity profiles for post-processing
@@ -121,8 +124,8 @@ sidePlaneR = box(center= (length/2.0,rightLimitY,height/2.0),extents=(2000,0,hei
 O.bodies.append([sidePlaneR,sidePlaneL])
 
 # Regular arrangement of spheres sticked at the bottom with random height
-L = range(0,int(length/(diameterPart))) #The length is divided in particle diameter
-W = range(0,int(width/(diameterPart))) #The width is divided in particle diameter
+L = list(range(0,int(length/(diameterPart)))) #The length is divided in particle diameter
+W = list(range(0,int(width/(diameterPart)))) #The width is divided in particle diameter
 
 for x in L: #loop creating a set of sphere sticked at the bottom with a (uniform) random altitude comprised between 0.5 (diameter/12) and 5.5mm (11diameter/12) with steps of 0.5mm. The repartition along z is made around groundPosition.
 	for y in W:
@@ -157,9 +160,9 @@ O.engines = [
 	InsertionSortCollider([Bo1_Sphere_Aabb(), Bo1_Wall_Aabb(),Bo1_Facet_Aabb(),Bo1_Box_Aabb()],label='contactDetection',allowBiggerThanPeriod = True),
 	# Calculate the different interactions
 	InteractionLoop(
-   	[Ig2_Sphere_Sphere_ScGeom(), Ig2_Box_Sphere_ScGeom()],
-   	[Ip2_ViscElMat_ViscElMat_ViscElPhys()],
-   	[Law2_ScGeom_ViscElPhys_Basic()]
+	[Ig2_Sphere_Sphere_ScGeom(), Ig2_Box_Sphere_ScGeom()],
+	[Ip2_ViscElMat_ViscElMat_ViscElPhys()],
+	[Law2_ScGeom_ViscElPhys_Basic()]
 	,label = 'interactionLoop'),				
 	#Apply an hydrodynamic force to the particles
 	HydroForceEngine(densFluid = densFluidPY,viscoDyn = kinematicViscoFluid*densFluidPY,zRef = groundPosition,gravity = gravityVector,deltaZ = dz,expoRZ = expoDrag_PY,lift = False,nCell = ndimz,vCell = length*width*dz,radiusPart=diameterPart/2.,vxFluid = np.array(vxFluidPY),phiPart = phiPartPY,vxPart = vxPartPY,ids = idApplyForce, label = 'hydroEngine', dead = True,fluidWallFriction=True,channelWidth=width,phiMax = phiPartMax,iturbu = 1,ilm=2,iusl=1,irheolf=0),
@@ -195,7 +198,7 @@ def gravityDeposition(lim):
 	else :		
 		print('\n Gravity deposition finished, apply fluid forces !\n')
 		newtonIntegr.damping = 0.0	# Set the artificial numerical damping to zero
-	   	gravDepo.dead = True	# Remove the present engine for the following
+		gravDepo.dead = True	# Remove the present engine for the following
 		hydroEngine.dead = False	# Activate the HydroForceEngine
 		hydroEngine.vxFluid = vxFluidPY # Send the fluid velocity vector used to apply the drag fluid force on particles in HydroForceEngine (see c++ code)
 		hydroEngine.ReynoldStresses = np.ones(ndimz)*1e-4 # Send the simplified fluid Reynolds stresses Rxz/\rho^f used to account for the fluid velocity fluctuations in HydroForceEngine (see c++ code)
@@ -228,7 +231,7 @@ def fluidModel():
 def turbulentFluctuationPY():
 	#For stability requirement at the initialization stage
 	if O.time<depoTime+0.5:
-		print 'No turbulent fluctuation in the initialization process for stability reasons!'
+		print('No turbulent fluctuation in the initialization process for stability reasons!')
 		turbFluct.virtPeriod = 0.5
 	else:
 		# Evaluate nBed, the position of the bed which is assumed to be located around the first maximum of concentration when considering decreasing z.
@@ -282,7 +285,7 @@ def measure():
 
 	#Evaluate the Shields number from the maximum of the Reynolds stresses evaluated in the fluid resolution
 	shieldsNumber = max(hydroEngine.ReynoldStresses)/((densPart-densFluidPY)*diameterPart*abs(gravityVector[2]))	
-	print 'Shields number', shieldsNumber
+	print('Shields number', shieldsNumber)
 
 	if saveData==1:	#Save data for postprocessing
 		global fileNumber
@@ -311,7 +314,7 @@ if saveData==1:	#If saveData option is activated, requires a folder data
 	if os.path.exists(scriptPath + '/sim'+ str(nbSim) +'/data/')==False:
 		os.makedirs(scriptPath + '/sim'+ str(nbSim) +'/data/')
 	else:
-		print '\n!! Save data: overwrite the files contains in the folder data/ !!\n'
+		print('\n!! Save data: overwrite the files contains in the folder data/ !!\n')
 #Function to save global variables in a python file which can be re-executed for post-processing
 def Save(filePathName, globalVariables):
 	f = open(filePathName,'w')

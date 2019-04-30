@@ -5,6 +5,7 @@
 # The reference paper [Haustein2017]
 
 
+from __future__ import print_function
 from yade import utils, plot, timing
 from yade import pack
 
@@ -116,7 +117,7 @@ def stopUnloading():
         # while the id is composed of time and process number
         # plot.saveDataTxt(O.tags['d.id'] + '.txt')
         plot.saveDataTxt('data'+ O.tags['id'] +'.txt')
-        print timing.stats()
+        print(timing.stats())
         O.pause()
 
 

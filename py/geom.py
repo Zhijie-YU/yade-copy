@@ -2,9 +2,12 @@
 """
 Creates geometry objects from facets.
 """
+from __future__ import print_function
 
+from builtins import range
 from yade.wrapper import *
-import utils,math,numpy
+import math,numpy
+from yade import utils
 
 from minieigen import *
 
@@ -44,7 +47,7 @@ def facetParallelepiped(center,extents,height,orientation=Quaternion((0,1,0),0.0
 	
 	#Defense from zero dimensions
 	if (wallMask>63):
-		print "wallMask must be 63 or less"
+		print("wallMask must be 63 or less")
 		wallMask=63
 	if (extents[0]==0):
 		wallMask=1
@@ -62,7 +65,7 @@ def facetParallelepiped(center,extents,height,orientation=Quaternion((0,1,0),0.0
 		beta = math.asin(height/extents[2])
 		dx = math.cos(beta)*extents[2]
 	
-	mn,mx=[-extents[i] for i in 0,1,2],[extents[i] for i in 0,1,2]
+	mn,mx=[-extents[i] for i in (0,1,2)],[extents[i] for i in (0,1,2)]
 	def doWall(a,b,c,d):
 		return [utils.facet((a,b,c),**kw),utils.facet((a,c,d),**kw)]
 	ret=[]
@@ -143,15 +146,15 @@ def facetSphere(center,radius,thetaResolution=8,phiResolution=8,returnElementMap
 	nodes.append(Vector3(c0,c1,c2-radius))
 	n = len(nodes)-1
 	
-	elements = [(0,i+1,i+2) for i in xrange(thetaResolution-1)]
+	elements = [(0,i+1,i+2) for i in range(thetaResolution-1)]
 	elements.append((0,1,thetaResolution))
-	for j in xrange(0,phiResolution-3):
+	for j in range(0,phiResolution-3):
 		k = j*thetaResolution + 1
-		elements.extend((k+i,k+i+1,k+i+thetaResolution) for i in xrange(thetaResolution-1))
+		elements.extend((k+i,k+i+1,k+i+thetaResolution) for i in range(thetaResolution-1))
 		elements.append((k,k+thetaResolution-1,k+2*thetaResolution-1))
-		elements.extend((k+i+thetaResolution,k+i+1+thetaResolution,k+i+1) for i in xrange(thetaResolution-1))
+		elements.extend((k+i+thetaResolution,k+i+1+thetaResolution,k+i+1) for i in range(thetaResolution-1))
 		elements.append((k+2*thetaResolution-1,k+thetaResolution,k))
-	elements.extend((n,n-i-1,n-i-2) for i in xrange(thetaResolution-1))
+	elements.extend((n,n-i-1,n-i-2) for i in range(thetaResolution-1))
 	elements.append((n,n-1,n-thetaResolution))
 	
 	facets = [utils.facet(tuple(nodes[node] for node in elem),**kw) for elem in elements]
@@ -316,7 +319,7 @@ def facetPolygonHelixGenerator(center,radiusOuter,pitch=0,orientation=Quaternion
 		XOuter=radiusOuter*math.cos(i); YOuter=radiusOuter*math.sin(i); 
 		POuter.append(Vector3(XOuter,YOuter,heightsInRad[z]))
 		PCenter.append(Vector3(0,0,heightsInRad[z]))
-		if (radiusInner<>0):
+		if (radiusInner!=0):
 			XInner=radiusInner*math.cos(i); YInner=radiusInner*math.sin(i); 
 			PInner.append(Vector3(XInner,YInner,heightsInRad[z]))
 		z+=1
@@ -324,7 +327,7 @@ def facetPolygonHelixGenerator(center,radiusOuter,pitch=0,orientation=Quaternion
 	for i in range(0,len(POuter)):
 		POuter[i]=orientation*POuter[i]+center
 		PCenter[i]=orientation*PCenter[i]+center
-		if (radiusInner<>0):
+		if (radiusInner!=0):
 			PInner[i]=orientation*PInner[i]+center
 	
 	ret=[]
@@ -367,7 +370,7 @@ def facetCylinderConeGenerator(center,radiusTop,height,orientation=Quaternion((0
 	if (angleRange[1]<angleRange[0]): raise RuntimeError("angleRange[1] should be larger or equal angleRange[1]");
 	
 	if isinstance(angleRange,float):
-		print u'WARNING: geom.facetCylinder,angleRange should be (Θmin,Θmax), not just Θmax (one number), update your code.'
+		print(u'WARNING: geom.facetCylinder,angleRange should be (Θmin,Θmax), not just Θmax (one number), update your code.')
 		angleRange=(0,angleRange)
 		
 	anglesInRad = numpy.linspace(angleRange[0], angleRange[1], segmentsNumber+1, endpoint=True)

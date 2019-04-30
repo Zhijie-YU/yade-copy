@@ -37,6 +37,10 @@
   #define SELF_CHECK
 #endif
 
+// https://codeyarns.com/2014/03/11/how-to-selectively-ignore-a-gcc-warning/
+// https://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Pragmas.html
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
 
 /*-------------------------------------------------------------------------*/
 /* Methods exported to python */
@@ -355,11 +359,8 @@ pygts_write(PygtsSurface *self, PyObject *args)
     return NULL;
 
   /* Convert to PygtsObjects */
-  if(!PyFile_Check(f_)) {
-    PyErr_SetString(PyExc_TypeError,"expected a File");
-    return NULL;
-  }
-  f = PyFile_AsFile(f_);
+  f=FILE_from_py_file__raises(f_,"w");
+  if(!f) return NULL;
 
   /* Write to the file */
   gts_surface_write(PYGTS_SURFACE_AS_GTS_SURFACE(self),f);
@@ -382,11 +383,8 @@ pygts_write_oogl(PygtsSurface *self, PyObject *args)
     return NULL;
 
   /* Convert to PygtsObjects */
-  if(!PyFile_Check(f_)) {
-    PyErr_SetString(PyExc_TypeError,"expected a File");
-    return NULL;
-  }
-  f = PyFile_AsFile(f_);
+  f=FILE_from_py_file__raises(f_,"w");
+  if(!f) return NULL;
 
   /* Write to the file */
   gts_surface_write_oogl(PYGTS_SURFACE_AS_GTS_SURFACE(self),f);
@@ -409,11 +407,8 @@ pygts_write_oogl_boundary(PygtsSurface *self, PyObject *args)
     return NULL;
 
   /* Convert to PygtsObjects */
-  if(!PyFile_Check(f_)) {
-    PyErr_SetString(PyExc_TypeError,"expected a File");
-    return NULL;
-  }
-  f = PyFile_AsFile(f_);
+  f=FILE_from_py_file__raises(f_,"w");
+  if(!f) return NULL;
 
   /* Write to the file */
   gts_surface_write_oogl_boundary(PYGTS_SURFACE_AS_GTS_SURFACE(self),f);
@@ -436,11 +431,8 @@ pygts_write_vtk(PygtsSurface *self, PyObject *args)
     return NULL;
 
   /* Convert to PygtsObjects */
-  if(!PyFile_Check(f_)) {
-    PyErr_SetString(PyExc_TypeError,"expected a File");
-    return NULL;
-  }
-  f = PyFile_AsFile(f_);
+  f=FILE_from_py_file__raises(f_,"w");
+  if(!f) return NULL;
 
   /* Write to the file */
   gts_surface_write_vtk(PYGTS_SURFACE_AS_GTS_SURFACE(self),f);
@@ -838,7 +830,11 @@ static void get_indices(GtsFace *face, IndicesData *data)
     for(j=0;j<data->Nv;j++) {
       if( PYGTS_VERTEX_AS_GTS_VERTEX(PyTuple_GET_ITEM(data->vertices,j))
 	  ==v[i] ) {
-	PyTuple_SET_ITEM(t, i, PyInt_FromLong(j));
+  #if PY_MAJOR_VERSION >= 3
+    PyTuple_SET_ITEM(t, i, PyLong_FromLong(j));
+  #else
+	  PyTuple_SET_ITEM(t, i, PyInt_FromLong(j));
+  #endif
 	flag = TRUE;
 	break;
       }
@@ -2006,7 +2002,7 @@ dealloc(PygtsSurface* self)
 
 
 static PyObject *
-new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+new_(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
   PyObject *o;
   PygtsObject *obj;
@@ -2133,8 +2129,7 @@ iternext(PygtsSurface *self)
 
 /* Methods table */
 PyTypeObject PygtsSurfaceType = {
-    PyObject_HEAD_INIT(NULL)
-    0,                       /* ob_size */
+    PyVarObject_HEAD_INIT(NULL,0)
     "gts.Surface",           /* tp_name */
     sizeof(PygtsSurface),    /* tp_basicsize */
     0,                       /* tp_itemsize */
@@ -2153,9 +2148,13 @@ PyTypeObject PygtsSurfaceType = {
     0,                       /* tp_getattro */
     0,                       /* tp_setattro */
     0,                       /* tp_as_buffer */
-    Py_TPFLAGS_DEFAULT |
-      Py_TPFLAGS_BASETYPE |
-      Py_TPFLAGS_HAVE_ITER,  /* tp_flags */
+    Py_TPFLAGS_DEFAULT |     /* tp_flags */
+      Py_TPFLAGS_BASETYPE
+      #if PY_MAJOR_VERSION < 3
+        /* this is always set in py3k: https://mail.python.org/pipermail/python-porting/2012-April/000289.html */
+        | Py_TPFLAGS_HAVE_ITER  
+      #endif
+      ,
     "Surface object",        /* tp_doc */
     0,                       /* tp_traverse */
     0,                       /* tp_clear */
@@ -2173,7 +2172,7 @@ PyTypeObject PygtsSurfaceType = {
     0,                       /* tp_dictoffset */
     (initproc)init,          /* tp_init */
     0,                       /* tp_alloc */
-    (newfunc)new             /* tp_new */
+    (newfunc)new_             /* tp_new */
 };
 
 
@@ -2253,3 +2252,6 @@ pygts_surface_new(GtsSurface *s) {
   pygts_object_register(surface);
   return PYGTS_SURFACE(surface);
 }
+
+#pragma GCC diagnostic pop
+

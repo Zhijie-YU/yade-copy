@@ -126,6 +126,11 @@ from __future__ import print_function
 #-----------------------------------------------------------------------------
 
 # Stdlib
+from future import standard_library
+standard_library.install_aliases()
+
+from builtins import range
+from builtins import object
 import os
 import re
 import sys
@@ -157,13 +162,13 @@ from IPython.utils.py3compat import PY3
 if PY3:
     from io import StringIO
 else:
-    from StringIO import StringIO
+    from io import StringIO
 
 #-----------------------------------------------------------------------------
 # Globals
 #-----------------------------------------------------------------------------
 # for tokenizing blocks
-COMMENT, INPUT, OUTPUT =  range(3)
+COMMENT, INPUT, OUTPUT =  list(range(3))
 
 #-----------------------------------------------------------------------------
 # Functions and class declarations

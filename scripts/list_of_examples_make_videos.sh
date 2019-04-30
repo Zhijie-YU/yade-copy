@@ -1,4 +1,9 @@
 #!/usr/bin/zsh
+# INFO: run this script inside ./scripts
+#       It can also be used to check if the examples are working. Only need to modify line the_examples=…… to use a different grep pattern
+#       Then when asked '(Press Ctrl-C when recording is complete) Ready? [y/n] :' press n to skip recording. Then a new example is tested.
+#       Also can start more examples simultaneously - just press 'n' to start next one without closing the previous one.
+
 # This script automates creation of videos from examples. First it greps list_of_examples for pattern "...│...│no │"
 # to identify examples which do not have a video uploaded.
 # Then it runs a loop over all those examples. Opens two terminals, in first terminal there is yade running,
@@ -13,13 +18,14 @@
 #grep -E "...│...│no │" ../examples/list_of_examples.txt | sed -e "s/.*\(\<[A-Za-z_0-9-]\+\>\.py\>\).*/\1/"
 
 the_examples=("${(@f)$(grep -E "...│...│no │" ../examples/list_of_examples.txt | sed -e "s/.* \([A-Za-z_0-9-]\+\>\.py\>\).*/\1/")}")
+#the_examples=("${(@f)$(grep -E "^\?  │...│...│" ../examples/list_of_examples.txt | sed -e "s/.* \([A-Za-z_0-9-]\+\>\.py\>\).*/\1/")}")
 
 mkdir -p /tmp/video
 mkdir -p /tmp/run
-cp yade /tmp/run
+cp ../examples/yade /tmp/run
 
 for example in $the_examples; do
-	file_location=("${(@f)$(find . -name "${example}" -type f)}")
+	file_location=("${(@f)$(find ../ -name "${example}" -type f)}")
 	print "Working on ${example} in ${file_location}"
 	cp ${file_location} /tmp/run/${example}
 	SUCCESS=$?

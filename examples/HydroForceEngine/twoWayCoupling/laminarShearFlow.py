@@ -1,3 +1,4 @@
+from __future__ import print_function
 #########################################################################################################################################################################
 # Author: Raphael Maurin, raphael.maurin@imft.fr
 # 06/11/2018
@@ -10,6 +11,8 @@
 ############################################################################################################################################################################
 
 #Import libraries
+
+from builtins import range
 from yade import pack, plot
 import math
 import random as rand
@@ -49,7 +52,7 @@ fluidHeight = 2*Nlayer*diameterPart	#Height of the flow from the bottom of the s
 waterDepth = Nlayer*diameterPart
 Rep =  densFluidPY*diameterPart*uTop/dynamicVisco
 Re = densFluidPY*waterDepth*uTop/dynamicVisco
-print "\nDimensionless numbers of the simulation: Re =",Re, ",   Rep =",Rep,",  rhop/rhof=",densPart/densFluidPY, ",   Shields =", Shields,"\n"
+print("\nDimensionless numbers of the simulation: Re =",Re, ",   Rep =",Rep,",  rhop/rhof=",densPart/densFluidPY, ",   Shields =", Shields,"\n")
 #Fit the gravity in order to obtain the wanted Shields number while keeping the Reynolds number and particle Reynolds number to the same values. 
 gammaDot = uTop/(Nlayer*diameterPart)#Approximate Shear rate
 gra = dynamicVisco*gammaDot/((densPart-densFluidPY)*Shields*diameterPart)
@@ -72,7 +75,7 @@ vxPartPY = np.zeros(ndimz-1)	# Vertical average particle velocity profile, evalu
 
 #Initialize the fluid velocity with a simple shear profile over the granular bed
 initVxFluid = np.zeros(ndimz+1)
-initVxFluid[ndimz/2:] = np.linspace(0,ndimz-ndimz/2+1,ndimz-ndimz/2+1)*uTop/(ndimz-ndimz/2+1)
+initVxFluid[ndimz//2:] = np.linspace(0,int(ndimz-ndimz/2+1),int(ndimz-ndimz/2+1))*uTop/(ndimz-ndimz/2+1)
 
 #Geometrical configuration, define useful quantities
 height = 5*fluidHeight	#heigth of the periodic cell, in m (bigger than the fluid height to take into particles jumping above the latter)
@@ -107,8 +110,8 @@ topPlate = box(center= (length/2.0, width/2.0,groundPosition+fluidHeight),extent
 tpID = O.bodies.append(topPlate) #add to simulation
 
 # Regular arrangement of spheres sticked at the bottom with random height
-L = range(0,int(length/(diameterPart))) #The length is divided in particle diameter
-W = range(0,int(width/(diameterPart))) #The width is divided in particle diameter
+L = list(range(0,int(length/(diameterPart)))) #The length is divided in particle diameter
+W = list(range(0,int(width/(diameterPart)))) #The width is divided in particle diameter
 
 for x in L: #loop creating a set of sphere sticked at the bottom with a (uniform) random altitude comprised between 0.5 (diameter/12) and 5.5mm (11diameter/12) with steps of 0.5mm. The repartition along z is made around groundPosition.
 	for y in W:
@@ -142,9 +145,9 @@ O.engines = [
 	InsertionSortCollider([Bo1_Sphere_Aabb(), Bo1_Wall_Aabb(),Bo1_Facet_Aabb(),Bo1_Box_Aabb()],label='contactDetection',allowBiggerThanPeriod = True),
 	# Calculate the different interactions
 	InteractionLoop(
-   	[Ig2_Sphere_Sphere_ScGeom(), Ig2_Box_Sphere_ScGeom()],
-   	[Ip2_ViscElMat_ViscElMat_ViscElPhys()],
-   	[Law2_ScGeom_ViscElPhys_Basic()]
+	[Ig2_Sphere_Sphere_ScGeom(), Ig2_Box_Sphere_ScGeom()],
+	[Ip2_ViscElMat_ViscElMat_ViscElPhys()],
+	[Law2_ScGeom_ViscElPhys_Basic()]
 	,label = 'interactionLoop'),				
 	#Apply an hydrodynamic force to the particles
 	HydroForceEngine(densFluid = densFluidPY,viscoDyn = dynamicVisco,zRef = groundPosition,gravity = gravityVector,deltaZ = dz,expoRZ = expoDrag_PY,lift = False,nCell = ndimz,vCell = length*width*dz,radiusPart=diameterPart/2.,vxFluid = initVxFluid,phiPart = phiPartPY,vxPart = vxPartPY,irheolf=0, iusl = 0, uTop = uTop,iturbu = 0,ids = idApplyForce, label = 'hydroEngine', dead = True),
@@ -178,7 +181,7 @@ def gravityDeposition(lim):
 	else :
 		print('\n Gravity deposition finished, apply fluid forces !\n')
 		newtonIntegr.damping = 0.0	# Set the artificial numerical damping to zero
-	   	gravDepo.dead = True		# Remove the present engine for the following
+		gravDepo.dead = True		# Remove the present engine for the following
 		hydroEngine.dead = False	# Activate the HydroForceEngine
 		hydroEngine.vxFluid = vxFluidPY # Send the fluid velocity vector used to apply the drag fluid force on particles in HydroForceEngine (see c++ code)
 		hydroEngine.ReynoldStresses = np.zeros(ndimz) # Send the simplified fluid Reynolds stresses Rxz/\rho^f used to account for the fluid velocity fluctuations in HydroForceEngine (see c++ code)
@@ -227,7 +230,7 @@ def measure():
 	#Evaluate the dimensionless sediment transport rate for information
 	qsMean = sum(phiPartPY*vxPartPY)*dz/sqrt((densPart/densFluidPY - 1)*abs(gravityVector[2])*pow(diameterPart,3))
 	plot.addData(SedimentRate = qsMean, time = O.time)	#Plot it during the simulation
-	print qsMean
+	print(qsMean)
 
 	#Condition to stop the simulation after endTime seconds
 	if O.time>=endTime:
@@ -259,7 +262,7 @@ if saveData==1:	#If saveData option is activated, requires a folder data
 	if os.path.exists(scriptPath +'/data/')==False:
 		os.mkdir(scriptPath +'/data/')
 	else:
-		print '\n!! Save data: overwrite the files contains in the folder data/ !!\n'
+		print('\n!! Save data: overwrite the files contains in the folder data/ !!\n')
 #Function to save global variables in a python file which can be re-executed for post-processing
 def Save(filePathName, globalVariables):
 	f = open(filePathName,'w')

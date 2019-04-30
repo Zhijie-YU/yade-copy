@@ -52,61 +52,60 @@ void PhaseCluster::solvePressure()
 			  double diag=0;
 			  for (int j=0;j<4;j++) if ((not tes->Triangulation().is_infinite(cell->neighbor(j))) and  !cell->neighbor(j)->info().blocked) {
 			      diag+= (cell->info().kNorm())[j];
-// 			      cerr <<"("<< cell->info().id<< " "<<cell->neighbor(j)->info().id<<  ") diag+= "<< cell->info().id<<" = "<<(cell->info().kNorm())[j]<<endl;
-			       if ((not cell->neighbor(j)->info().Pcondition) and not cell->neighbor(j)->info().isNWRes) {
-				 if (cell->info().label == cell->neighbor(j)->info().label) {
-				  // off-diag coeff, only if neighbor cell is part of same cluster and in upper triangular part of the matrix
+			      if ((not cell->neighbor(j)->info().Pcondition) and not cell->neighbor(j)->info().isNWRes) {
+				 if (not factorized)
+				 {
+				   if (cell->info().label == cell->neighbor(j)->info().label) {
+					// off-diag coeff, only if neighbor cell is part of same cluster and in upper triangular part of the matrix
 					if (cell->info().index < cell->neighbor(j)->info().index) {
-// 						cerr<<"("<< cell->info().id<<" "<<cell->neighbor(j)->info().id <<") coeff="<<-(cell->info().kNorm())[j]<<endl;
-						
-						
 						T_nnz++;
 						is.push_back(cell->info().index);
 						js.push_back(cell->neighbor(j)->info().index);
 						vs.push_back(-(cell->info().kNorm())[j]);}
 					}
-					else {LOG_WARN("adjacent pores from different W-clusters:"<< cell->info().id<<" "<<cell->neighbor(j)->info().id );}
-			       } else {//imposed pressure can be in the W-phase or the NW-phase but capillary pressure will be added in another loop
+				   else {LOG_WARN("adjacent pores from different W-clusters:"<< cell->info().id<<" "<<cell->neighbor(j)->info().id );}
+				 }
+			      } else {//imposed pressure can be in the W-phase or the NW-phase but capillary pressure will be added in another loop
 				    // for the moment add neighbor pressure regadless of the phase
 				    RHS[cell->info().index]+=(cell->info().kNorm())[j]*cell->neighbor(j)->info().p();}
 			}
 			else {if (tes->Triangulation().is_infinite(cell->neighbor(j))) LOG_WARN("infinite neighbour");}
-// 			/*if (debugTPF)*/ cerr<<"diag: "<< cell->info().id<<" = "<<diag<<endl;
-			  // define the diag coeff
-			 T_nnz++;
-			is.push_back(cell->info().index);
-			js.push_back(cell->info().index);
-			vs.push_back(diag);
+			// define the diag coeff
+			if (not factorized) {
+				T_nnz++;
+				is.push_back(cell->info().index);
+				js.push_back(cell->info().index);
+				vs.push_back(diag);}
 			  
-			  // source term from volume change, to be updated later
-			  //FIXME: needs to be commented in for full coupling - currently off for debugging other things
-// 			  RHSvol[cell->info().index]-=cell->info().dv();
-		  }
+			// source term from volume change, to be updated later
+			RHSvol[cell->info().index]-=cell->info().dv();
+		}
 		for (vector<Interface>::iterator it =  interfaces.begin(); it!=interfaces.end(); it++) {
 			if (not tes) LOG_WARN("no tes!!");
 			const CellHandle& innerCell = tes->cellHandles[it->first.first];
 			if (innerCell->info().Pcondition) continue;
 			RHS[innerCell->info().index]-=innerCell->info().kNorm()[it->outerIndex]*it->capillaryP;
-// 			/*if (debugTPF) */cerr<<"("<< innerCell->info().id<<" "<<innerCell->neighbor(it->outerIndex)->info().id <<") RHS(cap)-="<<innerCell->info().kNorm()[it->outerIndex]*it->capillaryP<<" "<<innerCell->info().kNorm()[it->outerIndex]<<" "<<it->capillaryP<<endl;
 		}
 		//comC.useGPU=useGPU; //useGPU;
 		//FIXME: is it safe to share "comC" among parallel cluster resolution?
-		cholmod_triplet* T = cholmod_l_allocate_triplet(ncols,ncols, T_nnz, 1, CHOLMOD_REAL, &(comC));
-		for(unsigned k=0;k<T_nnz;k++) {
-			((long*) T->i)[k]=is[k];
-			((long*) T->j)[k]=js[k];
-			((double*) T->x)[k]=vs[k];
+		if (not factorized) {
+			cholmod_triplet* T = cholmod_l_allocate_triplet(ncols,ncols, T_nnz, 1, CHOLMOD_REAL, &(comC));
+			for(unsigned k=0;k<T_nnz;k++) {
+				((long*) T->i)[k]=is[k];
+				((long*) T->j)[k]=js[k];
+				((double*) T->x)[k]=vs[k];
+			}
+			T->nnz=T_nnz;
+			// convert triplet list into a cholmod sparse matrix, then factorize it
+			cholmod_sparse* AcholC = cholmod_l_triplet_to_sparse(T, T->nnz, &(comC));
+			LC = cholmod_l_analyze(AcholC, &(comC));
+			cholmod_l_factorize(AcholC, LC, &(comC));
+			// clean
+			cholmod_l_free_triplet(&T, &(comC));
+			cholmod_l_free_sparse(&AcholC, &(comC));
+			factorized = true;
 		}
-		T->nnz=T_nnz;
-	
-		// convert triplet list into a cholmod sparse matrix, then factorize it
-		cholmod_sparse* AcholC = cholmod_l_triplet_to_sparse(T, T->nnz, &(comC));
-// 		cholmod_l_print_sparse(AcholC, "Achol", pComC);
-			
-		LC = cholmod_l_analyze(AcholC, &(comC));
-		cholmod_l_factorize(AcholC, LC, &(comC));
-		
-		cholmod_dense* B = cholmod_l_zeros(ncols, 1, AcholC->xtype, &(comC));
+		cholmod_dense* B = cholmod_l_zeros(ncols, 1, LC->xtype, &(comC));
 		double* B_x =(double *) B->x;
 		for (int k=0; k<ncols; k++) B_x[k]=RHS[k]+RHSvol[k];
 	
@@ -119,9 +118,8 @@ void PhaseCluster::solvePressure()
 			cell->info().p() = e_x[cell->info().index];
 		}
 		//clean
-		cholmod_l_free_triplet(&T, &(comC));
 		cholmod_l_free_dense(&B, &(comC));
-		cholmod_l_free_sparse(&AcholC, &(comC));
+		
 #endif
 }
 
@@ -2657,7 +2655,16 @@ vector<int> TwoPhaseFlowEngine::clusterOutvadePore(unsigned startingId, unsigned
 	//unsigned facet; // Note by Janek: warning: unused variable ‘facet’ [-Wunused-variable]
 	clusterGetPore(cluster,newPore);
 	unsigned facetIdx;
-	for (facetIdx=0; cluster->interfaces[facetIdx].first.first != startingId or cluster->interfaces[facetIdx].first.second!=imbibedId; facetIdx++) {if ((facetIdx+1)>=cluster->interfaces.size()) LOG_WARN("interface not found");}
+	if (	index>=0 and unsigned(index)<cluster->interfaces.size() and
+		cluster->interfaces[index].first.first == startingId and
+		cluster->interfaces[index].first.second == imbibedId)  {
+		  facetIdx=index;
+	} else {
+	  if (index>=0) LOG_WARN("index mismatch wrt. cell ids");
+	  for (facetIdx=0; cluster->interfaces[facetIdx].first.first != startingId or cluster->interfaces[facetIdx].first.second!=imbibedId; facetIdx++)
+		{if ((facetIdx+1)>=cluster->interfaces.size()) LOG_WARN("interface not found");}
+	} 
+	
 	vector<unsigned> interfacesToRemove = {facetIdx};
 	vector<unsigned> interfacesToAdd;
 	bool updateIntfs=false;//if turned true later we will have to clean interfaces

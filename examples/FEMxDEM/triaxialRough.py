@@ -11,6 +11,8 @@ How to run this script:
     /path/to/yade ./triaxialRough.py
 Please amend these instructions if you find that they do not work.
 """
+
+from builtins import range
 from esys.escript import *
 from esys.finley import Brick
 from esys.weipa import saveVTK
@@ -37,7 +39,7 @@ nx = 8; ny = 8; nz = 16; # discretization
 mydomain = Brick(l0=lx,l1=ly,l2=lz,n0=nx,n1=ny,n2=nz,order=2,integrationOrder=2) # 20-noded,8-Gauss hexahedral element
 dim = 3; k = kronecker(mydomain)
 numg = 8*nx*ny*nz; # number of Gauss points
-packNo=range(0,numg,8)
+packNo=list(range(0,numg,8))
 
 prob = MultiScale(domain=mydomain,ng=numg,useMPI=True,rtol=1e-2) # mpi is activated
 

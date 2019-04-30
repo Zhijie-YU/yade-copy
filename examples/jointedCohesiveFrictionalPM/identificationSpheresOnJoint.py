@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
 from yade import pack, utils, ymport, export
 
 packing='parallellepiped_10'
@@ -10,7 +11,7 @@ facetMat = O.materials.append(JCFpmMat(type=0,young=1,frictionAngle=radians(1),p
 def sphereMat(): return JCFpmMat(type=1,young=1,frictionAngle=radians(1),density=1,poisson=1,tensileStrength=1e6,cohesion=1e6,jointNormalStiffness=1,jointShearStiffness=1,jointTensileStrength=1e6,jointCohesion=1e6,jointFrictionAngle=1)
 
 ############################ Import of the sphere assembly
-print "\n  In case of errors please look at README about generating parallellepiped_10.spheres file\n"
+print("\n  In case of errors please look at README about generating parallellepiped_10.spheres file\n")
 O.bodies.append(ymport.text(packing+'.spheres',scale=1,shift=Vector3(0,0,0),material=sphereMat)) #(-3,-4,-8)
 
 #### some preprocessing (not mandatory)
@@ -36,7 +37,7 @@ for o in O.bodies:
    o.shape.color=(0,0,0)
 Rmean=R/numSpheres
 
-print 'number of spheres=', numSpheres, ' | Rmean=', Rmean, ' | dim=', dim
+print('number of spheres=', numSpheres, ' | Rmean=', Rmean, ' | dim=', dim)
 
 ############################ import stl file
 O.bodies.append(ymport.stl(DFN+'.stl',color=(0.9,0.9,0.9),wire=False,material=facetMat)) 
@@ -77,108 +78,108 @@ O.step();
 for i in O.interactions:
     ##if not i.isReal : continue
     if isinstance(O.bodies[i.id1].shape,Facet) and isinstance(O.bodies[i.id2].shape,Sphere): 
-	vertices=O.bodies[i.id1].shape.vertices
-	normalRef=vertices[0].cross(vertices[1]) # defines the normal to the facet normalRef
-	nRef=normalRef/(normalRef.norm()) ## normalizes normalRef
-	normalFacetSphere=i.geom.normal # geom.normal is oriented from id1 to id2 -> normalFacetSphere from facet (i.id1) to sphere (i.id2)
+        vertices=O.bodies[i.id1].shape.vertices
+        normalRef=vertices[0].cross(vertices[1]) # defines the normal to the facet normalRef
+        nRef=normalRef/(normalRef.norm()) ## normalizes normalRef
+        normalFacetSphere=i.geom.normal # geom.normal is oriented from id1 to id2 -> normalFacetSphere from facet (i.id1) to sphere (i.id2)
 
-	if O.bodies[i.id2].state.onJoint==False : ## particles has not yet been identified as belonging to a joint plane
-	    O.bodies[i.id2].state.onJoint=True
-	    O.bodies[i.id2].state.joint=1
-	    O.bodies[i.id2].shape.color=jointcolor1
-	    if nRef.dot(normalFacetSphere)>=0 :
-		O.bodies[i.id2].state.jointNormal1=nRef
-	    elif nRef.dot(normalFacetSphere)<0 :
-		O.bodies[i.id2].state.jointNormal1=-nRef
-	elif O.bodies[i.id2].state.onJoint==True :  ## particles has already been identified as belonging to, at least, 1 facet
-	    if O.bodies[i.id2].state.joint==1 and ((O.bodies[i.id2].state.jointNormal1.cross(nRef)).norm()>0.05) : ## particles has already been identified as belonging to only 1 facet
-		O.bodies[i.id2].state.joint=2
-		O.bodies[i.id2].shape.color=jointcolor2
-		if nRef.dot(normalFacetSphere)>=0 :
-		    O.bodies[i.id2].state.jointNormal2=nRef
-		elif nRef.dot(normalFacetSphere)<0 :
-		    O.bodies[i.id2].state.jointNormal2=-nRef
-	    elif O.bodies[i.id2].state.joint==2 and ((O.bodies[i.id2].state.jointNormal1.cross(nRef)).norm()>0.05) and ((O.bodies[i.id2].state.jointNormal2.cross(nRef)).norm()>0.05): ## particles has already been identified as belonging to more than 1 facet
-		O.bodies[i.id2].state.joint=3
-		O.bodies[i.id2].shape.color=jointcolor3
-		if nRef.dot(normalFacetSphere)>=0 :
-		    O.bodies[i.id2].state.jointNormal3=nRef
-		elif nRef.dot(normalFacetSphere)<0 :
-		    O.bodies[i.id2].state.jointNormal3=-nRef
-	    elif O.bodies[i.id2].state.joint==3 and ((O.bodies[i.id2].state.jointNormal1.cross(nRef)).norm()>0.05) and ((O.bodies[i.id2].state.jointNormal2.cross(nRef)).norm()>0.05) and ((O.bodies[i.id2].state.jointNormal3.cross(nRef)).norm()>0.05):
-		O.bodies[i.id2].state.joint=4
-		O.bodies[i.id2].shape.color=jointcolor5
+        if O.bodies[i.id2].state.onJoint==False : ## particles has not yet been identified as belonging to a joint plane
+            O.bodies[i.id2].state.onJoint=True
+            O.bodies[i.id2].state.joint=1
+            O.bodies[i.id2].shape.color=jointcolor1
+            if nRef.dot(normalFacetSphere)>=0 :
+                O.bodies[i.id2].state.jointNormal1=nRef
+            elif nRef.dot(normalFacetSphere)<0 :
+                O.bodies[i.id2].state.jointNormal1=-nRef
+        elif O.bodies[i.id2].state.onJoint==True :  ## particles has already been identified as belonging to, at least, 1 facet
+            if O.bodies[i.id2].state.joint==1 and ((O.bodies[i.id2].state.jointNormal1.cross(nRef)).norm()>0.05) : ## particles has already been identified as belonging to only 1 facet
+                O.bodies[i.id2].state.joint=2
+                O.bodies[i.id2].shape.color=jointcolor2
+                if nRef.dot(normalFacetSphere)>=0 :
+                    O.bodies[i.id2].state.jointNormal2=nRef
+                elif nRef.dot(normalFacetSphere)<0 :
+                    O.bodies[i.id2].state.jointNormal2=-nRef
+            elif O.bodies[i.id2].state.joint==2 and ((O.bodies[i.id2].state.jointNormal1.cross(nRef)).norm()>0.05) and ((O.bodies[i.id2].state.jointNormal2.cross(nRef)).norm()>0.05): ## particles has already been identified as belonging to more than 1 facet
+                O.bodies[i.id2].state.joint=3
+                O.bodies[i.id2].shape.color=jointcolor3
+                if nRef.dot(normalFacetSphere)>=0 :
+                    O.bodies[i.id2].state.jointNormal3=nRef
+                elif nRef.dot(normalFacetSphere)<0 :
+                    O.bodies[i.id2].state.jointNormal3=-nRef
+            elif O.bodies[i.id2].state.joint==3 and ((O.bodies[i.id2].state.jointNormal1.cross(nRef)).norm()>0.05) and ((O.bodies[i.id2].state.jointNormal2.cross(nRef)).norm()>0.05) and ((O.bodies[i.id2].state.jointNormal3.cross(nRef)).norm()>0.05):
+                O.bodies[i.id2].state.joint=4
+                O.bodies[i.id2].shape.color=jointcolor5
 
 #### second step -> find spheres interacting with spheres on facet (could be executed in the same timestep as step 1?)
 for j in O.interactions:
     #if not i.isReal : continue
     if isinstance(O.bodies[j.id1].shape,Facet) and isinstance(O.bodies[j.id2].shape,Sphere):
-	vertices=O.bodies[j.id1].shape.vertices
-	normalRef=vertices[0].cross(vertices[1]) # defines the normal to the facet normalRef
-	nRef=normalRef/(normalRef.norm()) ## normalizes normalRef
-	if ((O.bodies[j.id2].state.jointNormal1.cross(nRef)).norm()<0.05) :
-	    jointNormalRef=O.bodies[j.id2].state.jointNormal1
-	elif ((O.bodies[j.id2].state.jointNormal2.cross(nRef)).norm()<0.05) :
-	    jointNormalRef=O.bodies[j.id2].state.jointNormal2
-	elif ((O.bodies[j.id2].state.jointNormal3.cross(nRef)).norm()<0.05) :
-	    jointNormalRef=O.bodies[j.id2].state.jointNormal3
-	else : continue
-	facetCenter=O.bodies[j.id1].state.pos
-	#### seek for each sphere interacting with the identified sphere j.id2
-	for n in O.interactions.withBody(j.id2) :
-	    if n.id1==j.id2 and isinstance(O.bodies[n.id2].shape,Sphere): 
-		facetSphereDir=(O.bodies[n.id2].state.pos-facetCenter)
-		if O.bodies[n.id2].state.onJoint==True :
-		    if O.bodies[n.id2].state.joint==3 and ((O.bodies[n.id2].state.jointNormal1.cross(jointNormalRef)).norm()>0.05) and ((O.bodies[n.id2].state.jointNormal2.cross(jointNormalRef)).norm()>0.05) and ((O.bodies[n.id2].state.jointNormal3.cross(jointNormalRef)).norm()>0.05):
-			O.bodies[n.id2].state.joint=4
-			O.bodies[n.id2].shape.color=jointcolor5
-		    elif O.bodies[n.id2].state.joint==2 and ((O.bodies[n.id2].state.jointNormal1.cross(jointNormalRef)).norm()>0.05) and ((O.bodies[n.id2].state.jointNormal2.cross(jointNormalRef)).norm()>0.05):
-			O.bodies[n.id2].state.joint=3
-			if facetSphereDir.dot(jointNormalRef)>=0:
-			    O.bodies[n.id2].state.jointNormal3=jointNormalRef
-			elif facetSphereDir.dot(jointNormalRef)<0:
-			    O.bodies[n.id2].state.jointNormal3=-jointNormalRef 
-		    elif O.bodies[n.id2].state.joint==1 and ((O.bodies[n.id2].state.jointNormal1.cross(jointNormalRef)).norm()>0.05) :
-			O.bodies[n.id2].state.joint=2
-			if facetSphereDir.dot(jointNormalRef)>=0:
-			    O.bodies[n.id2].state.jointNormal2=jointNormalRef
-			elif facetSphereDir.dot(jointNormalRef)<0:
-			    O.bodies[n.id2].state.jointNormal2=-jointNormalRef
-		elif  O.bodies[n.id2].state.onJoint==False :
-		    O.bodies[n.id2].state.onJoint=True
-		    O.bodies[n.id2].state.joint=1
-		    O.bodies[n.id2].shape.color=jointcolor4
-		    if facetSphereDir.dot(jointNormalRef)>=0:
-			O.bodies[n.id2].state.jointNormal1=jointNormalRef
-		    elif facetSphereDir.dot(jointNormalRef)<0:
-			O.bodies[n.id2].state.jointNormal1=-jointNormalRef
+        vertices=O.bodies[j.id1].shape.vertices
+        normalRef=vertices[0].cross(vertices[1]) # defines the normal to the facet normalRef
+        nRef=normalRef/(normalRef.norm()) ## normalizes normalRef
+        if ((O.bodies[j.id2].state.jointNormal1.cross(nRef)).norm()<0.05) :
+            jointNormalRef=O.bodies[j.id2].state.jointNormal1
+        elif ((O.bodies[j.id2].state.jointNormal2.cross(nRef)).norm()<0.05) :
+            jointNormalRef=O.bodies[j.id2].state.jointNormal2
+        elif ((O.bodies[j.id2].state.jointNormal3.cross(nRef)).norm()<0.05) :
+            jointNormalRef=O.bodies[j.id2].state.jointNormal3
+        else : continue
+        facetCenter=O.bodies[j.id1].state.pos
+        #### seek for each sphere interacting with the identified sphere j.id2
+        for n in O.interactions.withBody(j.id2) :
+            if n.id1==j.id2 and isinstance(O.bodies[n.id2].shape,Sphere): 
+                facetSphereDir=(O.bodies[n.id2].state.pos-facetCenter)
+                if O.bodies[n.id2].state.onJoint==True :
+                    if O.bodies[n.id2].state.joint==3 and ((O.bodies[n.id2].state.jointNormal1.cross(jointNormalRef)).norm()>0.05) and ((O.bodies[n.id2].state.jointNormal2.cross(jointNormalRef)).norm()>0.05) and ((O.bodies[n.id2].state.jointNormal3.cross(jointNormalRef)).norm()>0.05):
+                        O.bodies[n.id2].state.joint=4
+                        O.bodies[n.id2].shape.color=jointcolor5
+                    elif O.bodies[n.id2].state.joint==2 and ((O.bodies[n.id2].state.jointNormal1.cross(jointNormalRef)).norm()>0.05) and ((O.bodies[n.id2].state.jointNormal2.cross(jointNormalRef)).norm()>0.05):
+                        O.bodies[n.id2].state.joint=3
+                        if facetSphereDir.dot(jointNormalRef)>=0:
+                            O.bodies[n.id2].state.jointNormal3=jointNormalRef
+                        elif facetSphereDir.dot(jointNormalRef)<0:
+                            O.bodies[n.id2].state.jointNormal3=-jointNormalRef 
+                    elif O.bodies[n.id2].state.joint==1 and ((O.bodies[n.id2].state.jointNormal1.cross(jointNormalRef)).norm()>0.05) :
+                        O.bodies[n.id2].state.joint=2
+                        if facetSphereDir.dot(jointNormalRef)>=0:
+                            O.bodies[n.id2].state.jointNormal2=jointNormalRef
+                        elif facetSphereDir.dot(jointNormalRef)<0:
+                            O.bodies[n.id2].state.jointNormal2=-jointNormalRef
+                elif  O.bodies[n.id2].state.onJoint==False :
+                    O.bodies[n.id2].state.onJoint=True
+                    O.bodies[n.id2].state.joint=1
+                    O.bodies[n.id2].shape.color=jointcolor4
+                    if facetSphereDir.dot(jointNormalRef)>=0:
+                        O.bodies[n.id2].state.jointNormal1=jointNormalRef
+                    elif facetSphereDir.dot(jointNormalRef)<0:
+                        O.bodies[n.id2].state.jointNormal1=-jointNormalRef
 
-	    elif n.id2==j.id2 and isinstance(O.bodies[n.id1].shape,Sphere): 
-		facetSphereDir=(O.bodies[n.id1].state.pos-facetCenter)
-		if O.bodies[n.id1].state.onJoint==True :
-		    if O.bodies[n.id1].state.joint==3 and ((O.bodies[n.id1].state.jointNormal1.cross(jointNormalRef)).norm()>0.05) and ((O.bodies[n.id1].state.jointNormal2.cross(jointNormalRef)).norm()>0.05) and ((O.bodies[n.id1].state.jointNormal3.cross(jointNormalRef)).norm()>0.05):
-			O.bodies[n.id1].state.joint=4
-			O.bodies[n.id1].shape.color=jointcolor5
-		    elif O.bodies[n.id1].state.joint==2 and ((O.bodies[n.id1].state.jointNormal1.cross(jointNormalRef)).norm()>0.05) and ((O.bodies[n.id1].state.jointNormal2.cross(jointNormalRef)).norm()>0.05):
-			O.bodies[n.id1].state.joint=3
-			if facetSphereDir.dot(jointNormalRef)>=0:
-			    O.bodies[n.id1].state.jointNormal3=jointNormalRef
-			elif facetSphereDir.dot(jointNormalRef)<0:
-			    O.bodies[n.id1].state.jointNormal3=-jointNormalRef
-		    elif O.bodies[n.id1].state.joint==1 and ((O.bodies[n.id1].state.jointNormal1.cross(jointNormalRef)).norm()>0.05) :
-			O.bodies[n.id1].state.joint=2
-			if facetSphereDir.dot(jointNormalRef)>=0:
-			    O.bodies[n.id1].state.jointNormal2=jointNormalRef
-			elif facetSphereDir.dot(jointNormalRef)<0:
-			    O.bodies[n.id1].state.jointNormal2=-jointNormalRef
-		elif  O.bodies[n.id1].state.onJoint==False :
-		    O.bodies[n.id1].state.onJoint=True
-		    O.bodies[n.id1].state.joint=1
-		    O.bodies[n.id1].shape.color=jointcolor4
-		    if facetSphereDir.dot(jointNormalRef)>=0:
-			O.bodies[n.id1].state.jointNormal1=jointNormalRef
-		    elif facetSphereDir.dot(jointNormalRef)<0:
-			O.bodies[n.id1].state.jointNormal1=-jointNormalRef
+            elif n.id2==j.id2 and isinstance(O.bodies[n.id1].shape,Sphere): 
+                facetSphereDir=(O.bodies[n.id1].state.pos-facetCenter)
+                if O.bodies[n.id1].state.onJoint==True :
+                    if O.bodies[n.id1].state.joint==3 and ((O.bodies[n.id1].state.jointNormal1.cross(jointNormalRef)).norm()>0.05) and ((O.bodies[n.id1].state.jointNormal2.cross(jointNormalRef)).norm()>0.05) and ((O.bodies[n.id1].state.jointNormal3.cross(jointNormalRef)).norm()>0.05):
+                        O.bodies[n.id1].state.joint=4
+                        O.bodies[n.id1].shape.color=jointcolor5
+                    elif O.bodies[n.id1].state.joint==2 and ((O.bodies[n.id1].state.jointNormal1.cross(jointNormalRef)).norm()>0.05) and ((O.bodies[n.id1].state.jointNormal2.cross(jointNormalRef)).norm()>0.05):
+                        O.bodies[n.id1].state.joint=3
+                        if facetSphereDir.dot(jointNormalRef)>=0:
+                            O.bodies[n.id1].state.jointNormal3=jointNormalRef
+                        elif facetSphereDir.dot(jointNormalRef)<0:
+                            O.bodies[n.id1].state.jointNormal3=-jointNormalRef
+                    elif O.bodies[n.id1].state.joint==1 and ((O.bodies[n.id1].state.jointNormal1.cross(jointNormalRef)).norm()>0.05) :
+                        O.bodies[n.id1].state.joint=2
+                        if facetSphereDir.dot(jointNormalRef)>=0:
+                            O.bodies[n.id1].state.jointNormal2=jointNormalRef
+                        elif facetSphereDir.dot(jointNormalRef)<0:
+                            O.bodies[n.id1].state.jointNormal2=-jointNormalRef
+                elif  O.bodies[n.id1].state.onJoint==False :
+                    O.bodies[n.id1].state.onJoint=True
+                    O.bodies[n.id1].state.joint=1
+                    O.bodies[n.id1].shape.color=jointcolor4
+                    if facetSphereDir.dot(jointNormalRef)>=0:
+                        O.bodies[n.id1].state.jointNormal1=jointNormalRef
+                    elif facetSphereDir.dot(jointNormalRef)<0:
+                        O.bodies[n.id1].state.jointNormal1=-jointNormalRef
 
 
 #### for visualization:

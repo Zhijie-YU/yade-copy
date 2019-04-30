@@ -1,3 +1,4 @@
+from __future__ import print_function
 m = PolyhedraMat()
 m.density = 2600 #kg/m^3 
 m.Ks = 20000
@@ -22,9 +23,9 @@ clump = O.bodies[clumpId]
 s = clump.state
 s2 = t2.state
 # if t1.mass and inertia are set to almost zero, clump properties should equal t2 properties
-print s.pos, s2.pos
-print s.mass, s2.mass
-print s.inertia, s2.inertia
+print(s.pos, s2.pos)
+print(s.mass, s2.mass)
+print(s.inertia, s2.inertia)
 ######################################################################
 
 

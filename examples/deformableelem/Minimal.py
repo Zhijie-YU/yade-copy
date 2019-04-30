@@ -76,14 +76,14 @@ fixed_tail_body_upperlimit=1.01;
 O.dt=1e-9;
 
 O.engines=[
-	    ForceResetter(),	
-	    ## Apply internal force to the deformable elements and internal force of the interaction element	 
-	    FEInternalForceEngine([If2_Lin4NodeTetra_LinIsoRayleighDampElast(),If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat()]),
-	    NewtonIntegrator(damping=0,gravity=[0,0,0]),
-	   #PyRunner(virtPeriod=1e-99,command='applyforcetoelements()'),
-	   # ## Plotting data: adds plots after one step of the integrator engine
-	   #PyRunner(virtPeriod=1e-99,command='addplot()')
-	  ]
+        ForceResetter(),
+        ## Apply internal force to the deformable elements and internal force of the interaction element         
+        FEInternalForceEngine([If2_Lin4NodeTetra_LinIsoRayleighDampElast(),If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat()]),
+        NewtonIntegrator(damping=0,gravity=[0,0,0]),
+        #PyRunner(virtPeriod=1e-99,command='applyforcetoelements()'),
+        # ## Plotting data: adds plots after one step of the integrator engine
+        #PyRunner(virtPeriod=1e-99,command='addplot()')
+        ]
 
 from yade import plot
 
@@ -91,8 +91,8 @@ plot.plots={'t':'vel','time':'pos','tm':'force'}
 plot.plot(subPlots=True)
 
 try:
-	from yade import qt
-	qt.View()
-	qt.Controller()
+        from yade import qt
+        qt.View()
+        qt.Controller()
 except ImportError: pass
 

@@ -27,9 +27,13 @@ Usasge 2: generate SimpleScene.cpp formatted for wiki with comments from simple-
 
    ./py2wiki simple-scene.py ../extra/SimpleScene.cpp 
 """
+from __future__ import print_function
 
+
+from builtins import range
+from builtins import object
 import sys,re
-class Text:
+class Text(object):
 	def __init__(self,txt):
 		self.text=[txt]
 class Code(Text): pass
@@ -64,15 +68,15 @@ showCode=len(pg)-1
 for i in range(len(pg[0])):
 	ll=pg[0][i]
 	if ll.__class__==Comment('').__class__:
-		for l in ll.text: print l
+		for l in ll.text: print(l)
 	if ll.__class__==Code('').__class__:
-		if table: print '<table><tr>'
-		for j in (range(len(pg)) if table else [showCode]):
-			print '%s<source lang="%s">'%('<td>' if table else '',codeLangs[j])
+		if table: print('<table><tr>')
+		for j in (list(range(len(pg))) if table else [showCode]):
+			print('%s<source lang="%s">'%('<td>' if table else '',codeLangs[j]))
 			#if pg[j][i].text[0][0]==' ': print ' ',
-			for l in pg[j][i].text: print l
-			print '</source>%s'%('</td>' if table else '')
-		if table: print '</tr></table>'
+			for l in pg[j][i].text: print(l)
+			print('</source>%s'%('</td>' if table else ''))
+		if table: print('</tr></table>')
 		
 	
 

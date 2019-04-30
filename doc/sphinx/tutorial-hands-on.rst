@@ -356,7 +356,7 @@ There are functions to generate a specific arrangement of particles in the :yref
 
 	Yade [1]: sp.makeCloud((1,1,1),(2,2,2),rMean=.2) # put spheres with defined radius inside box given by corners (1,1,1) and (2,2,2)
 
-	Yade [1]: for c,r in sp: print c,r               # print center and radius of all particles (SpherePack is a sequence which can be iterated over)
+	Yade [1]: for c,r in sp: print(c,r)               # print center and radius of all particles (SpherePack is a sequence which can be iterated over)
 	   ...:
 
 	Yade [1]: sp.toSimulation()                      # create particles and add them to the simulation

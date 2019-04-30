@@ -1,3 +1,4 @@
+from __future__ import print_function
 ################################################################################
 #
 # Python script to test tetra-tetra contact detection for different possible
@@ -58,7 +59,7 @@ def prepareExample(vertices1,vertices2,vel1=(0,0,0),vel2=(0,0,0),amom1=(0,0,0),a
 	t2.state.vel = vel2
 	t1.state.angMom = amom1
 	t2.state.angMom = amom2
-	if label: print label
+	if label: print(label)
 	O.pause()
 	O.step()
 

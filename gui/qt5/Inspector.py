@@ -1,5 +1,7 @@
 # encoding: utf-8
 
+from __future__ import print_function
+
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from yade import *
@@ -50,7 +52,7 @@ class CellInspector(QWidget):
 	
 
 def makeBodyLabel(b):
-	ret=unicode(b.id)+u' '
+	ret=str(b.id)+u' '
 	if not b.shape: ret+=u'⬚'
 	else:
 		typeMap={'Sphere':u'⚫','Facet':u'△','Wall':u'┃','Box':u'⎕','Cylinder':u'⌭','ChainedCylinder':u'☡','Clump':u'☍'}
@@ -61,9 +63,9 @@ def makeBodyLabel(b):
 
 def getBodyIdFromLabel(label):
 	try:
-		return int(unicode(label).split()[0])
+		return int(str(label).split()[0])
 	except ValueError:
-		print 'Error with label:',unicode(label)
+		print('Error with label:',str(label))
 		return -1
 
 class BodyInspector(QWidget):
@@ -168,7 +170,7 @@ class BodyInspector(QWidget):
 		# no body shown yet, try to get the first one...
 		if self.bodyId<0 and len(O.bodies)>0:
 			try:
-				print 'SET ZERO'
+				print('SET ZERO')
 				b=O.bodies[0]; self.bodyIdBox.setValue(0)
 			except IndexError: pass
 		v=yade.qt.views()

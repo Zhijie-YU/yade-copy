@@ -4,6 +4,7 @@
 # In paraview: Tools -> Python shell, then click Run Script and choose this file
 
 # should correspond to the values in export_text.py
+from __future__ import print_function
 center = (5,5,5)
 normal = (1,1,1)
 

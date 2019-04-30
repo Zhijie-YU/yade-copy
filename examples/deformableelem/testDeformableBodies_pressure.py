@@ -147,8 +147,8 @@ def applyforcetoelements():
 #		fixboundaryelements();
 
 def addplot():
-	forcenode=forcebodies[forcebodies.keys()[0]][0].id;
-	boundarynode=boundarybodies[boundarybodies.keys()[0]][0].id;
+	forcenode=forcebodies[list(forcebodies.keys())[0]][0].id;
+	boundarynode=boundarybodies[list(boundarybodies.keys())[0]][0].id;
 	plot.addData(force=O.forces.f(forcenode)[0],pos=(O.bodies[forcenode].state.pos[0]-initialpositions[forcenode][0]),vel=O.bodies[forcenode].state.vel[0],postail=(O.bodies[boundarynode].state.pos[0]-initialpositions[boundarynode][0]),t=O.time,time=O.time,tm=O.time,tt=O.time)
 
 		
@@ -177,14 +177,14 @@ O.dt=1e-3;
 
 O.engines=[
 #		integratoreng,
-	    ForceResetter(),
-#	    ## Apply internal force to the deformable elements and internal force of the interaction element
-	    FEInternalForceEngine([If2_Lin4NodeTetra_LinIsoRayleighDampElast(),If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat()]),
-	    PyRunner(iterPeriod=1,command='applyforcetoelements()'),
-	    NewtonIntegrator(damping=0,gravity=[0,0,0]),
-#	    ## Plotting data: adds plots after one step of the integrator engine
-	    PyRunner(iterPeriod=1,command='addplot()')
-	  ]
+		ForceResetter(),
+#		Apply internal force to the deformable elements and internal force of the interaction element
+		FEInternalForceEngine([If2_Lin4NodeTetra_LinIsoRayleighDampElast(),If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat()]),
+		PyRunner(iterPeriod=1,command='applyforcetoelements()'),
+		NewtonIntegrator(damping=0,gravity=[0,0,0]),
+#		Plotting data: adds plots after one step of the integrator engine
+		PyRunner(iterPeriod=1,command='addplot()')
+	]
 
 from yade import plot
 

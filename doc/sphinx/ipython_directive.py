@@ -51,13 +51,19 @@ Authors
 - Fernando Perez: refactoring, documentation, cleanups.
 - VáclavŠmilauer <eudoxos-AT-arcig.cz>: Prompt generatlizations.
 """
+from __future__ import print_function
 
 #-----------------------------------------------------------------------------
 # Imports
 #-----------------------------------------------------------------------------
 
 # Stdlib
-import cStringIO
+from future import standard_library
+standard_library.install_aliases()
+
+from builtins import range
+from builtins import object
+import io
 import imp
 import os
 import re
@@ -92,7 +98,7 @@ sphinx_version = sphinx.__version__.split(".")
 sphinx_version = tuple([int(re.split('[a-z]', x)[0])
                         for x in sphinx_version[:2]])
 
-COMMENT, INPUT, OUTPUT =  range(3)
+COMMENT, INPUT, OUTPUT =  list(range(3))
 rc_override = {}
 rgxin = re.compile('In \[(\d+)\]:\s?(.*)\s*')
 rgxcont = re.compile('   \.+:\s?(.*)\s*')
@@ -205,7 +211,7 @@ class EmbeddedSphinxShell(object):
 
     def __init__(self):
 
-        self.cout = cStringIO.StringIO()
+        self.cout = io.StringIO()
 
         IPython.Shell.Term.cout = self.cout
         IPython.Shell.Term.cerr = self.cout
@@ -419,9 +425,9 @@ def ipython_directive(name, arguments, options, content, lineno,
                       ):
 
     debug = ipython_directive.DEBUG
-    shell.is_suppress = options.has_key('suppress')
-    shell.is_doctest = options.has_key('doctest')
-    shell.is_verbatim = options.has_key('verbatim')
+    shell.is_suppress = 'suppress' in options
+    shell.is_doctest = 'doctest' in options
+    shell.is_verbatim = 'verbatim' in options
 
     #print 'ipy', shell.is_suppress, options
     parts = '\n'.join(content).split('\n\n')
@@ -447,7 +453,7 @@ def ipython_directive(name, arguments, options, content, lineno,
     #print lines
     if len(lines)>2:
         if debug:
-            print '\n'.join(lines)
+            print('\n'.join(lines))
         else:
             #print 'INSERTING %d lines'%len(lines)
             state_machine.insert_input(

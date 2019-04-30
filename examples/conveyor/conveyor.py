@@ -17,6 +17,7 @@ tc = 0.001
 en = 0.3
 es = 0.3
 
+import yade.geom
 
 ## Import wall's geometry
 mat=O.materials.append(ViscElMat(density=Density,frictionAngle=frictionAngle,tc=tc,en=en,et=es))
@@ -27,7 +28,7 @@ particles=O.bodies.append([sphere(c,r,mask=3) for c,r in sp])
 
 from yade import ymport
 fctIds= O.bodies.append(ymport.gmsh('conveyor.mesh',scale=0.001,color=(1,0,0)))
-voxIds= O.bodies.append(utils.geom.facetBunker(center=[0,1.5,-0.7],dBunker=1.1, dOutput=0.2,hBunker=0.2,hOutput=0.2,hPipe=0.1, mask=5))
+voxIds= O.bodies.append(geom.facetBunker(center=[0,1.5,-0.7],dBunker=1.1, dOutput=0.2,hBunker=0.2,hOutput=0.2,hPipe=0.1, mask=5))
 
 for i in fctIds:
 	O.bodies[i].state.vel=Vector3(0,0.2,0)      # Set conveyor velocity

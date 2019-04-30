@@ -10,7 +10,7 @@ FUNCTION(find_python_module module)
   ENDIF(ARGC GREATER 1 AND ARGV1 STREQUAL "REQUIRED")
   
   EXECUTE_PROCESS(COMMAND "${PYTHON_EXECUTABLE}" "-c" 
-    "import re, ${module}; print re.compile('/__init__.py.*').sub('',${module}.__file__)"
+    "from __future__ import print_function ; import re, ${module} ; print (re.compile('/__init__.py.*').sub('',${module}.__file__))" #NOTE: from __future__ imports MUST be at the beginning of command.
     RESULT_VARIABLE _${module}_status 
     OUTPUT_VARIABLE _${module}_location
     ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)

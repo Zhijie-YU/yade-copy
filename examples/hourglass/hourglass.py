@@ -7,6 +7,7 @@
 # in line 62 not to revolute the hourglass before particles are
 # settled down at the bottom.
 
+
 from yade import ymport
 import time
 

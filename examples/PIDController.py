@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 # encoding: utf-8
+from __future__ import print_function
 from yade import utils, plot
 
   
@@ -47,7 +48,7 @@ def addPlotData():
   plot.addData(z=O.iter, pMove=fMove[2], pFest=fMove[2])
 
 def switchTranslationEngine():
-  print "Switch from TranslationEngine engine to ServoPIDController"
+  print("Switch from TranslationEngine engine to ServoPIDController")
   translat.dead = True
   combEngine.dead = False
   

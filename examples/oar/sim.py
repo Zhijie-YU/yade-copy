@@ -1,3 +1,4 @@
+from __future__ import print_function
 # see https://yade-dem.org/doc/user.html#batch-execution-on-job-based-clusters-oar
 
 readParamsFromTable(unknownOk=True,
@@ -7,11 +8,11 @@ readParamsFromTable(unknownOk=True,
 	notInTable='notInTable'
 )
 from yade.params import table
-print O.tags['description']
-print 'important',table.important
-print 'unimportant',table.unimportant
-print O.tags['params'].replace(',','_');
-print O.tags['defaultParams']
+print(O.tags['description'])
+print('important',table.important)
+print('unimportant',table.unimportant)
+print(O.tags['params'].replace(',','_'));
+print(O.tags['defaultParams'])
 import time
 import os
 import re
@@ -27,13 +28,13 @@ if m_hasWalltime :
         w = re.match("^([0-9]+):([0-9]{2}):([0-9]{2})$",walltime);
         g = w.groups();
         m_Walltime = 3600*float(g[0]) + 60*float(g[1]) + float(g[2]);
-        print "Will run for %i seconds"%m_Walltime;
+        print("Will run for %i seconds"%m_Walltime);
     else:
-        print "Wrong walltime format."
+        print("Wrong walltime format.")
         m_hasWalltime = False;
         
 def SaveAndQuit():
-	print "Quit due to walltime expiration";
+	print("Quit due to walltime expiration");
 	O.stopAtIter = O.iter + 1;
 
 #time.sleep(5)
@@ -43,7 +44,7 @@ if m_hasWalltime:
     O.engines += [PyRunner(command='SaveAndQuit()',realPeriod=m_Walltime*m_WalltimeStopAt)];
 
 O.run(1000,True)
-print 'finished'
+print('finished')
 import sys
 sys.stdout.flush()
 sys.exit(0)

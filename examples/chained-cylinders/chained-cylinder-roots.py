@@ -1,9 +1,11 @@
+from __future__ import print_function
 #--- bruno.chareyre@hmg.inpg.fr ---
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 # Experiment beam-like behaviour with chained cylinders + CohFrict connexions
 
+from builtins import range
 from yade import pack
 from yade.gridpfacet import *
 
@@ -24,13 +26,13 @@ sp=pack.SpherePack()
 #cohesive spheres crash because sphere-cylnder functor geneteragets ScGeom3D
 #O.materials.append(CohFrictMat(young=1.0e5,poisson=0.03,density=2.60e2,frictionAngle=frictionAngle,label='spheremat'))
 
-if os.path.exists("cloud4cylinders"+`Ns`):
- 	print "loading spheres from file"
-	sp.load("cloud4cylinders"+`Ns`)
+if os.path.exists("cloud4cylinders"+repr(Ns)):
+	print("loading spheres from file")
+	sp.load("cloud4cylinders"+repr(Ns))
 else:
- 	print "generating spheres"
- 	Ns=sp.makeCloud(Vector3(-0.3,0.2,-1.0),Vector3(+0.3,+0.5,+1.0),-1,.2,Ns,False,0.8)
-	sp.save("cloud4cylinders"+`Ns`)
+	print("generating spheres")
+	Ns=sp.makeCloud(Vector3(-0.3,0.2,-1.0),Vector3(+0.3,+0.5,+1.0),-1,.2,Ns,False,0.8)
+	sp.save("cloud4cylinders"+repr(Ns))
 
 O.bodies.append([sphere(center,rad,material='spheremat') for center,rad in sp])
 walls=aabbWalls((Vector3(-0.3,-0.15,-1),Vector3(+0.3,+1.0,+1)),thickness=.1,material='walllmat')
@@ -73,7 +75,7 @@ for j in range(-Nc, Nc+1):
 		px2=float(i+1.)*hx/float(Ne)-0.8+dxj; py2=sin(float(i+1.)*omega)*hy+dyj; pz2=cos(float(i+1.)*omega)*hz+dzj;
 		chainedCylinder(begin=Vector3(pz,py,px), radius=0.02,end=Vector3(pz2,py2,px2),color=Vector3(0.6,0.5,0.5),material='cylindermat')
 		if (i == Ne-1): #close the chain with a node of size 0
-			print "closing chain"
+			print("closing chain")
 			b=chainedCylinder(begin=Vector3(pz2,py2,px2), radius=0.02,end=Vector3(pz2,py2,px2),color=Vector3(0.6,0.5,0.5),material='cylindermat')
 			b.state.blockedDOFs='xyzXYZ'
 	ChainedState.currentChain=ChainedState.currentChain+1

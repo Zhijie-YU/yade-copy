@@ -1,5 +1,8 @@
 # -*- coding: utf-8
 
+from __future__ import print_function
+
+from builtins import range
 from yade import pack,export,geom,timing,bodiesHandling
 import time,numpy
 	
@@ -61,7 +64,7 @@ for z in range(numberTests):
 		SpheresID+=O.bodies.append(pack.regularHexa(pack.inSphere((Vector3(0.0,0.0,0.0)),rad),radius=rad/rR,gap=rad/rR*0.5,material=defMat))
 		
 		geometryParameters = bodiesHandling.spheresPackDimensions(SpheresID)
-		print len(SpheresID)
+		print(len(SpheresID))
 		
 		floorId=[]
 		floorId+=O.bodies.append(geom.facetBox(geometryParameters['center'],geometryParameters['extends']/2.0*1.05,material=defMat)) #Floor
@@ -81,7 +84,7 @@ for z in range(numberTests):
 			NewtonIntegrator(damping=0,gravity=[0,0,-9.81]),
 		]
 		
-		print "number of bodies %d"%len(O.bodies)
+		print("number of bodies %d"%len(O.bodies))
 		# Initialize the collider else it is not possible to compare the results with different nbIter
 		O.run(initIter,1)
 		O.timingEnabled=True
@@ -92,11 +95,11 @@ for z in range(numberTests):
 		O.wait()
 		
 		tEnd=time.time()
-		print
-		print 'Elapsed ', tEnd-tStart, ' sec'
-		print 'Performance ', nbIter/(tEnd-tStart), ' iter/sec'
-		print 'Extrapolation on 1e5 iters ', (tEnd-tStart)/nbIter*1e5/3600., ' hours'
-		print "=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*"
+		print()
+		print('Elapsed ', tEnd-tStart, ' sec')
+		print('Performance ', nbIter/(tEnd-tStart), ' iter/sec')
+		print('Extrapolation on 1e5 iters ', (tEnd-tStart)/nbIter*1e5/3600., ' hours')
+		print("=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*=*")
 		timing.stats()
 		iterVel += [nbIter/(tEnd-tStart)]
 		testTime += [tEnd-tStart]
@@ -105,14 +108,14 @@ for z in range(numberTests):
 tEndAll=time.time()
 commonTime = tEndAll-tStartAll
 
-print "Common time ", commonTime, "s"
-print
-print
+print("Common time ", commonTime, "s")
+print()
+print()
 
-print "___________________________________________________"
-print
-print "SUMMARY"
-print
+print("___________________________________________________")
+print()
+print("SUMMARY")
+print()
 scoreIterVel=0.0
 for i in range(len(radRAD)):
 	iterAv=0.0
@@ -122,12 +125,12 @@ for i in range(len(radRAD)):
 	avgVel = numpy.average(iterVelNumpy)
 	dispVel = numpy.std(iterVelNumpy)/numpy.average(iterVelNumpy)*100.0
 	if (dispVel>10.):
-		print "Calculation velocity is unstable, try to close all programs and start performance tests again"
+		print("Calculation velocity is unstable, try to close all programs and start performance tests again")
 	
-	print particlesNumber[i]," spheres, calculation velocity=",avgVel, "iter/sec +/-",dispVel,"%"
+	print(particlesNumber[i]," spheres, calculation velocity=",avgVel, "iter/sec +/-",dispVel,"%")
 	data+=[[particlesNumber[i],avgVel,avgVel*dispVel/100.]]
 	scoreIterVel+=avgVel/coefCor[i]*1000.0
-print
+print()
 scoreIterVel = int(scoreIterVel)
 ## write output file for graph
 import subprocess
@@ -148,17 +151,17 @@ fid.write(header+"\n")
 for l in data:
 	fid.write("%d %f %f\n"%(l[0],l[1],l[2]))
 fid.close()
-print "Summary saved to "+filename
-print 
-print "SCORE: " + str(scoreIterVel)
-print "Number of threads: ", os.environ['OMP_NUM_THREADS']
-print "___________________________________________________"
-print
+print("Summary saved to "+filename)
+print()
+print("SCORE: " + str(scoreIterVel))
+print("Number of threads: ", os.environ['OMP_NUM_THREADS'])
+print("___________________________________________________")
+print()
 
-print "CPU info:"
+print("CPU info:")
 cmd = "lscpu"
 #cpuinfo=subprocess.check_output(cmd, shell=True) # needs python >=2.7.0
 process = subprocess.Popen(cmd, stdout=subprocess.PIPE, shell=True)
 cpuinfo = process.communicate()[0].lstrip('model name\t:').strip()
-print cpuinfo
+print(cpuinfo)
 sys.exit(0)

@@ -1,5 +1,6 @@
 # -*- coding: utf-8
 
+from builtins import range
 from yade import pack,export,qt
 import gts,os,random,itertools
 from numpy import *
@@ -45,12 +46,12 @@ tblIds=O.bodies.append(pack.gtsSurface2Facets(table,material=facetMat,color=(0,1
 # Create clumps...
 clumpColor=(0.0, 0.5, 0.5)
 for k,l in itertools.product(arange(0,10),arange(0,10)):
-	clpId,sphId=O.bodies.appendClumped([sphere(Vector3(x0t+Rs*(k*4+2),y0t+Rs*(l*4+2),i*Rs*2+zt),Rs,color=clumpColor,material=dfltSpheresMat) for i in xrange(4)])
+	clpId,sphId=O.bodies.appendClumped([sphere(Vector3(x0t+Rs*(k*4+2),y0t+Rs*(l*4+2),i*Rs*2+zt),Rs,color=clumpColor,material=dfltSpheresMat) for i in range(4)])
 
 # ... and spheres
 spheresColor=(0.4, 0.4, 0.4)
 for k,l in itertools.product(arange(0,9),arange(0,9)):
-	sphAloneId=O.bodies.append( [sphere( Vector3(x0t+Rs*(k*4+4),y0t+Rs*(l*4+4),i*Rs*2.3+zt),Rs,color=spheresColor,material=dfltSpheresMat) for i in xrange(4) ] )
+	sphAloneId=O.bodies.append( [sphere( Vector3(x0t+Rs*(k*4+4),y0t+Rs*(l*4+4),i*Rs*2.3+zt),Rs,color=spheresColor,material=dfltSpheresMat) for i in range(4) ] )
 
 # Create engines
 O.engines=[

@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 '''This example shows usage of addToClump() and appendClumped().'''
+from __future__ import print_function
 
+from builtins import range
 from yade import pack,export,qt
 
 #define material for all bodies:
@@ -46,12 +48,12 @@ id_clump2 = clump2[0]
 def getClumpInfo():
 	for b in O.bodies:
 		if b.isClump:
-			print 'Clump ',b.id,' has following members:'
-			keys = b.shape.members.keys()
+			print('Clump ',b.id,' has following members:')
+			keys = list(b.shape.members.keys())
 			for ii in range(0,len(keys)):
-				print '- Body ',keys[ii]
-			print 'inertia:',b.state.inertia
-			print 'mass:',b.state.mass,'\n'
+				print('- Body ',keys[ii])
+			print('inertia:',b.state.inertia)
+			print('mass:',b.state.mass,'\n')
 
 
 #### show how to use addToClump():
@@ -60,19 +62,19 @@ def getClumpInfo():
 #create a new sphere:
 id_new=O.bodies.append(sphere([0,0.2,1], material=Mat, radius=0.5))
 
-print '\nSTATE before adding sphere to clump ------------'
+print('\nSTATE before adding sphere to clump ------------')
 getClumpInfo()
 
 #add a sphere to the clump:
 O.bodies.addToClump([id_new],id_clump1)
 
-print '\nSTATE after adding sphere to clump ------------'
+print('\nSTATE after adding sphere to clump ------------')
 getClumpInfo()
 
 #add a clump to a clump:
 O.bodies.addToClump([id_clump2],id_clump1)
 
-print '\nSTATE after adding the second clump to clump ------------'
+print('\nSTATE after adding the second clump to clump ------------')
 getClumpInfo()
 
 #try to add clump member to a clump (should give error message):
@@ -82,6 +84,6 @@ getClumpInfo()
 
 O.dt=1e-6
 
-print '\nPress Play button ... '
+print('\nPress Play button ... ')
 renderer = qt.Renderer()
 qt.View()

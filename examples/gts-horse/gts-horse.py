@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 # © 2009 Václav Šmilauer <eudoxos@arcig.cz>
 
+from __future__ import print_function
 from yade import pack
 import gts, os.path, locale
 
@@ -19,11 +20,11 @@ if not os.path.exists('horse.coarse.gts'):
 	if os.path.exists('horse.gts'):
 		surf=gts.read(open('horse.gts')); surf.coarsen(1000); surf.write(open('horse.coarse.gts','w'))
 	else:
-		print """horse.gts not found, you need to download input data:
+		print("""horse.gts not found, you need to download input data:
 
 		wget http://gts.sourceforge.net/samples/horse.gts.gz
 		gunzip horse.gts.gz
-		"""
+		""")
 		quit()
 
 surf=gts.read(open('horse.coarse.gts'))

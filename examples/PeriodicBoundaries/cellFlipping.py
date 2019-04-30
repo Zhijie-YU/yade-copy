@@ -1,6 +1,7 @@
 # coding: utf-8
 # 2017 Bruno Chareyre <bruno.chareyre~a~grenoble-inp.fr>
 "Demonstrate cell flipping in periodic boundary conditions"
+from __future__ import print_function
 from yade import pack,qt,plot
 
 O.periodic=True
@@ -26,8 +27,8 @@ phase=0
 def triaxDone():
 	global phase
 	if phase==0:
-		print 'Here we are: stress',triax.stress,'strain',triax.strain,'stiffness',triax.stiff
-		print 'Now shearing.'
+		print('Here we are: stress',triax.stress,'strain',triax.strain,'stiffness',triax.stiff)
+		print('Now shearing.')
 		O.cell.velGrad=Matrix3(0,1,0, 0,0,0, 0,0,0)
 		triax.stressMask=7
 		triax.goal=[-1e4,-1e4,-1e4]
@@ -45,6 +46,6 @@ plot.plot()
 
 O.engines=O.engines+[PyRunner(command='if O.cell.hSize[0,1]>O.cell.hSize[0,0]: flipCell()',iterPeriod=20)]
 
-print "\nPress ▶ (the start button) to see graph.\n"
+print("\nPress ▶ (the start button) to see graph.\n")
 
 #now click play and watch the flips happening, the evolution of stress or unbalanced force should not show any discontinuity

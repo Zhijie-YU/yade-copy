@@ -4,6 +4,7 @@
 #This script is designed to show the "circleView" features, which allow to display circles instead of spheres for 2D simulations.
 #/!\ this is just a DISPLAY FEATURE, computed particles still are SPHERICAL.
 
+from builtins import range
 from yade import qt
 X=1
 Y=1
@@ -24,9 +25,9 @@ O.engines=[
     ForceResetter(),
 	InsertionSortCollider([Bo1_Sphere_Aabb()]),
     InteractionLoop(
-		    [Ig2_Sphere_Sphere_ScGeom()],
-		    [Ip2_FrictMat_FrictMat_FrictPhys()],
-		    [Law2_ScGeom_FrictPhys_CundallStrack()]
+		[Ig2_Sphere_Sphere_ScGeom()],
+		[Ip2_FrictMat_FrictMat_FrictPhys()],
+		[Law2_ScGeom_FrictPhys_CundallStrack()]
     ),
 	NewtonIntegrator(damping=0.1, gravity=(0.,0.,-10)),
 ]

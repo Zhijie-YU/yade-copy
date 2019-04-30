@@ -56,11 +56,11 @@ O.engines=[
 from yade import plot
 O.engines=O.engines[0:5]+[PyRunner(iterPeriod=20,command='history()',label='recorder')]+O.engines[5:7]
 def history():
-  	plot.addData(e11=-triax.strain[0], e22=-triax.strain[1], e33=-triax.strain[2],
-		    s11=-triax.stress(0)[0],
-		    s22=-triax.stress(2)[1],
-		    s33=-triax.stress(4)[2],
-		    i=O.iter)
+	plot.addData(e11=-triax.strain[0], e22=-triax.strain[1], e33=-triax.strain[2],
+		s11=-triax.stress(0)[0],
+		s22=-triax.stress(2)[1],
+		s33=-triax.stress(4)[2],
+		i=O.iter)
 
 plot.plots={'i':('e11','e22','e33',None,'s11','s22','s33')}
 

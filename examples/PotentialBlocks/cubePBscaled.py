@@ -71,8 +71,8 @@ for s in sp:
 	highlight=False
 	b.shape=PotentialBlock(k=0.2, r=0.05*meanSize, R=1.02*sphereRad, a=[1.0,-1.0,0.0,0.0,0.0,0.0], b=[0.0,0.0,1.0,-1.0,0.0,0.0], c=[0.0,0.0,0.0,0.0,1.0,-1.0], d=[distanceToCentre-rPP,distanceToCentre-rPP,distanceToCentre-rPP,distanceToCentre-rPP,distanceToCentre-rPP,distanceToCentre-rPP],isBoundary=False,color=color,wire=wire,highlight=highlight,minAabb=Vector3(3.0*sphereRad,3.0*sphereRad,3.0*sphereRad),maxAabb=Vector3(3.0*sphereRad,3.0*sphereRad,3.0*sphereRad),maxAabbRotated=Vector3(3.0*sphereRad,3.0*sphereRad,3.0*sphereRad),minAabbRotated=Vector3(3.0*sphereRad,3.0*sphereRad,3.0*sphereRad),AabbMinMax=True,fixedNormal=False,id=count)
 	length=meanSize
-  	V= 1.0
-  	geomInert=(2./5.)*powderDensity*V*sphereRad**2
+	V= 1.0
+	geomInert=(2./5.)*powderDensity*V*sphereRad**2
 	utils._commonBodySetup(b,V,Vector3(geomInert,geomInert,geomInert), material='frictionless',pos=s[0],  dynamic=True, fixed=False)
 	b.state.pos = s[0] #s[0] stores center
 	b.state.ori = Quaternion((random.random(),random.random(),random.random()),random.random()) #s[2]

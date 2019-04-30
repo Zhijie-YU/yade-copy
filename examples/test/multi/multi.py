@@ -1,3 +1,4 @@
+from __future__ import print_function
 #
 # https://yade-dem.org/wiki/ScriptParametricStudy
 #
@@ -5,7 +6,7 @@
 from yade import  plot
 readParamsFromTable(gravity=-9.81,density=2400,initialSpeed=10,noTableOk=True)
 from yade.params.table import *
-print gravity,density,initialSpeed
+print(gravity,density,initialSpeed)
 
 O.materials.append(FrictMat(young=30e9,density=density,poisson=.3)) ## use the 'density' parameter here
 
@@ -42,4 +43,4 @@ O.run(20000,True)
 # 'a' means to open for appending
 #file('multi.out','a').write('%s %g %g %g %g\n'%(O.tags['description'],gravity,density,initialSpeed,O.bodies[1].state.pos[1]))
 file('multi.out','a').write('%g %g %g %g\n'%(gravity,density,initialSpeed,O.bodies[1].state.pos[1]))
-print 'gnuplot',plot.saveGnuplot(O.tags['id'])
+print('gnuplot',plot.saveGnuplot(O.tags['id']))

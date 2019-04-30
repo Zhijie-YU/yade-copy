@@ -606,7 +606,7 @@ The macro :ref:`YADE_CLASS_BASE_DOC` introduced above is (behind the scenes) als
 
 	Yade [4]: s.dict().keys()              ## show all available keys
 
-	Yade [5]: for k in s.dict().keys(): print s.dict()[k]  ## iterate over keys, print their values
+	Yade [5]: for k in s.dict().keys(): print(s.dict()[k])  ## iterate over keys, print their values
 	   ...:
 
 	Yade [5]: s.dict()['radius']             ## same as: 'radius' in s.keys()
@@ -1664,9 +1664,9 @@ and
 
 	Yade [1]: f2=ForceEngine(ids=[0,4,5],force=Vector3(0,-1,-2))
 
-	Yade [2]: print f1.dict()
+	Yade [2]: print(f1.dict())
 
-	Yade [3]: print f2.dict()
+	Yade [3]: print(f2.dict())
 
 Wrapped classes also inherit from :yref:`Serializable` several special virtual methods: :yref:`dict()<Serializable::dict>` returning all registered class attributes as dictionary (shown above), :yref:`clone()<Serializable::clone>` returning copy of instance (by copying attribute values), :yref:`updateAttrs()<Serializable::updateAttrs>` and :yref:`updateExistingAttrs()<Serializable::updateExistingAttrs>` assigning attributes from given dictionary (the former thrown for unknown attribute, the latter doesn't).
 

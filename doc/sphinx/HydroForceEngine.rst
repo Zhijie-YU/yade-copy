@@ -48,7 +48,7 @@ Also, HydroForceEngine applies a drag force to each particles contained in the i
 
 .. math:: \mathbf f_D^p= \frac{1}{2} C_d A \rho^f ||u^f_p \mathbf e_x- \mathbf v^p|| \left(u^f_p \mathbf e_x - \mathbf v^p\right),
 
-where $\mathbf u^f_p$ is the fluid velocity at the center of particle $p$, $\mathbf v^p$ is the particle velocity, $\rho^f$ is the fluid density, $A = \pi d^2/4$ is the area of the sphere submitted to the flow, and $C_d$ is the drag coefficient accounts for the effects of particle Reynolds number [DallaValle1948]_ and of increased drag due to the presence of other particles (hindrance, [Richardson1954]_: 
+where $\mathbf u^f_p$ is the fluid velocity at the center of particle $p$, $\mathbf v^p$ is the particle velocity, $\rho^f$ is the fluid density, $A = \pi d^2/4$ is the area of the sphere submitted to the flow, and $C_d$ is the drag coefficient accounts for the effects of particle Reynolds number [Dallavalle1948]_ and of increased drag due to the presence of other particles (hindrance, [Richardson1954]_: 
 
 .. math:: C_d = \left(0.44 + \frac{24}{Re_p}\right) (1-\phi_p)^{- \gamma} = \left(0.44 + 24 \frac{\nu^f}{||u^f_p \mathbf e_x- \mathbf v^p|| d}\right) (1-\phi_p)^{- \gamma}
 

@@ -2,6 +2,7 @@
 # author: Marcus Guadagnin Moravia <marcus.moravia@3sr-grenoble.fr>
 # example showing how to handle interactions involving spheres, gridConnections, and PFacets
 # running the script there will be contacts between: sphere-sphere, sphere-gridConnection, sphere-PFacet, griConnection-gridConnection, gridConnection-PFacet, and PFacet-PFacet
+from builtins import range
 from yade import qt,plot
 from yade.gridpfacet import *
 

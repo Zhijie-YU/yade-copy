@@ -6,6 +6,7 @@
 # Coefficient of restitution is the ratio of speeds after and before an impact
 # This check-simulation checks the correctness of ViscoElasticEngine
 
+from __future__ import print_function
 from yade import utils, plot
 o = Omega()
 fr = 0.5;rho=2000

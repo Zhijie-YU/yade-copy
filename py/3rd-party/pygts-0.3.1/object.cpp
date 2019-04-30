@@ -27,6 +27,10 @@
 
 #include "pygts.h"
 
+// https://codeyarns.com/2014/03/11/how-to-selectively-ignore-a-gcc-warning/
+// https://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Pragmas.html
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
 
 /*-------------------------------------------------------------------------*/
 /* Methods exported to python */
@@ -65,7 +69,7 @@ id(PygtsObject *self, void *closure)
     return NULL;
   }
   /* Use the pointer of the gtsobj */
-  return Py_BuildValue("i",(long)(self->gtsobj));
+  return PyLong_FromVoidPtr((void*)(self->gtsobj));
 }
 
 
@@ -101,12 +105,12 @@ dealloc(PygtsObject* self)
       self->gtsobj=NULL;
     }
   }
-  self->ob_type->tp_free((PyObject*)self);
+  Py_TYPE(self)->tp_free((PyObject*)self);
 }
 
 
 static PyObject *
-new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+new_(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
   PygtsObject *self;
 
@@ -134,22 +138,39 @@ init(PygtsObject *self, PyObject *args, PyObject *kwds)
 }
 
 
-static int 
-compare(PygtsObject *o1, PygtsObject *o2)
-{
-  if(o1->gtsobj==o2->gtsobj) {
-    return 0;
+/* replace with rich comparison: https://docs.python.org/2/c-api/typeobj.html#PyTypeObject.tp_richcompare */
+#if PY_MAJOR_VERSION >= 3
+  static PyObject* rich_compare(PygtsObject *o1, PygtsObject *o2, int op){
+    int ret=0;
+    switch(op){
+      case Py_LT: ret=(o1->gtsobj <  o2->gtsobj); break;
+      case Py_LE: ret=(o1->gtsobj <= o2->gtsobj); break;
+      case Py_EQ: ret=(o1->gtsobj == o2->gtsobj); break;
+      case Py_NE: ret=(o1->gtsobj != o2->gtsobj); break;
+      case Py_GT: ret=(o1->gtsobj >  o2->gtsobj); break;
+      case Py_GE: ret=(o1->gtsobj >= o2->gtsobj); break;
+     default: Py_RETURN_NOTIMPLEMENTED;
+    }
+    if(ret) Py_RETURN_TRUE;
+    Py_RETURN_FALSE;
+  };
+#else
+  static int 
+  compare(PygtsObject *o1, PygtsObject *o2)
+  {
+    if(o1->gtsobj==o2->gtsobj) {
+      return 0;
+    }
+    else {
+      return -1;
+    }
   }
-  else {
-    return -1;
-  }
-}
+#endif
 
 
 /* Methods table */
 PyTypeObject PygtsObjectType = {
-  PyObject_HEAD_INIT(NULL)
-  0,                         /* ob_size */
+  PyVarObject_HEAD_INIT(NULL,0)
   "gts.Object"  ,            /* tp_name */
   sizeof(PygtsObject),       /* tp_basicsize */
   0,                         /* tp_itemsize */
@@ -157,7 +178,11 @@ PyTypeObject PygtsObjectType = {
   0,                         /* tp_print */
   0,                         /* tp_getattr */
   0,                         /* tp_setattr */
-  (cmpfunc)compare,          /* tp_compare */
+  #if PY_MAJOR_VERSION >= 3
+    0,                         /* tp_compare */
+  #else
+    (cmpfunc)compare,          /* tp_compare */
+  #endif
   0,                         /* tp_repr */
   0,                         /* tp_as_number */
   0,                         /* tp_as_sequence */
@@ -171,12 +196,16 @@ PyTypeObject PygtsObjectType = {
   Py_TPFLAGS_DEFAULT |
     Py_TPFLAGS_BASETYPE,     /* tp_flags */
   "Base object",             /* tp_doc */
-  0,		             /* tp_traverse */
-  0,		             /* tp_clear */
-  0,		             /* tp_richcompare */
-  0,		             /* tp_weaklistoffset */
-  0,		             /* tp_iter */
-  0,		             /* tp_iternext */
+  0,                         /* tp_traverse */
+  0,                         /* tp_clear */
+  #if PY_MAJOR_VERSION >= 3
+    (richcmpfunc)rich_compare, /* tp_richcompare */
+  #else
+    0,                         /* tp_richcompare */
+  #endif
+  0,                         /* tp_weaklistoffset */
+  0,                         /* tp_iter */
+  0,                         /* tp_iternext */
   methods,                   /* tp_methods */
   0,                         /* tp_members */
   getset,                    /* tp_getset */
@@ -187,7 +216,7 @@ PyTypeObject PygtsObjectType = {
   0,                         /* tp_dictoffset */
   (initproc)init,            /* tp_init */
   0,                         /* tp_alloc */
-  (newfunc)new               /* tp_new */
+  (newfunc)new_               /* tp_new */
 };
 
 
@@ -242,4 +271,6 @@ pygts_object_deregister(PygtsObject *o)
     }
   }
 }
+
+#pragma GCC diagnostic pop
 

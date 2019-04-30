@@ -22,6 +22,8 @@
 ## See triax-tutorial/script-session1.py for more detailed explanations of the packing generation procedure.
 
 ## ______________   First section, similar to triax-tutorial/script-session1.py  _________________
+from __future__ import print_function
+from builtins import range
 from yade import pack
 
 num_spheres=1000# number of spheres
@@ -112,7 +114,7 @@ O.run(1,1)
 Qin = flow.getBoundaryFlux(2)
 Qout = flow.getBoundaryFlux(3)
 permeability = abs(Qin)/1.e-4 #size is one, we compute K=V/∇H
-print "Qin=",Qin," Qout=",Qout," permeability=",permeability
+print("Qin=",Qin," Qout=",Qout," permeability=",permeability)
 
 #C. now the oedometer test, drained at the top, impermeable at the bottom plate
 flow.bndCondIsPressure=[0,0,0,1,0,0]
@@ -146,8 +148,8 @@ from yade import plot
 
 ## a function saving variables
 def history():
-  	plot.addData(e22=-triax.strain[1]-zeroe22,e22_theory=drye22+(1-dryFraction)*consolidation((O.time-zeroTime)*Cv/wetHeight**2)*1000./modulus,t=O.time,p=flow.getPorePressure((0.5,0.1,0.5)),s22=-triax.stress(3)[1]-10000)
-  	#plot.addData(e22=-triax.strain[1],t=O.time,s22=-triax.stress(2)[1],p=flow.MeasurePorePressure((0.5,0.5,0.5)))
+	plot.addData(e22=-triax.strain[1]-zeroe22,e22_theory=drye22+(1-dryFraction)*consolidation((O.time-zeroTime)*Cv/wetHeight**2)*1000./modulus,t=O.time,p=flow.getPorePressure((0.5,0.1,0.5)),s22=-triax.stress(3)[1]-10000)
+	#plot.addData(e22=-triax.strain[1],t=O.time,s22=-triax.stress(2)[1],p=flow.MeasurePorePressure((0.5,0.5,0.5)))
 
 O.engines=O.engines+[PyRunner(iterPeriod=200,command='history()',label='recorder')]
 ##make nice animations:
@@ -159,10 +161,10 @@ plot.plot()
 O.saveTmp()
 O.timingEnabled=1
 from yade import timing
-print "starting oedometer simulation"
+print("starting oedometer simulation")
 O.run(200,1)
 timing.stats()
 
-print "\nPress ▶ (the start button) to see graph.\n"
+print("\nPress ▶ (the start button) to see graph.\n")
 
 ## Make more steps to see the convergence to the stationnary solution

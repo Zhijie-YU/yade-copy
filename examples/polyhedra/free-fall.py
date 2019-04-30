@@ -1,3 +1,4 @@
+from __future__ import print_function
 from yade import plot, polyhedra_utils
 
 
@@ -28,7 +29,7 @@ O.bodies.append(polyhedra_utils.polyhedra(gravel,v=((0,0,-0.05),(0.3,0,-0.05),(0
 polyhedra_utils.fillBox((0,0,0), (0.3,0.3,0.3),gravel,sizemin=[0.025,0.025,0.025],sizemax=[0.05,0.05,0.05],seed=4)
 
 def checkUnbalancedI():   
-    print "iter %d, time elapsed %f,  time step %.5e, unbalanced forces = %.5f"%(O.iter, O.realtime, O.dt, utils.unbalancedForce())		
+    print("iter %d, time elapsed %f,  time step %.5e, unbalanced forces = %.5f"%(O.iter, O.realtime, O.dt, utils.unbalancedForce()))
 
 O.engines=[
    ForceResetter(),

@@ -1,3 +1,4 @@
+from __future__ import print_function
 # J. Duriez (jerome.duriez@irstea.fr)
 
 # to import with yade/python/ipython solveLiqBridge.py, or with execfile('solveLiqBridge.py',globals()) once inside a yade/python/ipython session
@@ -6,6 +7,8 @@
 # import numpy
 # from math import sin,pi,cos,sqrt,tan
 # --- End of "ipython necessary imports" ---
+
+from builtins import range
 import scipy # for root finding function (see below), requires installing python-scipy package
 from scipy import optimize
 
@@ -111,8 +114,8 @@ def solveLiqBridge(rRatio,theta,uStar,delta1,deltaZ,plot,plot3D,speak):
 
     # Check whether surf = tr(integral n*n)
     if (surf - (2*nn11 + nn33) ) / surf > 0.0025: # strict equality beyond reach
-        print 'surf =', surf
-        print 'Vs 2*nn11 + nn33 =', 2*nn11 + nn33
+        print('surf =', surf)
+        print('Vs 2*nn11 + nn33 =', 2*nn11 + nn33)
         startStr = 'r = ' + str(rRatio) + ';theta = '+ str(theta) + ';u* = ' + str(uStar)
         raise BaseException('Liq-gas area # tr(integral over liq-gas surf. n*n) for ' + startStr + ';delta1 = '+ str(delta1),';dZ = '+ str(deltaZ))
 
@@ -138,7 +141,7 @@ def solveLiqBridge(rRatio,theta,uStar,delta1,deltaZ,plot,plot3D,speak):
     if (min(rho) - rhoNeck) / rhoNeck > 0.002:
         strU,strD1,strDz = str(uStar),str(delta1),str(deltaZ)
         if speak != 0:
-            print 'Profile with u*='+strU+', delta1='+strD1+' and deltaZ='+strDz+' has not reached its neck !'
+            print('Profile with u*='+strU+', delta1='+strD1+' and deltaZ='+strDz+' has not reached its neck !')
         out = 0
     else:
         out = 1

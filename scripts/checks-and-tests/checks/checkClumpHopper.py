@@ -2,6 +2,8 @@
 # This script is used in --check to keep the functionality of adding/removal
 # of particles and clumps functional
 
+from __future__ import print_function
+from builtins import range
 import itertools
 from numpy import *
 
@@ -55,21 +57,21 @@ def addBodies():
 	# Create clumps...
 	clumpColor=(0.0, 0.5, 0.5)
 	for k,l in itertools.product(arange(0,10),arange(0,10)):
-		clpId,sphId=O.bodies.appendClumped([sphere(Vector3(x0t+Rs*(k*4+2),y0t+Rs*(l*4+2),i*Rs*2+zt+ab*3),Rs,color=clumpColor,material=dfltSpheresMat) for i in xrange(4)])
+		clpId,sphId=O.bodies.appendClumped([sphere(Vector3(x0t+Rs*(k*4+2),y0t+Rs*(l*4+2),i*Rs*2+zt+ab*3),Rs,color=clumpColor,material=dfltSpheresMat) for i in range(4)])
 		numSphereGen += len(sphId)
 
 	# ... and spheres
 	spheresColor=(0.4, 0.4, 0.4)
 	for k,l in itertools.product(arange(0,9),arange(0,9)):
-		sphAloneId=O.bodies.append( [sphere( Vector3(x0t+Rs*(k*4+4),y0t+Rs*(l*4+4),i*Rs*2.3+zt+ab*3),Rs,color=spheresColor,material=dfltSpheresMat) for i in xrange(4) ] )
+		sphAloneId=O.bodies.append( [sphere( Vector3(x0t+Rs*(k*4+4),y0t+Rs*(l*4+4),i*Rs*2.3+zt+ab*3),Rs,color=spheresColor,material=dfltSpheresMat) for i in range(4) ] )
 		numSphereGen += len(sphAloneId)
 
 def state():
 	global numSphereGen
 	global resultStatus
-	print "Iter %d: Total number of generated spheres %d, removed particles %d, current particles %d, kinEnergy %g"%(O.iter, numSphereGen, domLim.nDeleted, numSphereGen-domLim.nDeleted, utils.kineticEnergy())
+	print("Iter %d: Total number of generated spheres %d, removed particles %d, current particles %d, kinEnergy %g"%(O.iter, numSphereGen, domLim.nDeleted, numSphereGen-domLim.nDeleted, utils.kineticEnergy()))
 	if (utils.kineticEnergy() > kinEnergyMax):
-		print "Kinetic energy is over a threshold value! Error!"
+		print("Kinetic energy is over a threshold value! Error!")
 		resultStatus += 1
 		O.pause()
 

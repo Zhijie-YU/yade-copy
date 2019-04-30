@@ -21,6 +21,11 @@
 ##
 ## http://docutils.sourceforge.net/docs/howto/rst-roles.html
 
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+
+from builtins import range
 import sys, os, re
 from docutils import nodes
 from sphinx import addnodes
@@ -36,10 +41,10 @@ import docutils
 # xrefs: http://groups.google.com/group/sphinx-dev/browse_thread/thread/d719d19307654548
 #
 #
-import __builtin__
-if 'latex' in sys.argv: __builtin__.writer='latex'
-elif 'html' in sys.argv: __builtin__.writer='html'
-elif 'epub' in sys.argv: __builtin__.writer='epub'
+import builtins
+if 'latex' in sys.argv: builtins.writer='latex'
+elif 'html' in sys.argv: builtins.writer='html'
+elif 'epub' in sys.argv: builtins.writer='epub'
 else: raise RuntimeError("Must have either 'latex' or 'html' on the command line (hack for reference styles)")
 
 
@@ -68,7 +73,7 @@ def yadesrc_role(role,rawtext,lineno,inliner,options={},content=[]):
 
 # map modules to their html (rst) filenames. Used for sub-modules, where e.g. SpherePack is yade._packSphere.SpherePack, but is documented from yade.pack.rst
 moduleMap={
-	  'yade._packPredicates'    :'yade.pack'
+	'yade._packPredicates'    :'yade.pack'
 	, 'yade._packSpheres'       :'yade.pack'
 	, 'yade._packObb'           :'yade.pack'
 	, 'yade._utils'             :'yade.utils'
@@ -79,7 +84,7 @@ moduleMap={
 class YadeXRefRole(XRefRole):
 	#def process_link
 	def process_link(self, env, refnode, has_explicit_title, title, target):
-		print 'TARGET:','yade.wrapper.'+target
+		print('TARGET:','yade.wrapper.'+target)
 		return '[['+title+']]','yade.wrapper.'+target
 
 def mkYrefNode(target,text,rawtext,role,explicitText,lineno,options={}):
@@ -87,16 +92,16 @@ def mkYrefNode(target,text,rawtext,role,explicitText,lineno,options={}):
 	
 	Other targets are supposed to live in yade.wrapper (such as c++ classes)."""
 
-	writer=__builtin__.writer # to make sure not shadowed by a local var
+	writer=builtins.writer # to make sure not shadowed by a local var
 	import string
 	if target.startswith('yade.'):
 		module='.'.join(target.split('.')[0:2])
-		module2=(module if module not in moduleMap.keys() else moduleMap[module])
+		module2=(module if module not in list(moduleMap.keys()) else moduleMap[module])
 		if target==module: target='' # to reference the module itself
 		uri=('%%%s#%s'%(module2,target) if writer=='latex' else '%s.html#%s'%(module2,target))
 		if not explicitText and module!=module2:
 			text=module2+'.'+'.'.join(target.split('.')[2:])
-		text=string.replace(text,'yade.','',1)
+		text=text.replace('yade.','',1)
 	elif target.startswith('external:'):
 		exttarget=target.split(':',1)[1]
 		if not explicitText: text=exttarget
@@ -175,7 +180,10 @@ def fixSrc(app,docname,source):
 	source[0]=replaceLaTeX(source[0])
 
 def fixDocstring(app,what,name,obj,options,lines):
-	for i in range(0,len(lines)): lines[i]=lines[i].decode('utf-8')
+	try: #for python2 (python3 will produce an error)
+		for i in range(0,len(lines)): lines[i]=lines[i].decode('utf-8')
+	except:
+		pass
 	# remove empty default roles, which is not properly interpreted by docutils parser
 	for i in range(0,len(lines)):
 		lines[i]=lines[i].replace(':ydefault:``','')
@@ -191,9 +199,9 @@ def fixDocstring(app,what,name,obj,options,lines):
 			lines[i]=l2[i] if i<len(l2) else ''
 	elif isBoostMethod(what,obj):
 		l2=boostFuncSignature(name,obj)[1]
-                if (l2):
-                    for i in range(0,len(lines)):
-                            lines[i]=l2[i] if i<len(l2) else ''
+		if (l2):
+			for i in range(0,len(lines)):
+				lines[i]=l2[i] if i<len(l2) else ''
 	# LaTeX: replace $...$ by :math:`...`
 	# must be done after calling boostFuncSignature which uses original docstring
 	for i in range(0,len(lines)): lines[i]=replaceLaTeX(lines[i])
@@ -231,11 +239,11 @@ def boostFuncSignature(name,obj,removeSelf=False):
 		strippedDoc[i],n=re.subn(r'([a-zA-Z_][a-zA-Z0-9_]*\() \(object\)arg1(, |)',r'\1',strippedDoc[i].replace('->','→'))
 	# inspect dosctring after mangling
 	if 'getViscoelasticFromSpheresInteraction' in name and False:
-		print name
-		print strippedDoc
-		print '======================'
-		for l in strippedDoc: print l
-		print '======================'
+		print(name)
+		print(strippedDoc)
+		print('======================')
+		for l in strippedDoc: print(l)
+		print('======================')
 	sig=doc1.split('(',1)[1]
 	if removeSelf:
 		# remove up to the first comma; if no comma present, then the method takes no arguments
@@ -256,7 +264,7 @@ def boostFuncSignature(name,obj,removeSelf=False):
 def fixSignature(app, what, name, obj, options, signature, return_annotation):
 	#print what,name,obj,signature#,dir(obj)
 	if what=='attribute':
-		doc=unicode(obj.__doc__)
+		doc=str(obj.__doc__)
 		ret=''
 		m=re.match('.*:ydefault:`(.*?)`.*',doc)
 		if m:
@@ -305,7 +313,7 @@ from sphinx import addnodes
 def parse_ystaticattr(env,attr,attrnode):
 	m=re.match(r'([a-zA-Z0-9_]+)\.(.*)\(=(.*)\)',attr)
 	if not m:
-		print 100*'@'+' Static attribute %s not matched'%attr
+		print(100*'@'+' Static attribute %s not matched'%attr)
 		attrnode+=addnodes.desc_name(attr,attr)
 	klass,name,default=m.groups()
 	#attrnode+=addnodes.desc_type('static','static')
@@ -401,11 +409,11 @@ extensions = [
 		'sphinx.ext.viewcode',
 		'sphinx.ext.inheritance_diagram',
 		'matplotlib.sphinxext.plot_directive',
-		'matplotlib.sphinxext.only_directives',
+		#'matplotlib.sphinxext.only_directives', #removed this with python3, seems not used anymore by sphinx.
 		#'matplotlib.sphinxext.mathmpl',
 		'ipython_console_highlighting',
 		'youtube',
-		'sphinx.ext.todo',
+		'sphinx.ext.todo'
 		]
 
 
@@ -418,8 +426,10 @@ else:
 		extensions.append('ipython_directive013')
 	elif 200<=yade.runtime.ipython_version<500:
 		extensions.append('ipython_directive200')
-	else:
+	elif yade.runtime.ipython_version<600:
 		extensions.append('ipython_directive500')
+	else:
+		extensions.append('IPython.sphinxext.ipython_directive')
 
 # the sidebar extension
 if False:
@@ -437,6 +447,7 @@ graphviz_dot = 'dot'
 inheritance_graph_attrs = { 'rankdir' : 'BT' } 
 inheritance_node_attrs = { 'height' : 0.5, 'fontsize' : 12, 'shape' : 'oval' } 
 inheritance_edge_attrs = {} 
+
 
 my_latex_preamble=r'''
 \usepackage{euler} % must be loaded before fontspec for the whole doc (below); this must be kept for pngmath, however
@@ -518,6 +529,10 @@ my_latex_preamble=r'''
 \def\sortInv{\hbox{\phantom{||}}}
 \def\sortlines#1{\xymatrix@=3pt{#1}}
 \def\crossBound{||\mkern-18mu<}
+
+% restore previous tocdepth in .pdf after introducing new sections in .html
+
+\setcounter{tocdepth}{2}
 
 '''
 

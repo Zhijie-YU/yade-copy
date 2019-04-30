@@ -1,7 +1,8 @@
 #!/usr/bin/env python
-# encoding: utf-8
+# encoding: utf-8
 
 # The model checks liquid migration model if it is enabled during compilation
+from __future__ import print_function
 from yade import utils, plot
 
 if ('LIQMIGRATION' in features):
@@ -58,20 +59,20 @@ if ('LIQMIGRATION' in features):
   ]
   
   def showData():
-    print "Step %d"%O.iter
-    print "idB=%d, Vf=%s, Vmin=%s;"%(id0, O.bodies[id0].state.Vf, O.bodies[id0].state.Vmin)
-    print "idB=%d, Vf=%s, Vmin=%s;"%(id1, O.bodies[id1].state.Vf, O.bodies[id1].state.Vmin)
-    print "idB=%d, Vf=%s, Vmin=%s;"%(id2, O.bodies[id2].state.Vf, O.bodies[id2].state.Vmin)
+    print("Step %d"%O.iter)
+    print("idB=%d, Vf=%s, Vmin=%s;"%(id0, O.bodies[id0].state.Vf, O.bodies[id0].state.Vmin))
+    print("idB=%d, Vf=%s, Vmin=%s;"%(id1, O.bodies[id1].state.Vf, O.bodies[id1].state.Vmin))
+    print("idB=%d, Vf=%s, Vmin=%s;"%(id2, O.bodies[id2].state.Vf, O.bodies[id2].state.Vmin))
     try:
-      print "Interaction[%d, %d].Vb=%s"%(id0, id1, O.interactions[id0,id1].phys.Vb)
+      print("Interaction[%d, %d].Vb=%s"%(id0, id1, O.interactions[id0,id1].phys.Vb))
     except:
       pass
     
     try:
-      print "Interaction[%d, %d].Vb=%s"%(id0, id2, O.interactions[id0,id2].phys.Vb)
+      print("Interaction[%d, %d].Vb=%s"%(id0, id2, O.interactions[id0,id2].phys.Vb))
     except:
       pass
-    print 
+    print()
   
   def switchVel():
     O.bodies[id1].state.vel=-O.bodies[id1].state.vel
@@ -100,5 +101,5 @@ if ('LIQMIGRATION' in features):
       (abs((O.bodies[id2].state.Vf - 0.041)/0.041) > tolerance)):
     resultStatus += 1
 else:
-  print "This checkLiquidMigration.py cannot be executed because LIQMIGRATION is disabled"
+  print("This checkLiquidMigration.py cannot be executed because LIQMIGRATION is disabled")
   

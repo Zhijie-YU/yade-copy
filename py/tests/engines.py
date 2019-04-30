@@ -1,5 +1,6 @@
 'test functionality of individual engines'
 
+from builtins import range
 import unittest
 import random
 from yade.wrapper import *

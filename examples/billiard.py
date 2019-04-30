@@ -4,6 +4,7 @@
 # The script was implemented to check the following task
 # http://math.stackexchange.com/questions/658871/perfectly-centered-break-of-a-perfectly-aligned-pool-ball-rack/659318#659318
 
+from builtins import range
 massBall   = 1.0
 radiusBall = 1.0
 rowsN = 5

@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+from __future__ import print_function
 from sys import *
 import os,re
 from string import *
@@ -50,7 +51,7 @@ def grepCpp(path,f,level=0):
 		if m:
 			inc=m.group(1); incBaseName=m.group(1).split('.')[0]
 			if not os.path.exists(path+sep+m.group(1)):
-				print "WARNING: file %s included from %s doesn't exist"%(m.group(1),fullF)
+				print("WARNING: file %s included from %s doesn't exist"%(m.group(1),fullF))
 				pass
 			else:
 				if m.group(1).split('.')[0] not in plugins or incBaseName==baseName:
@@ -72,7 +73,7 @@ cache=shelve.open('linkdeps.cache')
 cache['pluginLinks'],cache['pluginFeats'],cache['pluginSrcs']=pluginLinks,pluginFeats,pluginSrcs
 pluginLinks,pluginFeats,pluginSrcs=cache['pluginLinks'],cache['pluginFeats'],cache['pluginSrcs']
 pluginObjs={}
-for p in pluginLinks.keys(): pluginObjs[p]='packages'
+for p in list(pluginLinks.keys()): pluginObjs[p]='packages'
 cache.close()
 
 def getPluginLibs(plugin):
@@ -83,11 +84,11 @@ def getPluginLibs(plugin):
 		try:
 			libs.add(pluginObjs[lib])
 		except KeyError:
-			print 'WARNING: plugin %s, missing lib %s'%(plugin,lib)
+			print('WARNING: plugin %s, missing lib %s'%(plugin,lib))
 	return libs
 allLibs=set();
-for p in pluginSrcs.keys(): allLibs.update(getPluginLibs(p))
-print "\tenv.SharedLibrary('packages',Split('"+' '.join(pluginSrcs.values())+"'),LIBS=env['LIBS']+Split('"+' '.join(allLibs)+"'),CXXFLAGS=env['CXXFLAGS']+['--combine'])"
+for p in list(pluginSrcs.keys()): allLibs.update(getPluginLibs(p))
+print("\tenv.SharedLibrary('packages',Split('"+' '.join(list(pluginSrcs.values()))+"'),LIBS=env['LIBS']+Split('"+' '.join(allLibs)+"'),CXXFLAGS=env['CXXFLAGS']+['--combine'])")
 #print plugin,' '.join(feats)
 #print f ,' '.join(feats)
 

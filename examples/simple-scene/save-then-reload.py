@@ -9,6 +9,8 @@
 ## but it is not a requirement.
 ## Comments on the simulation itself can be found in script-session1.py
 
+from __future__ import print_function
+
 nRead=readParamsFromTable(
 	num_spheres=1001,
 	compFricDegree = 30,
@@ -43,12 +45,13 @@ startTime=time.time()
 ## user function saving variables, it will not be saved with the simulation; which is ok since it is always re-defined here.
 from yade import plot
 def history():
-  	plot.addData(e11=-triax.strain[0], e22=-triax.strain[1], e33=-triax.strain[2],
-  		    ev=-triax.strain[0]-triax.strain[1]-triax.strain[2],
-		    s11=-triax.stress(triax.wall_right_id)[0],
-		    s22=-triax.stress(triax.wall_top_id)[1],
-		    s33=-triax.stress(triax.wall_front_id)[2],
-		    i=O.iter)
+	plot.addData(e11=-triax.strain[0], e22=-triax.strain[1], e33=-triax.strain[2],
+		ev=-triax.strain[0]-triax.strain[1]-triax.strain[2],
+		s11=-triax.stress(triax.wall_right_id)[0],
+		s22=-triax.stress(triax.wall_top_id)[1],
+		s33=-triax.stress(triax.wall_front_id)[2],
+		i=O.iter)
+
 
 O.materials.append(FrictMat(young=young,poisson=0.5,frictionAngle=radians(compFricDegree),density=2600,label='spheres'))
 O.materials.append(FrictMat(young=young,poisson=0.5,frictionAngle=0,density=0,label='walls'))
@@ -83,21 +86,21 @@ triax.goal1=triax.goal2=triax.goal3=-10000
 
 ## If no dense state has been generated previously proceed to confinement, else reload
 if not savedState:
-	print "No saved state - running isotropic confinement for num_spheres=", str(table.num_spheres),", compFricDegree=", str(table.compFricDegree),", key='",str(table.key),"'"
+	print("No saved state - running isotropic confinement for num_spheres=", str(table.num_spheres),", compFricDegree=", str(table.compFricDegree),", key='",str(table.key),"'")
 	while 1:
 		O.run(1000, True)
 		unb=unbalancedForce()
-		print 'unbalanced force:',unb,' mean stress: ',triax.meanStress
+		print('unbalanced force:',unb,' mean stress: ',triax.meanStress)
 		if unb<stabilityThreshold and abs(-10000-triax.meanStress)/10000<0.001:
 			break
 	while triax.porosity>targetPorosity:
 		compFricDegree = 0.95*compFricDegree
 		setContactFriction(radians(compFricDegree))
 		O.run(500,1)
-	print "Confinement achieved, save then proceed to deviatoric loading"
+	print("Confinement achieved, save then proceed to deviatoric loading")
 	O.save(initStateFilename)
 else:
-	print "Saved state found - reload then proceed to deviatoric loading for num_spheres=", str(table.num_spheres),", compFricDegree=", str(table.compFricDegree),", key='",str(table.key),"'"
+	print("Saved state found - reload then proceed to deviatoric loading for num_spheres=", str(table.num_spheres),", compFricDegree=", str(table.compFricDegree),", key='",str(table.key),"'")
 	O.load(initStateFilename)
 
 
@@ -112,4 +115,4 @@ newton.damping=0.1
 
 O.run(100,True)
 
-print "Total execution time (savedState=",str(savedState),"): ",str(time.time()-startTime),"s"
+print("Total execution time (savedState=",str(savedState),"): ",str(time.time()-startTime),"s")

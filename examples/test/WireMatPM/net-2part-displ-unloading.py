@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 # encoding: utf-8
+from __future__ import print_function
+from builtins import input
 from yade import  ymport, qt, plot
 
 ## definition of some colors for colored text output in terminal
@@ -10,10 +12,10 @@ RED = '\033[91m'
 BLACK = '\033[0m'
 
 #### short description of script
-print BLUE+'''
+print(BLUE+'''
 Simple test for two particles to test the contact law for the WireMat
 by unsing the '''+RED+'''StepDisplacer'''+BLUE+''' with loading and unloading.
-'''+BLACK
+'''+BLACK)
 
 #### define parameters for the net
 # mesh opening size
@@ -57,7 +59,7 @@ def addPlotData():
 			plot.addData( Fn=i.phys.normalForce.norm(), un=(O.bodies[1].state.pos[1]-O.bodies[0].state.pos[1])-a )
 			#plot.saveGnuplot('net-2part-displ-unloading')
 		except:
-			print "No interaction!"
+			print("No interaction!")
 			O.pause()
 
 #### define simulation to create link
@@ -96,38 +98,38 @@ Ig2ssGeom.interactionDetectionFactor=-1.
 #### define simulation loading
 O.engines = [StepDisplacer( ids=[1],mov=Vector3(0,+1e-5,0),rot=Quaternion().Identity,setVelocities=False )] + O.engines
 
-print 'Loading (press enter)'
-raw_input()
+print('Loading (press enter)')
+input()
 O.run(100,True)
 
 #### define simulation unloading
 O.engines = [StepDisplacer( ids=[1],mov=Vector3(0,-1.3e-5,0),rot=Quaternion().Identity,setVelocities=False )] + O.engines[1:]
 
-print 'Unloading (press enter)'
-raw_input()
+print('Unloading (press enter)')
+input()
 O.run(50,True)
 
 #### define simulation reloading
 O.engines = [StepDisplacer( ids=[1],mov=Vector3(0,+1.6e-5,0),rot=Quaternion().Identity,setVelocities=False )] + O.engines[1:]
 
-print 'Reloading (press enter)'
-raw_input()
+print('Reloading (press enter)')
+input()
 O.run(500,True)
 
 
 #### define simulation unloading
 O.engines = [StepDisplacer( ids=[1],mov=Vector3(0,-1.45e-5,0),rot=Quaternion().Identity,setVelocities=False )] + O.engines[1:]
 
-print 'Reunloading (press enter)'
-raw_input()
+print('Reunloading (press enter)')
+input()
 O.run(10,True)
 
 
 #### define simulation reloading
 O.engines = [StepDisplacer( ids=[1],mov=Vector3(0,+1.6e-5,0),rot=Quaternion().Identity,setVelocities=False )] + O.engines[1:]
 
-print 'Reloading (press enter)'
-raw_input()
+print('Reloading (press enter)')
+input()
 O.run(500,True)
 
 

@@ -15,7 +15,13 @@ For examples, see
 * :ysrc:`examples/gts-horse/gts-horse.py`
 * :ysrc:`examples/WireMatPM/wirepackings.py`
 """
+from __future__ import print_function
 
+from future import standard_library
+standard_library.install_aliases()
+from builtins import map
+
+from builtins import range
 import itertools,warnings
 from numpy import arange
 from math import sqrt
@@ -31,7 +37,7 @@ from minieigen import *
 if 'product' not in dir(itertools):
 	def product(*args, **kwds):
 		"http://docs.python.org/library/itertools.html#itertools.product"
-		pools = map(tuple, args) * kwds.get('repeat', 1); result = [[]]
+		pools = list(map(tuple, args)) * kwds.get('repeat', 1); result = [[]]
 		for pool in pools: result = [x+[y] for x in result for y in pool]
 		for prod in result: yield tuple(prod)
 	itertools.product=product
@@ -44,12 +50,12 @@ except ImportError: pass
 # make c++ predicates available in this module
 noPredicate = False
 try:
-	from _packPredicates import * ## imported in randomDensePack as well
+	from yade._packPredicates import * ## imported in randomDensePack as well
 except ImportError: pass; noPredicate = True
 
 # import SpherePack
-from _packSpheres import *
-from _packObb import *
+from yade._packSpheres import *
+from yade._packObb import *
 
 ##
 # extend _packSphere.SpherePack c++ class by this method
@@ -152,7 +158,7 @@ if not (noPredicate):
       mn,mx=[inf,inf,inf],[-inf,-inf,-inf]
       for v in surf.vertices():
         c=v.coords()
-        mn,mx=[min(mn[i],c[i]) for i in 0,1,2],[max(mx[i],c[i]) for i in 0,1,2]
+        mn,mx=[min(mn[i],c[i]) for i in (0,1,2)],[max(mx[i],c[i]) for i in (0,1,2)]
       self.mn,self.mx=tuple(mn),tuple(mx)
       import gts
     def aabb(self): return self.mn,self.mx
@@ -187,7 +193,7 @@ if not (noPredicate):
       inf=float('inf')
       min = Vector3(-inf,-inf,-inf)
       max = Vector3(+inf,+inf,+inf)
-      for i in xrange(3):
+      for i in range(3):
         j = (i+1)%3
         k = (i+2)%3
         if d[i]==0 and d[j]==0:
@@ -211,27 +217,27 @@ if not (noPredicate):
       try:
         import scipy.optimize
       except ImportError:
-        raise ImportError, "scipy (package python-scipy) needed for pack.inConvexPolyhedron"
+        raise ImportError("scipy (package python-scipy) needed for pack.inConvexPolyhedron")
       min,max = Vector3.Zero, Vector3.Zero
       A,b = [],[]
       for h in self._inHalfSpaces:
         A.append(tuple(-h._dir))
         b.append(h._d)
       inf = float('inf')
-      for i in xrange(3):
+      for i in range(3):
         c = Vector3.Zero
         #
         c[i] = 1
         opt = scipy.optimize.linprog(c,A_ub=A,b_ub=b,bounds=(-inf,inf))
         errmsg = "Something wrong in pack.inConvexPolyhedron defining planes.\nThe scipy.optimize.linprog output:\n{}\n"
         if not opt.success:
-          raise ValueError, errmsg.format(opt)
+          raise ValueError(errmsg.format(opt))
         min[i] = opt.x[i]
         #
         c[i] = -1
         opt = scipy.optimize.linprog(c,A_ub=A,b_ub=b,bounds=(-inf,inf))
         if not opt.success:
-          raise ValueError, errmsg.format(opt)
+          raise ValueError(errmsg.format(opt))
         max[i] = opt.x[i]
       return min,max
     def aabb(self):
@@ -270,7 +276,7 @@ If threshold is given (>0), then
 	import gts # will raise an exception in gts-less builds
 	if not len(set([len(pts1) for pts1 in pts]))==1: raise RuntimeError("Polylines must be all of the same length!")
 	vtxs=[[gts.Vertex(x,y,z) for x,y,z in pts1] for pts1 in pts]
-	sectEdges=[[gts.Edge(vtx[i],vtx[i+1]) for i in xrange(0,len(vtx)-1)] for vtx in vtxs]
+	sectEdges=[[gts.Edge(vtx[i],vtx[i+1]) for i in range(0,len(vtx)-1)] for vtx in vtxs]
 	interSectEdges=[[] for i in range(0,len(vtxs)-1)]
 	for i in range(0,len(vtxs)-1):
 		for j in range(0,len(vtxs[i])):
@@ -330,8 +336,8 @@ def regularOrtho(predicate,radius,gap,**kw):
 	Created spheres will have given radius and will be separated by gap space."""
 	ret=[]
 	mn,mx=predicate.aabb()
-	if(max([mx[i]-mn[i] for i in 0,1,2])==float('inf')): raise ValueError("Aabb of the predicate must not be infinite (didn't you use union | instead of intersection & for unbounded predicate such as notInNotch?");
-	xx,yy,zz=[arange(mn[i]+radius,mx[i]-radius,2*radius+gap) for i in 0,1,2]
+	if(max([mx[i]-mn[i] for i in (0,1,2)])==float('inf')): raise ValueError("Aabb of the predicate must not be infinite (didn't you use union | instead of intersection & for unbounded predicate such as notInNotch?");
+	xx,yy,zz=[arange(mn[i]+radius,mx[i]-radius,2*radius+gap) for i in (0,1,2)]
 	for xyz in itertools.product(xx,yy,zz):
 		if predicate(xyz,radius): ret+=[utils.sphere(xyz,radius=radius,**kw)]
 	if (len(ret)==0):
@@ -345,9 +351,9 @@ def regularHexa(predicate,radius,gap,**kw):
 	a=2*radius+gap
 	hy,hz=a*sqrt(3)/2.,a*sqrt(6)/3.
 	mn,mx=predicate.aabb()
-	dim=[mx[i]-mn[i] for i in 0,1,2]
+	dim=[mx[i]-mn[i] for i in (0,1,2)]
 	if(max(dim)==float('inf')): raise ValueError("Aabb of the predicate must not be infinite (didn't you use union | instead of intersection & for unbounded predicate such as notInNotch?");
-	ii,jj,kk=[range(0,int(dim[0]/a)+1),range(0,int(dim[1]/hy)+1),range(0,int(dim[2]/hz)+1)]
+	ii,jj,kk=[list(range(0,int(dim[0]/a)+1)),list(range(0,int(dim[1]/hy)+1)),list(range(0,int(dim[2]/hz)+1))]
 	for i,j,k in itertools.product(ii,jj,kk):
 		#Simple HCP-lattice packing
 		#http://en.wikipedia.org/wiki/Close-packing_of_equal_spheres#Simple_hcp_lattice
@@ -385,8 +391,9 @@ def filterSpherePack(predicate,spherePack,returnSpherePack=None,**kw):
 		return ret
 
 def _memoizePacking(memoizeDb,sp,radius,rRelFuzz,wantPeri,fullDim,noPrint=False):
+	import sys
 	if not memoizeDb: return
-	import cPickle,sqlite3,time,os
+	import pickle,sqlite3,time,os
 	if os.path.exists(memoizeDb):
 		conn=sqlite3.connect(memoizeDb)
 	else:
@@ -394,12 +401,15 @@ def _memoizePacking(memoizeDb,sp,radius,rRelFuzz,wantPeri,fullDim,noPrint=False)
 		c=conn.cursor()
 		c.execute('create table packings (radius real, rRelFuzz real, dimx real, dimy real, dimz real, N integer, timestamp real, periodic integer, pack blob)')
 	c=conn.cursor()
-	packBlob=buffer(cPickle.dumps(sp.toList(),cPickle.HIGHEST_PROTOCOL))
+	if(sys.version_info[0]<3):
+		packBlob=buffer(pickle.dumps(sp.toList(),pickle.HIGHEST_PROTOCOL))
+	else:
+		packBlob=memoryview(pickle.dumps(sp.toList(),pickle.HIGHEST_PROTOCOL))
 	packDim=sp.cellSize if wantPeri else fullDim
 	c.execute('insert into packings values (?,?,?,?,?,?,?,?,?)',(radius,rRelFuzz,packDim[0],packDim[1],packDim[2],len(sp),time.time(),wantPeri,packBlob,))
 	c.close()
 	conn.commit()
-	if not noPrint: print "Packing saved to the database",memoizeDb
+	if not noPrint: print("Packing saved to the database",memoizeDb)
 
 def _getMemoizedPacking(memoizeDb,radius,rRelFuzz,x1,y1,z1,fullDim,wantPeri,fillPeriodic,spheresInCell,memoDbg=False,noPrint=False):
 	"""Return suitable SpherePack read from *memoizeDb* if found, None otherwise.
@@ -407,9 +417,9 @@ def _getMemoizedPacking(memoizeDb,radius,rRelFuzz,x1,y1,z1,fullDim,wantPeri,fill
 		:param fillPeriodic: whether to fill fullDim by repeating periodic packing
 		:param wantPeri: only consider periodic packings
 	"""
-	import os,os.path,sqlite3,time,cPickle,sys
+	import os,os.path,sqlite3,time,pickle,sys
 	if memoDbg and not noPrint:
-		def memoDbgMsg(s): print s
+		def memoDbgMsg(s): print(s)
 	else:
 		def memoDbgMsg(s): pass
 	if not memoizeDb or not os.path.exists(memoizeDb):
@@ -434,9 +444,9 @@ def _getMemoizedPacking(memoizeDb,radius,rRelFuzz,x1,y1,z1,fullDim,wantPeri,fill
 		else:
 			if (X<fullDim[0] or Y<fullDim[1] or Z<fullDim[2]): memoDbgMsg("REJECT: not large enough"); continue # not large enough
 		memoDbgMsg("ACCEPTED");
-		if not noPrint: print "Found suitable packing in %s (radius=%g±%g,N=%g,dim=%g×%g×%g,%s,scale=%g), created %s"%(memoizeDb,R,rDev,NN,X,Y,Z,"periodic" if isPeri else "non-periodic",scale,time.asctime(time.gmtime(timestamp)))
+		if not noPrint: print("Found suitable packing in %s (radius=%g±%g,N=%g,dim=%g×%g×%g,%s,scale=%g), created %s"%(memoizeDb,R,rDev,NN,X,Y,Z,"periodic" if isPeri else "non-periodic",scale,time.asctime(time.gmtime(timestamp))))
 		c.execute('select pack from packings where timestamp=?',(timestamp,))
-		sp=SpherePack(cPickle.loads(str(c.fetchone()[0])))
+		sp=SpherePack(pickle.loads(c.fetchone()[0]))
 		sp.scale(scale);
 		if isPeri and wantPeri:
 			sp.isPeriodic = True
@@ -479,19 +489,20 @@ def randomDensePack(predicate,radius,material=-1,dim=None,cropLayers=0,rRelFuzz=
 
 	:return: SpherePack object with spheres, filtered by the predicate.
 	"""
-	import sqlite3, os.path, cPickle, time, sys, _packPredicates, numpy
+	import sqlite3, os.path, pickle, time, sys, numpy
 	from math import pi
+	from yade import _packPredicates
 	wantPeri=(spheresInCell>0)
 	if 'inGtsSurface' in dir(_packPredicates) and type(predicate)==inGtsSurface and useOBB:
 		center,dim,orientation=gtsSurfaceBestFitOBB(predicate.surf)
-		print "Best-fit oriented-bounding-box computed for GTS surface, orientation is",orientation
+		print("Best-fit oriented-bounding-box computed for GTS surface, orientation is",orientation)
 		dim*=2 # gtsSurfaceBestFitOBB returns halfSize
 	else:
 		if not dim: dim=predicate.dim()
 		if max(dim)==float('inf'): raise RuntimeError("Infinite predicate and no dimension of packing requested.")
 		center=predicate.center()
 		orientation=None
-	if not wantPeri: fullDim=tuple([dim[i]+4*cropLayers*radius for i in 0,1,2])
+	if not wantPeri: fullDim=tuple([dim[i]+4*cropLayers*radius for i in (0,1,2)])
 	else:
 		# compute cell dimensions now, as they will be compared to ones stored in the db
 		# they have to be adjusted to not make the cell to small WRT particle radius
@@ -510,7 +521,7 @@ def randomDensePack(predicate,radius,material=-1,dim=None,cropLayers=0,rRelFuzz=
 				sp.cellSize=(0,0,0) # resetting cellSize avoids warning when rotating
 				sp.rotate(*orientation.toAxisAngle())
 			return filterSpherePack(predicate,sp,material=material,returnSpherePack=returnSpherePack)
-		else: print "No suitable packing in database found, running",'PERIODIC compression' if wantPeri else 'triaxial'
+		else: print("No suitable packing in database found, running",'PERIODIC compression' if wantPeri else 'triaxial')
 		sys.stdout.flush()
 	O.switchScene(); O.resetThisScene() ### !!
 	if wantPeri:

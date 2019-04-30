@@ -1,9 +1,11 @@
+from __future__ import print_function
 #--- bruno.chareyre@hmg.inpg.fr ---
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
 # Experiment beam-like behaviour with chained cylinders + CohFrict connexions
 
+from builtins import range
 from yade.gridpfacet import *
 
 young=1.0e6
@@ -41,8 +43,8 @@ for i in range(0, Ne):
 def outp(id=1):
 	for i in O.interactions:
 		if i.id1 == 1:
-			print i.phys.shearForce
-			print i.phys.normalForce
+			print(i.phys.shearForce)
+			print(i.phys.normalForce)
 			return  i
 
 O.bodies[Ne-1].state.blockedDOFs='xyzXYZ'
@@ -53,9 +55,9 @@ yade.qt.View();
 from yade import plot
 plot.plots={'t':('pos1',None,'vel1')}
 def history():
-  	plot.addData(pos1=O.bodies[0].state.pos[1], # potential elastic energy
-		     vel1=O.bodies[0].state.vel[1],
-		     t=O.time)
+	plot.addData(pos1=O.bodies[0].state.pos[1], # potential elastic energy
+			vel1=O.bodies[0].state.vel[1],
+			t=O.time)
 
 #yade.qt.Renderer().bound=True
 plot.plot(subPlots=False)

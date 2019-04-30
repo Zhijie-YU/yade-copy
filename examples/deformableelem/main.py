@@ -21,6 +21,7 @@
 #  MA 02110-1301, USA.
 #  
 #  
+from past.builtins import execfile
 import sys
 
 from yadeimport import *

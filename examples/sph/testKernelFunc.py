@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 # This example allows to test different kernel functions
+from __future__ import print_function
 from yade import utils, plot, qt
 o = Omega()
 
@@ -63,7 +64,7 @@ o.engines = [
   PyRunner(command='addPlotData()',iterPeriod=1,dead=False),
 ]
 
-print "Time\tX\tRho\tP\tFpr "
+print("Time\tX\tRho\tP\tFpr ")
 
 # Function to add data to plot
 def addPlotData(): 

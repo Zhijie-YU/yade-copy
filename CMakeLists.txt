@@ -10,6 +10,7 @@
 #  ENABLE_CGAL: enable CGAL option (ON by default)
 #  ENABLE_VTK: enable VTK-export option (ON by default)
 #  ENABLE_OPENMP: enable OpenMP-parallelizing option (ON by default)
+#  ENABLE_MPI : Enable MPI communications in Yade. Used for Yade-OpenFOAM coupling.
 #  ENABLE_GTS: enable GTS-option (ON by default)
 #  ENABLE_GL2PS: enable GL2PS-option (ON by default)
 #  ENABLE_LINSOLV: enable LINSOLV-option (ON by default)
@@ -28,12 +29,54 @@
 #  VECTORIZE: enables vectorization and alignment in Eigen3 library, experimental (OFF by default)
 #  USE_QT5: use QT5 for GUI (ON by default)
 #  CHOLMOD_GPU link Yade to custom SuiteSparse installation and activate GPU accelerated PFV (OFF by default)
-#  ENABLE_MPI : Enable MPI communications in Yade. Used for Yade-OpenFOAM coupling.
+#  ENABLE_PYTHON3: enable python 3 compilation instead of python2.7 (OFF by default)
+#  PYTHON_VERSION: force python version to the given one, set -1 to automatically use the last version on the system. (-1 by default)
 
 project(Yade C CXX)
 cmake_minimum_required(VERSION 2.8.11)
 
+
+#===========================================================
+SET(DEFAULT ON CACHE INTERNAL "Default value for enabled by default options")
+SET(LINKLIBS "")
+SET(CONFIGURED_FEATS "")
+SET(DISABLED_FEATS "")
+
+OPTION(ENABLE_VTK "Enable VTK" ${DEFAULT})
+OPTION(ENABLE_OPENMP "Enable OpenMP" ${DEFAULT})
+OPTION(ENABLE_MPI "Enable MPI environement and communications, required for coupling Yade with OpenFOAM  " OFF)
+OPTION(ENABLE_GTS "Enable GTS" ${DEFAULT})
+OPTION(ENABLE_GUI "Enable GUI" ${DEFAULT})
+OPTION(ENABLE_CGAL "Enable CGAL" ${DEFAULT})
+OPTION(ENABLE_GL2PS "Enable GL2PS" ${DEFAULT})
+OPTION(ENABLE_LINSOLV "Enable direct solver for the flow engines (experimental)" ${DEFAULT})
+OPTION(ENABLE_PFVFLOW "Enable one-phase flow engines" ${DEFAULT})
+OPTION(ENABLE_TWOPHASEFLOW "Enable two-phase flow engines" ${DEFAULT})
+OPTION(ENABLE_SPH "Enable SPH" OFF)
+OPTION(ENABLE_LBMFLOW "Enable LBM engine (very experimental)" ON)
+OPTION(ENABLE_LIQMIGRATION "Enable liquid control (very experimental), see [Mani2013] for details" OFF)
+OPTION(ENABLE_MASK_ARBITRARY "Enable arbitrary precision of bitmask variables (only Body::groupMask yet implemented) (experimental). Use -DMASK_ARBITRARY_SIZE=int to set number of used bits (256 by default)" OFF)
+OPTION(ENABLE_PROFILING "Enable profiling, e.g. shows some more metrics, which can define bottlenecks of the code (OFF by default)" OFF)
+OPTION(ENABLE_POTENTIAL_PARTICLES "Enable potential particles" OFF)
+OPTION(ENABLE_OAR "Generate script for oar-based task scheduler" OFF)
+OPTION(USE_QT5 "USE Qt5 for GUI" ON)
+OPTION(ENABLE_POTENTIAL_BLOCKS "Enable PotentialBlocks" OFF)
+OPTION(ENABLE_DEFORM "Enable Deformation Engine" OFF)
+OPTION(CHOLMOD_GPU "Enable GPU acceleration flow engine direct solver" OFF)
+OPTION(ENABLE_THERMAL "Enable thermal engine (experimental)" OFF)
+#Set -DPYTHON_VERSION numeric option below:
+set(PYTHON_VERSION -1 CACHE STRING "Force python version to the given one. Defaults to -DPYTHON_VERSION=-1 which automatically uses the newest available python version on the system.")
+#===========================================================
+
+
+
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cMake")
+message(***PYTHON_VERSION*** ${PYTHON_VERSION})
+IF(${PYTHON_VERSION} EQUAL -1)
+	set(Python_ADDITIONAL_VERSIONS 3 2)
+ELSE()
+	set(Python_ADDITIONAL_VERSIONS ${PYTHON_VERSION})
+ENDIF()
 
 INCLUDE(FindPythonInterp)
 INCLUDE(FindOpenMP)
@@ -100,7 +143,20 @@ ENDIF (DEBUG)
 IF ( NOT LocalBoost )
   SET(LocalBoost "1.47.0") # Minimal required Boost version
 ENDIF ( NOT LocalBoost )
-FIND_PACKAGE(Boost ${LocalBoost} COMPONENTS python thread filesystem iostreams regex serialization system date_time REQUIRED)
+
+IF ( ${PYTHON_VERSION_MAJOR} EQUAL 2 )
+  FIND_PACKAGE(Boost ${LocalBoost} COMPONENTS python thread filesystem iostreams regex serialization system date_time REQUIRED)
+ELSE() #python3
+  FIND_PACKAGE(Boost ${LocalBoost} COMPONENTS python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR} thread filesystem iostreams regex serialization system date_time)
+  IF(NOT Boost_FOUND)
+    FIND_PACKAGE(Boost ${LocalBoost} COMPONENTS python3-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR} thread filesystem iostreams regex serialization system date_time)
+      IF(NOT Boost_FOUND)
+        message( FATAL_ERROR "Can't find suitable libboost_python version." )
+      ENDIF()
+  ENDIF()
+ENDIF()
+
+
 INCLUDE_DIRECTORIES (${Boost_INCLUDE_DIRS})
 # for checking purpose
 MESSAGE("--   Boost_VERSION: " ${Boost_VERSION})
@@ -120,39 +176,10 @@ FIND_PACKAGE(Eigen3 REQUIRED)
 FIND_PACKAGE(BZip2 REQUIRED)
 FIND_PACKAGE(ZLIB REQUIRED)
 
-SET(Python_ADDITIONAL_VERSIONS 2.7)
 FIND_PACKAGE(PythonLibs REQUIRED)
 INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 #===========================================================
 
-SET(DEFAULT ON CACHE INTERNAL "Default value for enabled by default options")
-SET(LINKLIBS "")
-SET(CONFIGURED_FEATS "")
-SET(DISABLED_FEATS "")
-
-OPTION(ENABLE_VTK "Enable VTK" ${DEFAULT})
-OPTION(ENABLE_OPENMP "Enable OpenMP" ${DEFAULT})
-OPTION(ENABLE_GTS "Enable GTS" ${DEFAULT})
-OPTION(ENABLE_GUI "Enable GUI" ${DEFAULT})
-OPTION(ENABLE_CGAL "Enable CGAL" ${DEFAULT})
-OPTION(ENABLE_GL2PS "Enable GL2PS" ${DEFAULT})
-OPTION(ENABLE_LINSOLV "Enable direct solver for the flow engines (experimental)" ${DEFAULT})
-OPTION(ENABLE_PFVFLOW "Enable one-phase flow engines" ${DEFAULT})
-OPTION(ENABLE_TWOPHASEFLOW "Enable two-phase flow engines" ${DEFAULT})
-OPTION(ENABLE_SPH "Enable SPH" OFF)
-OPTION(ENABLE_LBMFLOW "Enable LBM engine (very experimental)" ON)
-OPTION(ENABLE_LIQMIGRATION "Enable liquid control (very experimental), see [Mani2013] for details" OFF)
-OPTION(ENABLE_MASK_ARBITRARY "Enable arbitrary precision of bitmask variables (only Body::groupMask yet implemented) (experimental). Use -DMASK_ARBITRARY_SIZE=int to set number of used bits (256 by default)" OFF)
-OPTION(ENABLE_PROFILING "Enable profiling, e.g. shows some more metrics, which can define bottlenecks of the code (OFF by default)" OFF)
-OPTION(ENABLE_POTENTIAL_PARTICLES "Enable potential particles" OFF)
-OPTION(ENABLE_OAR "Generate script for oar-based task scheduler" OFF)
-OPTION(USE_QT5 "USE Qt5 for GUI" ON)
-OPTION(ENABLE_POTENTIAL_BLOCKS "Enable PotentialBlocks" OFF)
-OPTION(ENABLE_DEFORM "Enable Deformation Engine" OFF)
-OPTION(CHOLMOD_GPU "Enable GPU acceleration flow engine direct solver" OFF)
-OPTION(ENABLE_THERMAL "Enable thermal engine (experimental)" OFF)
-OPTION(ENABLE_MPI "Enable MPI environement and communications, required for coupling Yade with OpenFOAM  " OFF)
-#===========================================================
 # Use Eigen3 by default
 IF (EIGEN3_FOUND)
   INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
@@ -594,9 +621,15 @@ ELSE (CHUNKSIZE)
   ADD_LIBRARY(yade SHARED ${SRC_CORE} ${SRC_PKG} ${SRC_LIB})
 ENDIF (CHUNKSIZE)
 #===========================================================
-find_python_module(minieigen REQUIRED)
 
-find_python_module(Tkinter REQUIRED)
+FOREACH(PYTHON_MODULE IPython matplotlib numpy pygraphviz Xlib minieigen future past)
+	find_python_module(${PYTHON_MODULE} REQUIRED)
+ENDFOREACH()
+IF(${PYTHON_VERSION_MAJOR} EQUAL 2)
+	find_python_module(Tkinter REQUIRED)
+ELSE()
+	find_python_module(tkinter REQUIRED)
+ENDIF()
 #===========================================================
 
 ADD_LIBRARY(boot SHARED ${CMAKE_CURRENT_SOURCE_DIR}/core/main/pyboot.cpp)
@@ -693,7 +726,10 @@ ADD_CUSTOM_COMMAND(
                   TARGET doc PRE_BUILD
                   COMMAND rm -rf ${CMAKE_BINARY_DIR}/doc/sphinx/_build
                   COMMAND cp -r ${CMAKE_CURRENT_SOURCE_DIR}/doc/* ${CMAKE_BINARY_DIR}/doc
-                  COMMAND PYTHONPATH=${CMAKE_BINARY_DIR}/doc/sphinx ${YADE_EXEC_PATH}/yade${SUFFIX} yadeSphinx.py
+                  COMMAND PYTHONPATH=${CMAKE_BINARY_DIR}/doc/sphinx ${YADE_EXEC_PATH}/yade${SUFFIX} -x yadeSphinx.py html
+                  COMMAND PYTHONPATH=${CMAKE_BINARY_DIR}/doc/sphinx ${YADE_EXEC_PATH}/yade${SUFFIX} -x yadeSphinx.py latex
+                  COMMAND PYTHONPATH=${CMAKE_BINARY_DIR}/doc/sphinx ${YADE_EXEC_PATH}/yade${SUFFIX} -x yadeSphinx.py epub
+                  COMMAND PYTHONPATH=${CMAKE_BINARY_DIR}/doc/sphinx ${YADE_EXEC_PATH}/yade${SUFFIX} -x yadeSphinx.py workarounds
                   WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/doc/sphinx
                   DEPENDS ${YADE_EXEC_PATH}/yade${SUFFIX}
                   )

@@ -1,5 +1,7 @@
 # -*- coding: utf-8
 
+from __future__ import print_function
+from builtins import range
 from yade import pack,export,qt
 import gts,os,random,itertools
 from numpy import *
@@ -28,7 +30,7 @@ plnSurf1 = pack.sweptPolylines2gtsSurface([[Vector3(-.5,-.5,-.5),Vector3(.5,-.5,
 plnIds1=O.bodies.append(pack.gtsSurface2Facets(plnSurf1,material=facetMat,color=(0,1,0)))
 
 # Create clumps
-clpId,sphId=O.bodies.appendClumped([sphere(Vector3(0,Rs*2*i,Rs*2),Rs,material=dfltSpheresMat) for i in xrange(4)])
+clpId,sphId=O.bodies.appendClumped([sphere(Vector3(0,Rs*2*i,Rs*2),Rs,material=dfltSpheresMat) for i in range(4)])
 
 # Create engines
 O.engines=[
@@ -50,26 +52,26 @@ O.saveTmp()
 clump = O.bodies[clpId]
 spheres = [ O.bodies[id] for id in sphId ]
 
-print '\nClump:\n======'
+print('\nClump:\n======')
 #print '\nMaterial:'
 if clump.mat:
-	print clump.mat.dict()
+	print(clump.mat.dict())
 else:
-	print 'no material'
+	print('no material')
 
-print '\nshape:'
+print('\nshape:')
 if clump.shape:
-	print clump.shape.dict()
+	print(clump.shape.dict())
 else:
-	print 'no shape'
+	print('no shape')
 
-print '\nState:'
+print('\nState:')
 if clump.state:
-	print clump.state.dict()
+	print(clump.state.dict())
 else:
-	print 'no state'
+	print('no state')
 
-print '\nControl:'
+print('\nControl:')
 mass = sum( [ s.state.mass for s in spheres ] )
 xm_ = [ s.state.pos[0]*s.state.mass for s in spheres ]
 ym_ = [ s.state.pos[1]*s.state.mass for s in spheres ]
@@ -92,9 +94,9 @@ for s in spheres:
 	I += sphereInertiaTensor(s.state.pos,s.state.mass,s.shape.radius,centroid)
 I_eigenvalues, I_eigenvectors = linalg.eig(I)
 
-print 'mass = ', mass
-print 'centroid = ', centroid
-print 'I = \n', I
-print 'I_eigenvalues = ', I_eigenvalues
-print 'I_eigenvectors = \n', I_eigenvectors
+print('mass = ', mass)
+print('centroid = ', centroid)
+print('I = \n', I)
+print('I_eigenvalues = ', I_eigenvalues)
+print('I_eigenvectors = \n', I_eigenvectors)
 

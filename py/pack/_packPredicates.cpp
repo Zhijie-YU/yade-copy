@@ -277,11 +277,15 @@ public:
 };
 
 #ifdef YADE_GTS
+
+#if PY_MAJOR_VERSION < 3
 extern "C" {
+#endif
 // HACK
 #include"../3rd-party/pygts-0.3.1/pygts.h"
-
+#if PY_MAJOR_VERSION < 3
 }
+#endif
 /* Helper function for inGtsSurface::aabb() */
 static void vertex_aabb(GtsVertex *vertex, std::pair<Vector3r,Vector3r> *bb)
 {

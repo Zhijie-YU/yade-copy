@@ -5,6 +5,7 @@
 ## It holds the entire simulation (MetaBody), takes care of loading/saving,
 ## starting/stopping the simulation, loads plugins and more.
 
+from __future__ import print_function
 o=Omega() # for advaned folks: this creates default MetaBody as well
 
 
@@ -78,11 +79,11 @@ o.save('/tmp/a.xml.bz2');
 #o.run(100000); o.wait(); print o.iter/o.realtime,'iterations/sec'
 
 def onBodySelect(id):
-	print "Selected:",id
+	print("Selected:",id)
 	highlightNone()
 	for i in O.interactions.withBody(id):
 		O.bodies[i.id2 if i.id1==id else i.id1].shape.highlight=True
-		print i.id1,i.id2,i.phys,i.geom
+		print(i.id1,i.id2,i.phys,i.geom)
 
 try:
 	from yade import qt

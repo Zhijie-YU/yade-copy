@@ -1,4 +1,6 @@
-﻿__contributor__="Lisandro Dalcín"
+from builtins import range
+from builtins import object
+__contributor__="Lisandro Dalcín"
 """ MPIPool wrapped using mpi4py """
 #import mpi4py
 #mpi4py.rc.threaded = False

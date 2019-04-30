@@ -252,6 +252,10 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 					- cell->neighbor(throat)->info()).squared_length() );
 			return cell->info().fluidArea(throat) / length;
 		}
+		Real getConductivity(unsigned cell1, unsigned facetIdx) {
+			const CellHandle& pore1 = solver->tesselation().cellHandles[cell1];
+			return pore1->info().kNorm()[facetIdx];
+		}
 		
 		Vector3r getBoundaryNormal(int index) {
 		  if (index<0 || index>5) LOG_ERROR("index out of range (0-5)"); return normal[max(0,min(5,index))];}
@@ -438,6 +442,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		.def("getVertices",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getVertices,(boost::python::arg("id")),"get the vertices of a cell")
 		.def("getNeighbors",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getNeighbors,"get 4 neigboring cells")
 		.def("getDiffusionCoeff",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getDiffusionCoeff,(boost::python::arg("cellId"),boost::python::arg("throat")),"get the ratio of throat cross-sectional area and distance between two cells")
+		.def("getConductivity",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getConductivity,(boost::python::arg("cellId"),boost::python::arg("throat")),"get conductivity from cell and throat, with throat between 0 and 3 (same ordering as incident cells)")
 		#ifdef LINSOLV
 		.def("exportMatrix",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::exportMatrix,(boost::python::arg("filename")="matrix"),"Export system matrix to a file with all entries (even zeros will displayed).")
 		.def("exportTriplets",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::exportTriplets,(boost::python::arg("filename")="triplets"),"Export system matrix to a file with only non-zero entries.")

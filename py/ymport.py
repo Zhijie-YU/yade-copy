@@ -2,6 +2,8 @@
 Import geometry from various formats ('import' is python keyword, hence the name 'ymport').
 """
 
+from builtins import range
+from builtins import object
 from yade.wrapper import *
 from yade import utils
 
@@ -88,7 +90,7 @@ def textClumps(fileName,shift=Vector3.Zero,discretization=0,orientation=Quaterni
 			curClump=[]
 			idD = curClump.append(utils.sphere(shift+scale*pos,scale*float(data[3]),**kw))
 	
-	if (len(curClump)<>0):
+	if (len(curClump)!=0):
 		ret.append(O.bodies.appendClumped(curClump,discretization=discretization))
 	
 	# Set the mask to a clump the same as the first member of it
@@ -175,7 +177,7 @@ def gmsh(meshfile="file.mesh",shift=Vector3.Zero,scale=1.0,orientation=Quaternio
 	elementlistVector3=[] # for deformable elements
 	findVerticesString=0
 	
-	while (lines[findVerticesString].split()[0]<>'Vertices'): #Find the string with the number of Vertices
+	while (lines[findVerticesString].split()[0]!='Vertices'): #Find the string with the number of Vertices
 		findVerticesString+=1
 	findVerticesString+=1
 	numNodes = int(lines[findVerticesString].split()[0])
@@ -190,7 +192,7 @@ def gmsh(meshfile="file.mesh",shift=Vector3.Zero,scale=1.0,orientation=Quaternio
 		id += 1
 	
 	findTriangleString=findVerticesString+numNodes
-	while (lines[findTriangleString].split()[0]<>'Triangles'): #Find the string with the number of Triangles
+	while (lines[findTriangleString].split()[0]!='Triangles'): #Find the string with the number of Triangles
 		findTriangleString+=1
 	findTriangleString+=1
 	numTriangles = int(lines[findTriangleString].split()[0])
@@ -312,7 +314,7 @@ def unv(fileName,shift=(0,0,0),scale=1.0,returnConnectivityTable=False,**kw):
 	
 	Example: :ysrc:`examples/test/unv-read/unvRead.py`."""
 
-	class UNVReader:
+	class UNVReader(object):
 		# class used in ymport.unv function
 		# reads and evaluate given unv file and extracts all triangles
 		# can be extended to read tetrahedrons as well
@@ -425,10 +427,10 @@ def ele(nodeFileName,eleFileName,shift=(0,0,0),scale=1.0,**kw):
 	ls = line.split()
 	nVertices = int(ls[0])
 	if int(ls[1])!=3:
-		raise RuntimeError, "wrong .node file, number of dimensions should be 3"
-	vertices = [None for i in xrange(nVertices)]
+		raise RuntimeError("wrong .node file, number of dimensions should be 3")
+	vertices = [None for i in range(nVertices)]
 	shift = Vector3(shift)
-	for i in xrange(nVertices):
+	for i in range(nVertices):
 		line = f.readline()
 		while line.startswith('#'):
 			line = f.readline()
@@ -445,10 +447,10 @@ def ele(nodeFileName,eleFileName,shift=(0,0,0),scale=1.0,**kw):
 		line = f.readline()
 	ls = line.split()
 	if int(ls[1])!=4:
-		raise RuntimeError, "wrong .ele file, unsupported tetrahedra's number of nodes"
+		raise RuntimeError("wrong .ele file, unsupported tetrahedra's number of nodes")
 	nTetras = int(ls[0])
-	tetras = [None for i in xrange(nTetras)]
-	for i in xrange(nTetras):
+	tetras = [None for i in range(nTetras)]
+	for i in range(nTetras):
 		ls = f.readline().split()
 		tetras[int(ls[0])-1] = utils.polyhedron([vertices[int(ls[j])-1] for j in (1,2,3,4)],**kw)
 	f.close()

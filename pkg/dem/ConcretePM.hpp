@@ -7,7 +7,7 @@
 Concrete Particle Model (ConcretePM, Cpm) is a set of classes for modelling
 mechanical behavior of concrete. Several classes are needed for Cpm.
 
-1. CpmMat (Cpm material) deriving from BodyMacroParameters, which additionally has
+1. CpmMat (Cpm material) deriving from FrictMat → ElastMat → Material, which additionally has
    some information about damage on the body, cummulative plastic strain etc.
 
 2.	Ip2_CpmMat_CpmMat_CpmPhys is 2-ary functor for creating CpmPhys from CpmMat's of

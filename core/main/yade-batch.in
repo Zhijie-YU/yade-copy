@@ -4,7 +4,13 @@
 # vim: syntax=python
 # portions © 2008 Václav Šmilauer <eudoxos@arcig.cz>
 
-import os, sys, thread, time, logging, pipes, socket, xmlrpclib, re, shutil, random
+from __future__ import print_function
+from future import standard_library
+standard_library.install_aliases()
+
+from builtins import range
+from builtins import object
+import os, sys, _thread, time, logging, pipes, socket, xmlrpc.client, re, shutil, random
 
 # Add search path for yade Python-modules
 # It allows to use both Yade-versions (packaged and self-compiled one).
@@ -16,7 +22,7 @@ sys.path.insert(1,'${runtimePREFIX}/${LIBRARY_OUTPUT_PATH}/yade${SUFFIX}/py')
 #socket.setdefaulttimeout(10) 
 
 ## replaced by scons automatically
-prefix,suffix='${runtimePREFIX}' if not os.environ.has_key('YADE_PREFIX') else os.environ['YADE_PREFIX'],'${SUFFIX}'
+prefix,suffix='${runtimePREFIX}' if 'YADE_PREFIX' not in os.environ else os.environ['YADE_PREFIX'],'${SUFFIX}'
 
 libPATH='${LIBRARY_OUTPUT_PATH}'
 if (libPATH[1:] == '{LIBRARY_OUTPUT_PATH}'): libPATH='lib'
@@ -32,7 +38,7 @@ executable=os.path.join(prefix,'bin','yade'+suffix)
 import yade, yade.utils, yade.config, yade.remote
 
 
-class JobInfo():
+class JobInfo(object):
 	def __init__(self,num,id,command,hrefCommand,log,nCores,script,table,lineNo,affinity):
 		self.started,self.finished,self.duration,self.durationSec,self.exitStatus=None,None,None,None,None # duration is a string, durationSec is a number
 		self.command=command; self.hrefCommand=hrefCommand; self.num=num; self.log=log; self.id=id; self.nCores=nCores; self.cores=set(); self.infoSocket=None
@@ -42,7 +48,7 @@ class JobInfo():
 		self.threadNum=None
 		self.plotsLastUpdate,self.plotsFile=0.,yade.Omega().tmpFilename()+'.'+yade.remote.plotImgFormat
 	def saveInfo(self):
-		log=file(self.log,'a')
+		log=open(self.log,'a')
 		log.write("""
 =================== JOB SUMMARY ================
 id      : %s
@@ -72,7 +78,7 @@ finished: %s
 		for l in open(self.log,'r'):
 			if not l.startswith('XMLRPC info provider on'): continue
 			url=l[:-1].split()[4]
-			self.xmlrpcConn=xmlrpclib.ServerProxy(url,allow_none=True)
+			self.xmlrpcConn=xmlrpc.client.ServerProxy(url,allow_none=True,encoding="UTF-8")
 			self.hasXmlrpc=True
 			return True
 		if not self.hasXmlrpc: return False # catches the case where the magic line is not in the log yet
@@ -163,7 +169,7 @@ def globalHtmlStats():
 	ret+='<p><b>%d</b> total, <b>%d</b> <span style="background-color:yellow">running</span>, <b>%d</b> <span style="background-color:lime">done</span>%s</p>'%(len(jobs),len([j for j in jobs if j.status=='RUNNING']), len([j for j in jobs if j.status=='DONE']),' (<b>%d <span style="background-color:red"><b>failed</b></span>)'%nFailed if nFailed>0 else '')
 	return ret
 
-from BaseHTTPServer import BaseHTTPRequestHandler,HTTPServer
+from http.server import BaseHTTPRequestHandler,HTTPServer
 import socket,re
 class HttpStatsServer(BaseHTTPRequestHandler):
 	favicon=None # binary favicon, created when first requested
@@ -238,7 +244,7 @@ class HttpStatsServer(BaseHTTPRequestHandler):
 		if 'refresh' in headers and headers['refresh']==0: del headers['refresh']
 		for h in headers: self.send_header(h,str(headers[h]))
 		self.end_headers()
-		self.wfile.write(data)
+		self.wfile.write(data.encode('utf-8'))
 		global httpLastServe
 		httpLastServe=time.time()
 	def sendPygmentizedFile(self,f,**kw):
@@ -258,19 +264,19 @@ def runHttpStatsServer():
 	while port<maxPort:
 		try:
 			server=HTTPServer(('',port),HttpStatsServer)
-			import thread; thread.start_new_thread(server.serve_forever,())
-			print "http://localhost:%d shows batch summary"%port
+			import _thread; _thread.start_new_thread(server.serve_forever,())
+			print("http://localhost:%d shows batch summary"%port)
 			break
 		except socket.error:
 			port+=1
 	if port==maxPort:
-		print "WARN: No free port in range 9080-11000, not starting HTTP stats server!"
+		print("WARN: No free port in range 9080-11000, not starting HTTP stats server!")
 
 
 def runJob(job):
 	job.status='RUNNING'
 	job.started=time.time();
-	print '#%d (%s%s%s) started on %s'%(job.num,job.id,'' if job.nCores==1 else '/%d'%job.nCores,(' ['+','.join([str(c) for c in job.cores])+']') if job.cores else '',time.asctime())
+	print('#%d (%s%s%s) started on %s'%(job.num,job.id,'' if job.nCores==1 else '/%d'%job.nCores,(' ['+','.join([str(c) for c in job.cores])+']') if job.cores else '',time.asctime()))
 	#print '#%d cores',%(job.num,job.cores)
 	if job.cores:
 		def coresReplace(s): return s.replace('[threadspec]','--cores=%s'%(','.join(str(c) for c in job.cores)))
@@ -292,7 +298,7 @@ def runJob(job):
 		shutil.copy(job.plotsFile,f)
 		job.plotsFile=f
 		havePlot=True
-	print "#%d (%s%s) %s (exit status %d), duration %s, log %s%s"%(job.num,job.id,'' if job.nCores==1 else '/%d'%job.nCores,strStatus,job.exitStatus,job.duration,job.log,(', plot %s'%(job.plotsFile) if havePlot else ''))
+	print("#%d (%s%s) %s (exit status %d), duration %s, log %s%s"%(job.num,job.id,'' if job.nCores==1 else '/%d'%job.nCores,strStatus,job.exitStatus,job.duration,job.log,(', plot %s'%(job.plotsFile) if havePlot else '')))
 	job.saveInfo()
 	
 def runJobs(jobs,numCores):
@@ -316,7 +322,7 @@ def runJobs(jobs,numCores):
 					# only set cores if CPU affinity is desired; otherwise, just numer of cores is used
 					if j.affinity: j.cores=list(freeCores)[0:j.nCores] # take required number of free cores
 				# if overloaded, do not assign cores directly
-				thread.start_new_thread(runJob,(j,))
+				_thread.start_new_thread(runJob,(j,))
 				break
 		time.sleep(.5)
 		sys.stdout.flush()
@@ -333,10 +339,10 @@ def getNumCores():
 	try:
 		nCpu=len([l for l in open('/proc/cpuinfo','r') if l.find('processor')==0])
 	except:
-		print 'WARNING: No cpuinfo available! Setting the maximal number of processors 1'
+		print('WARNING: No cpuinfo available! Setting the maximal number of processors 1')
 		pass
 		
-	if os.environ.has_key("OMP_NUM_THREADS"): return min(int(os.environ['OMP_NUM_THREADS']),nCpu)
+	if "OMP_NUM_THREADS" in os.environ: return min(int(os.environ['OMP_NUM_THREADS']),nCpu)
 	return nCpu
 numCores=getNumCores()
 maxOmpThreads=numCores if 'OpenMP' in yade.config.features else 1
@@ -374,19 +380,19 @@ args = opts.args
 logFormat,lineList,maxJobs,nice,executable,gnuplotOut,dryRun,httpWait,globalLog=opts.logFormat,opts.lineList,opts.maxJobs,opts.nice,opts.executable,opts.gnuplotOut,opts.dryRun,opts.httpWait,opts.globalLog
 
 if opts.impLibraries:
-	print "\n\n ------------------------ IMPORTING ---------------------------------------\n\n"
+	print("\n\n ------------------------ IMPORTING ---------------------------------------\n\n")
 	sys.path.append('.')
 	for lib in opts.impLibraries:
-		print "\n\n ------------------------ IMPORTING ---------------------------------------\n\n"
-		print lib
+		print("\n\n ------------------------ IMPORTING ---------------------------------------\n\n")
+		print(lib)
 		__import__(lib)
 
 if opts.version:
-	print 'Yade version: %s, features: %s'%(version,','.join(features))
+	print('Yade version: %s, features: %s'%(version,','.join(features)))
 	sys.exit(0)
 
 if globalLog:
-	print 'Redirecting all output to',globalLog
+	print('Redirecting all output to',globalLog)
 	sys.stderr=open(globalLog,"w")
 	sys.stdout=sys.stderr
 
@@ -414,21 +420,21 @@ if not opts.disablePynotify:
 	except Exception:
 		pynotifyAvailable = False
 
-print "Will run simulation(s) %s using `%s', nice value %d, using max %d cores."%(scripts,executable,nice,maxJobs)
+print("Will run simulation(s) %s using `%s', nice value %d, using max %d cores."%(scripts,executable,nice,maxJobs))
 
 if table:
 	reader=yade.utils.TableParamReader(table)
 	params=reader.paramDict()
-	availableLines=params.keys()
+	availableLines=list(params.keys())
 
-	print "Will use table `%s', with available lines"%(table),', '.join([str(i) for i in availableLines])+'.'
+	print("Will use table `%s', with available lines"%(table),', '.join([str(i) for i in availableLines])+'.')
 
 	if lineList:
 		useLines=[]
 		def numRange2List(s):
 			ret=[]
 			for l in s.split(','):
-				if "-" in l: ret+=range(*[int(s) for s in l.split('-')]); ret+=[ret[-1]+1]
+				if "-" in l: ret+=list(range(*[int(s) for s in l.split('-')])); ret+=[ret[-1]+1]
 				else: ret+=[int(l)]
 			return ret
 		useLines0=numRange2List(lineList)
@@ -436,9 +442,9 @@ if table:
 			if l not in availableLines: logging.warn('Skipping unavailable line %d that was requested from the command line.'%l)
 			else: useLines+=[l]
 	else: useLines=availableLines
-	print "Will use lines ",', '.join([str(i)+' (%s)'%params[i]['description'] for i in useLines])+'.'
+	print("Will use lines ",', '.join([str(i)+' (%s)'%params[i]['description'] for i in useLines])+'.')
 else:
-	print "Running %d stand-alone simulation(s) in batch mode."%(len(scripts))
+	print("Running %d stand-alone simulation(s) in batch mode."%(len(scripts)))
 	useLines=[]
 	params={}
 	for i,s in enumerate(scripts):
@@ -460,7 +466,7 @@ for i,l in enumerate(useLines):
 	jobExecutable=executable
 	jobAffinity=opts.affinity
 	jobCount=opts.timing
-	for col in params[l].keys():
+	for col in list(params[l].keys()):
 		if col[0]!='!': continue
 		val=params[l][col]
 		if col=='!OMP_NUM_THREADS' or col=='!THREADS': nCores=int(val)
@@ -503,15 +509,15 @@ for i,l in enumerate(useLines):
 		hrefCmd=env+cmd+log
 		fullCmd=re.sub('(<a href="[^">]+">|</a>)','',hrefCmd)
 		desc=params[l]['description']
-		if '!SCRIPT' in params[l].keys(): desc=script+'.'+desc # prepend filename if script is specified explicitly
+		if '!SCRIPT' in list(params[l].keys()): desc=script+'.'+desc # prepend filename if script is specified explicitly
 		if opts.timing>0: desc+='[%d]'%j
 		jobs.append(JobInfo(jobNum,desc,fullCmd,hrefCmd,logFile2,nCores,script=script,table=table,lineNo=l,affinity=jobAffinity))
 
-print "Master process pid",os.getpid()
+print("Master process pid",os.getpid())
 
-print "Job summary:"
+print("Job summary:")
 for job in jobs:
-	print '   #%d (%s%s):'%(job.num,job.id,'' if job.nCores==1 else '/%d'%job.nCores),job.command
+	print('   #%d (%s%s):'%(job.num,job.id,'' if job.nCores==1 else '/%d'%job.nCores),job.command)
 sys.stdout.flush()
 
 
@@ -522,37 +528,37 @@ if opts.plotAlwaysUpdateTime>0:
 	def updateAllPlots():
 		time.sleep(opts.plotAlwaysUpdateTime)
 		for job in jobs: job.updatePlots()
-	thread.start_new_thread(updateAllPlots,())
+	_thread.start_new_thread(updateAllPlots,())
 
 # OK, go now
 if not dryRun: runJobs(jobs,maxJobs)
 
-print 'All jobs finished, total time ',t2hhmmss(totalRunningTime())
+print('All jobs finished, total time ',t2hhmmss(totalRunningTime()))
 
 plots=[]
 for j in jobs:
 	if not os.path.exists(j.plotsFile): continue
 	plots.append(j.plotsFile)
-if plots: print 'Plot files:',' '.join(plots)
+if plots: print('Plot files:',' '.join(plots))
 
 # for easy grepping in logfiles:
-print 'Log files:',' '.join([j.log for j in jobs])
+print('Log files:',' '.join([j.log for j in jobs]))
 
 # write timing table
 if opts.timing>0:
 	if opts.timingOut:
-		print 'Writing gathered timing information to',opts.timingOut
+		print('Writing gathered timing information to',opts.timingOut)
 		try:
 			out=open(opts.timingOut,'w')
 		except IOError:
 			logging.warn('Unable to open file %s for timing output, writing to stdout.'%opts.timingOut)
 			out=sys.stdout
 	else:
-		print 'Gathered timing information:'
+		print('Gathered timing information:')
 		out=sys.stdout
 	# write header
 	out.write('## timing data, written '+time.asctime()+' with arguments\n##    '+' '.join(sys.argv)+'\n##\n')
-	paramNames=params[params.keys()[0]].keys(); paramNames.sort()
+	paramNames=list(params[list(params.keys())[0]].keys()); paramNames.sort()
 	out.write('## line\tcount\tavg\tdev\trelDev\tmin\tmax\t|\t'+'\t'.join(paramNames)+'\n')
 	import math
 	for i,l in enumerate(useLines):
@@ -564,20 +570,20 @@ if opts.timing>0:
 		out.write('%d\t%d\t%.2f\t%.2f\t%.3g\t%.2f\t%.2f\t|\t'%(l,len(jobTimes),tAvg,tDev,tRelDev,tMin,tMax)+'\t'.join([params[l][p] for p in paramNames])+'\n')
 
 if not gnuplotOut:
-	print 'Bye.'
+	print('Bye.')
 else:
-	print 'Assembling gnuplot files…'
+	print('Assembling gnuplot files…')
 	for job in jobs:
-		for l in file(job.log):
+		for l in open(job.log):
 			if l.startswith('gnuplot '):
 				job.plot=l.split()[1]
 				break
 	preamble,plots='',[]
 	for job in jobs:
 		if not 'plot' in job.__dict__:
-			print "WARN: No plot found for job "+job.id
+			print("WARN: No plot found for job "+job.id)
 			continue
-		for l in file(job.plot):
+		for l in open(job.plot):
 			if l.startswith('plot'):
 				# attempt to parse the plot line
 				ll=l.split(' ',1)[1][:-1] # rest of the line, without newline
@@ -589,13 +595,13 @@ else:
 				break
 			if not plots: # first plot, copy all preceding lines
 				preamble+=l
-	gp=file(gnuplotOut,'w')
+	gp=open(gnuplotOut,'w')
 	gp.write(preamble)
 	gp.write('plot '+','.join(plots))
-	print "gnuplot",gnuplotOut
-	print "Plot written, bye."
+	print("gnuplot",gnuplotOut)
+	print("Plot written, bye.")
 if httpWait and time.time()-httpLastServe<30:
-	print "(continue serving http until no longer requested  as per --http-wait)"
+	print("(continue serving http until no longer requested  as per --http-wait)")
 	while time.time()-httpLastServe<30:
 		time.sleep(1)
 

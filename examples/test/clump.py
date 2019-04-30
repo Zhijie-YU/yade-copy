@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import range
 O.engines=[
 	ForceResetter(),
 	InsertionSortCollider([
@@ -23,7 +25,7 @@ for i,cc in enumerate(coords):
 	# O.bodies.appendClumped([sphere(...),sphere(...),sphere(...)])
 	# and returns tuple of clumpId,[bodyId1,bodyId2,bodyId3]
 	clump,spheres=O.bodies.appendClumped([sphere([relPos[j][0]+coords[i][0],relPos[j][1]+coords[i][1],relPos[j][2]+coords[i][2]],.5) for j in range(0,i+1)])
-	print clump,spheres
+	print(clump,spheres)
 O.dt=PWaveTimeStep()
 O.saveTmp('init')
 

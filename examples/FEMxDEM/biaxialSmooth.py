@@ -11,6 +11,7 @@ How to run this script:
     /path/to/yade ./biaxialSmooth.py
 Please amend these instructions if you find that they do not work.
 """
+
 from esys.escript import *
 from esys.finley import Rectangle
 from esys.weipa import saveVTK

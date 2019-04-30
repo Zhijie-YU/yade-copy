@@ -1,3 +1,5 @@
+from __future__ import print_function
+from builtins import range
 from yade import pack
 import random
 random.seed(1)
@@ -30,10 +32,10 @@ dMin = 1
 dMax = 1.2
 n = 20
 planes = []
-for i in xrange(n):
+for i in range(n):
 	d = random.random()*(dMax-dMin) + dMin # distance of plane from center, random number in range (dMin,dMax)
 	# http://mathworld.wolfram.com/HyperspherePointPicking.html
-	normal = Vector3([random.gauss(0,10) for _ in xrange(3)]) # random normal vector
+	normal = Vector3([random.gauss(0,10) for _ in range(3)]) # random normal vector
 	normal.normalize()
 	planes.append((center-d*normal,normal))
 pred3 = pack.inConvexPolyhedron(planes)
@@ -45,9 +47,9 @@ try: # should be ValueError, since the 3 planes does not form closed polyhedron 
 		((0,0,0), ( 0, 0,+1)),
 	))
 except ValueError:
-	print 'ValueError successfully detected'
+	print('ValueError successfully detected')
 else:
-	raise RuntimeError, "ValueError should have been detected..."
+	raise RuntimeError("ValueError should have been detected...")
 
 r = .05
 for p in (pred1,pred2,pred3):

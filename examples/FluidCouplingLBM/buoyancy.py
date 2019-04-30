@@ -1,3 +1,4 @@
+from __future__ import print_function
 ##############################################################################################################################
 #Authors: Luc Sibille  luc.sibille@3sr-grenoble.fr
 #         Franck Lomine  franck.lomine@insa-rennes.fr
@@ -115,7 +116,7 @@ b5=utils.box(center=[center[0],center[1],center[2]],extents=[halfSize[0],halfSiz
 O.bodies.append(b5)
 #--
 center=((lowerCornerW[0]+upperCornerW[0])/2,(lowerCornerW[1]+upperCornerW[1])/2,upperCornerW[2]+thickness/2.0)
-halfSize=(wallOversizeFactor*fabs(lowerCornerW[0]-upperCornerW[0])/2+thickness,wallOversizeFactor*fabs(lowerCornerW[1]-upperCornerW[1])/2+thickness,thickness/2.0);	 	
+halfSize=(wallOversizeFactor*fabs(lowerCornerW[0]-upperCornerW[0])/2+thickness,wallOversizeFactor*fabs(lowerCornerW[1]-upperCornerW[1])/2+thickness,thickness/2.0);
 b6=utils.box(center=[center[0],center[1],center[2]],extents=[halfSize[0],halfSize[1],halfSize[2]],color=[0,1,0],fixed=True,wire=True,material='walls')
 O.bodies.append(b6)
 
@@ -152,10 +153,10 @@ O.dt=0.00005  #use a fix value of time step, it is better to not use a time step
 
 yade.qt.View() #to see what is happening 
 
-print"___________________"
-print"PHASE 1"
-print "Settlement of particle under gravity only, fluid flow is not activated at the present time... please wait"
-print"___________________"
+print("___________________")
+print("PHASE 1")
+print("Settlement of particle under gravity only, fluid flow is not activated at the present time... please wait")
+print("___________________")
 
 O.run(60000,1)  #settlement of particle under gravity only, no action of the fluid flow.
 
@@ -167,7 +168,7 @@ def IncrDP():
 	Elbm.dP=(currentDP[0]+1.0/10000.0,0,0)
 	#O.engines[6].dP=currentDP+1.0/100.0	
 	if not(O.iter%100):
-		print "dP=", Elbm.dP[0]
+		print("dP=", Elbm.dP[0])
 
 O.engines=O.engines+[PyRunner(iterPeriod=1,command='IncrDP()')]
 
@@ -182,14 +183,14 @@ ENewton.damping=0.0
 
 # Now you just need to run the simulation as long as you want to ... note that if you wait to long the pressure gradient will become very large inducing great fluid velocities, and the fluid simulation may become crazy!! Look at the Mach number (M) printed in the console, it should not be too high...
 
-print"___________________"
-print"PHASE 2"
-print "Fluid flow has been activated now with a gradual increase of the pressure gradient."
-print "Run the simulation, until the pressure gradient is strong enough to compensate the gravity forces, then particles will mouve to the right."
-print"..."
-print"..."
-print "Velocity and pressure field of the fluid can be plotted with the matlab script yadeLBMvisu.m"
-print "Terzaghi critical hydraulic gradient can be compared with the one deduced from the simulation with the matlab script Buoyancy_Gradient.m"
-print"___________________"
+print("___________________")
+print("PHASE 2")
+print("Fluid flow has been activated now with a gradual increase of the pressure gradient.")
+print("Run the simulation, until the pressure gradient is strong enough to compensate the gravity forces, then particles will mouve to the right.")
+print("...")
+print("...")
+print("Velocity and pressure field of the fluid can be plotted with the matlab script yadeLBMvisu.m")
+print("Terzaghi critical hydraulic gradient can be compared with the one deduced from the simulation with the matlab script Buoyancy_Gradient.m")
+print("___________________")
 
 

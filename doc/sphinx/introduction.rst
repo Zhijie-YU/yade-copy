@@ -1,3 +1,5 @@
+.. _IntroductionStart:
+
 ###############
 Introduction
 ###############
@@ -45,7 +47,7 @@ The command-line is `ipython <http://ipython.scipy.org>`_, python shell with enh
 
 Typically, you will not type Yade commands by hand, but use *scripts*, python programs describing and running your simulations. Let us take the most simple script that will just print "Hello world!"::
 
-	print "Hello world!"
+	print("Hello world!")
 
 Saving such script as ``hello.py``, it can be given as argument to Yade::
 
@@ -377,7 +379,7 @@ Bodies can be iterated over using standard python iteration syntax:
 .. ipython::
 
 	In [1]: for b in O.bodies:
-	   ...:    print b.id,b.shape.radius
+	   ...:    print(b.id,b.shape.radius)
 	   ...:
 	0 1.0
 	1 0.5

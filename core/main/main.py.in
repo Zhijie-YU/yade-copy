@@ -2,6 +2,9 @@
 # encoding: utf-8
 # syntax:python
 
+from __future__ import print_function
+from past.builtins import execfile
+
 import sys,os,os.path,time
 try:
 	import _io
@@ -16,7 +19,7 @@ except ImportError:
 sys.path.insert(1,'${runtimePREFIX}/${LIBRARY_OUTPUT_PATH}/yade${SUFFIX}/py')
 
 # get yade path (allow YADE_PREFIX to override)
-prefix,suffix='${runtimePREFIX}' if not os.environ.has_key('YADE_PREFIX') else os.environ['YADE_PREFIX'],'${SUFFIX}'
+prefix,suffix='${runtimePREFIX}' if 'YADE_PREFIX' not in os.environ else os.environ['YADE_PREFIX'],'${SUFFIX}'
 # duplicate some items from yade.config here, so that we can increase verbosity when the c++ part is booting
 features,version,debugbuild='${CONFIGURED_FEATS}'.split(' '),'${realVersion}',' ${debugbuild}'
 
@@ -65,15 +68,15 @@ args = opts.args
 if opts.impLibraries:
 	sys.path.append('.')
 	for lib in opts.impLibraries:
-		print "\n------------------------ IMPORTING ------------------------"
+		print("\n------------------------ IMPORTING ------------------------")
 		# see also https://gitlab.com/yade-dev/trunk/issues/18
-		print "library:", lib, "\n"
+		print("library:", lib, "\n")
 		import importlib
 		importlib.import_module(str(lib))
 		#__import__(lib)
 
 if opts.version:
-	print 'Yade version: %s%s'%(version,debugbuild)
+	print('Yade version: %s%s'%(version,debugbuild))
 	sys.exit(0)
 
 if opts.script:
@@ -95,28 +98,28 @@ if opts.test:
 	try:
 		result=yade.tests.testAll()
 	except:
-		print 20*'*'+' UNEXPECTED EXCEPTION WHILE RUNNING TESTS '+20*'*'
-		print 20*'*'+' '+str(sys.exc_info()[0])
-		print 20*'*'+" Please report bug at https://gitlab.com/yade-dev/trunk/issues providing the following traceback:"
+		print(20*'*'+' UNEXPECTED EXCEPTION WHILE RUNNING TESTS '+20*'*')
+		print(20*'*'+' '+str(sys.exc_info()[0]))
+		print(20*'*'+" Please report bug at https://gitlab.com/yade-dev/trunk/issues providing the following traceback:")
 		import traceback; traceback.print_exc()
-		print 20*'*'+' Thank you '+20*'*'
+		print(20*'*'+' Thank you '+20*'*')
 		sys.exit(2)
 	if (os.path.exists('./DirSearchYade')): os.remove('./DirSearchYade')
 	if (os.path.exists('./MicroMacroAnalysis')): os.remove('./MicroMacroAnalysis')
 	if result.wasSuccessful():
-		print "*** ALL TESTS PASSED ***"
+		print("*** ALL TESTS PASSED ***")
 		sys.exit(0)
 	else:
-		print 20*'*'+' SOME TESTS FAILED '+20*'*'
+		print(20*'*'+' SOME TESTS FAILED '+20*'*')
 		sys.exit(1)
 
 if not 'OpenMP' in features and (opts.cores or (opts.threads and opts.threads>1)):
-	print 'WARNING: compiled without OpenMP, -j/--threads/--cores have no effect.'
+	print('WARNING: compiled without OpenMP, -j/--threads/--cores have no effect.')
 
 # OpenMP env variables must be set before loading yade libs ("import yade" below)
 # changes have no effect after libgomp initializes
 if opts.cores:
-	if opts.threads: print 'WARNING: --threads ignored, since --cores specified.'
+	if opts.threads: print('WARNING: --threads ignored, since --cores specified.')
 	try:
 		cores=[int(i) for i in opts.cores.split(',')]
 	except ValueError:
@@ -148,7 +151,7 @@ if opts.updateScripts:
 sys.argv=yade.runtime.argv=args
 yade.runtime.opts=opts
 
-from yade import utils, pack
+from yade import utils, pack, geom
 from yade.utils import *
 from yade.pack import *
 from math import *
@@ -172,7 +175,7 @@ def userSession(gui='none',qapp=None):
 	
 	# common ipython configuration
 	# use standard terminal color codes to make F12, F11 bold, and underline the word "help", see https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
-	banner='[[ ^L clears screen, ^U kills line. '+', '.join((['\033[1mF12\033[0m controller','\033[1mF11\033[0m 3D view (press \033[4m"h"\033[0m in 3D view for \033[4mhelp\033[0m)','\033[1mF10\033[0m both','\033[1mF9\033[0m generator'] if (gui<>'none') else [])+['\033[1mF8\033[0m plot'])+'. ]]'
+	banner='[[ ^L clears screen, ^U kills line. '+', '.join((['\033[1mF12\033[0m controller','\033[1mF11\033[0m 3D view (press \033[4m"h"\033[0m in 3D view for \033[4mhelp\033[0m)','\033[1mF10\033[0m both','\033[1mF9\033[0m generator'] if (gui!='none') else [])+['\033[1mF8\033[0m plot'])+'. ]]'
 	ipconfig=dict( # ipython options, see e.g. http://www.cv.nrao.edu/~rreid/casa/tips/ipy_user_conf.py
 		prompt_in1='Yade [\#]: ',
 		prompt_in2='     .\D.: ',
@@ -183,7 +186,7 @@ def userSession(gui='none',qapp=None):
 			'tab: complete',
 			# only with the gui; the escape codes might not work on non-linux terminals.
 			]
-			+(['"\e[24~": "\C-Uyade.qt.Controller();\C-M"','"\e[23~": "\C-Uyade.qt.View();\C-M"','"\e[21~": "\C-Uyade.qt.Controller(), yade.qt.View();\C-M"','"\e[20~": "\C-Uyade.qt.Generator();\C-M"'] if (gui<>'none') else []) #F12,F11,F10,F9
+			+(['"\e[24~": "\C-Uyade.qt.Controller();\C-M"','"\e[23~": "\C-Uyade.qt.View();\C-M"','"\e[21~": "\C-Uyade.qt.Controller(), yade.qt.View();\C-M"','"\e[20~": "\C-Uyade.qt.Generator();\C-M"'] if (gui!='none') else []) #F12,F11,F10,F9
 			+['"\e[19~": "\C-Uimport yade.plot; yade.plot.plot();\C-M"', #F8
 				'"\e[A": history-search-backward', '"\e[B": history-search-forward', # incremental history forward/backward
 		]
@@ -243,26 +246,26 @@ def userSession(gui='none',qapp=None):
 				try:
 					yade.qt.Controller()
 				except Exception as e:
-					print e
+					print(e)
 			@registry.add_binding(Keys.F11, eager=True)
 			def invokeView_(event):
 				try:
 					yade.qt.View()
 				except Exception as e:
-					print e
+					print(e)
 			@registry.add_binding(Keys.F10, eager=True)
 			def invokeBoth_(event):
 				try:
 					yade.qt.View()
 					yade.qt.Controller()
 				except Exception as e:
-					print e
+					print(e)
 			@registry.add_binding(Keys.F9, eager=True)
 			def invokeGenerator_(event):
 				try:
 					yade.qt.Generator()
 				except Exception as e:
-					print e
+					print(e)
 			@registry.add_binding(Keys.F8, eager=True)
 			def invokeGenerator_(event):
 				try:
@@ -282,7 +285,7 @@ def userSession(gui='none',qapp=None):
 	#	IPython.appstart_qt4(qapp)
 	if len(sys.argv)>0:
 		arg0=sys.argv[0]
-		if (gui<>'none'): yade.qt.Controller();
+		if (gui!='none'): yade.qt.Controller();
 		if sum(bool(arg0.endswith(ext)) for ext in ('.xml','.xml.bz2','.xml.gz','.yade','.yade.gz','.yade.bz2','.bin','.bin.gz','.bin.bz2'))>0:
 			if len(sys.argv)>1: raise RuntimeError('Extra arguments to saved simulation to run: '+' '.join(sys.argv[1:]))
 			sys.stderr.write("Running simulation "+arg0+'\n')
@@ -321,7 +324,7 @@ if gui:
 		# usually Xlib.error.DisplayError, but there can be Xlib.error.XauthError etc as well
 		# let's just pretend any exception means the display would not work
 		gui=None
-		print 'Warning: no X rendering available (see https://bbs.archlinux.org/viewtopic.php?id=13189)'
+		print('Warning: no X rendering available (see https://bbs.archlinux.org/viewtopic.php?id=13189)')
 
 # run remote access things, before actually starting the user session (not while imported by other python application)
 if __name__ == "__main__":

@@ -204,7 +204,7 @@ Comments
    of hours of simulations.
 
 -  For most simulations, your computational efficiency will decrease if
-   you use :math:`\textgreater` 8 cores per simulation. It is preferable
+   you use above 8 cores per simulation. It is preferable
    to use yadedaily-batch to distribute your cores accordingly so that
    you always dedicate 8 cores to each simulation and ensure 100% of the
    processor is running.

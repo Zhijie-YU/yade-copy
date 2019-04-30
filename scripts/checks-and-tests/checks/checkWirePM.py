@@ -2,6 +2,7 @@
 # 2011 © Klaus Thoeni <klaus.thoeni@gmail.com>
 # Check test version for WirePM tensile test
 
+from __future__ import print_function
 tolerance=0.01
 errors=0
 
@@ -32,10 +33,10 @@ kw = {'color':[1,1,0],'wire':True,'highlight':False,'fixed':False,'material':net
 O.bodies.append(netpack)
 
 if abs((lx-0.96)/0.96)>tolerance:
-	print "WirePM checkTest: difference on net dimension lx"
+	print("WirePM checkTest: difference on net dimension lx")
 	errors+=1
 if abs((ly-0.52)/0.52)>tolerance:
-	print "WirePM checkTest: difference on net dimension ly"
+	print("WirePM checkTest: difference on net dimension ly")
 	errors+=1
 
 
@@ -133,14 +134,14 @@ un = O.bodies[O.bodies[posIds[0]].id].state.pos[1] - O.bodies[O.bodies[posIds[0]
 
 
 if abs((un-0.0034)/0.034)>tolerance :
-	print "WirePM checkTest: difference on peak displacement"
-	print "Reference value:",0.034
-	print "Calculated value:",un
+	print("WirePM checkTest: difference on peak displacement")
+	print("Reference value:",0.034)
+	print("Calculated value:",un)
 	errors+=1
 if abs((Fn-6458.9)/6458.9)>tolerance :
-	print "WirePM checkTest: difference on peak Force"
-	print "Reference value:",6458.9
-	print "Calculated value:",Fn
+	print("WirePM checkTest: difference on peak Force")
+	print("Reference value:",6458.9)
+	print("Calculated value:",Fn)
 	errors+=1
 
 if (errors):

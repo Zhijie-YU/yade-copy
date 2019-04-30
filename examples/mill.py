@@ -8,6 +8,8 @@ Physical correctness is not the focus, the geometry and similar look is.
 You can take this file as instruction on how to build parametric surfaces,
 and how to make videos as well.
 """
+from __future__ import print_function
+from builtins import range
 from yade import pack
 from numpy import linspace
 # geometry parameters
@@ -56,7 +58,7 @@ for i in (0,1): # red and blue spheres
 	sp.makeCloud(bb[0],bb[1],sphRad,sphRadFuzz,int(.25*vol/((4./3)*pi*sphRad**3)),False)
 	O.bodies.append([sphere(s[0],s[1],color=colors[i]) for s in sp])
 
-print "Numer of grains",len(O.bodies)-len(millIds)
+print("Numer of grains",len(O.bodies)-len(millIds))
 
 O.dt=.5*PWaveTimeStep()
 

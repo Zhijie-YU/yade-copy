@@ -1,3 +1,4 @@
+from __future__ import print_function
 from yade import plot, polyhedra_utils, ymport, export
 
 frictionIn = 0.0
@@ -17,7 +18,7 @@ def printSuccess ():
    print ("Checkpoint: force values and number of bodies are OK! Iteration %d"%(O.iter))
 
 def checkForcesBodies(fR, bodNum):
-   if (abs(f[2] - fR)/f[2] >  tolerance or len(O.bodies) <> bodNum):
+   if (abs(f[2] - fR)/f[2] >  tolerance or len(O.bodies) != bodNum):
       printWarning (fR, f[2], 4, len(O.bodies))
       global resultStatus
       resultStatus += 1

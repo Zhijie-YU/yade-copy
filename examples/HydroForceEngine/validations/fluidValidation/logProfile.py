@@ -1,3 +1,4 @@
+from __future__ import print_function
 #########################################################################################################################################################################
 # Author: Raphael Maurin, raphael.maurin@imft.fr
 # 22/11/2017
@@ -15,6 +16,7 @@
 # as the analytical solution does not account for its presence. 
 # 
 #########################################################################################################################################################################
+from builtins import range
 import numpy as np
 
 
@@ -45,14 +47,14 @@ a = HydroForceEngine(densFluid=densFluid,viscoDyn=kinematicViscoFluid*densFluid,
 ################################
 # FLUID RESOLUTION
 a.fluidResolution(tfin,dtFluid)# Call the fluid resolution associated with the defined HydroForceEngine. Use the parameters defined just above. 
-print "\nFluid Resolution finished !  ","max(vxFluid)=",np.max(a.vxFluid),"\n"
+print("\nFluid Resolution finished !  ","max(vxFluid)=",np.max(a.vxFluid),"\n")
 
 
 
 
 ################################
 # COMPARISON TO THE ANALYTICAL SOLUTION
-print "Comparison to the analytical solution\n"
+print("Comparison to the analytical solution\n")
 vxFluid = np.array(a.vxFluid)
 
 
@@ -99,5 +101,5 @@ legend(loc=4)
 savefig('figProfiLog.png')
 show()
 
-print "finished! exit\n"
+print("finished! exit\n")
 exit()	#Leave the simulation

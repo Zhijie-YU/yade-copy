@@ -7,6 +7,8 @@
 # Thanks to Bettina Suhr for providing the
 # minimal test script.
 
+from __future__ import print_function
+
 from yade import pack
 import tempfile, shutil
 import time
@@ -43,7 +45,7 @@ elif partType=='clumps':
   sp.toSimulation()
   O.bodies.updateClumpProperties(discretization=10)# correct mass, volume, inertia!!
 else:
-  print "ERROR! choose either spheres or clumps for partType!"
+  print("ERROR! choose either spheres or clumps for partType!")
 
 O.dt=1e-6
 

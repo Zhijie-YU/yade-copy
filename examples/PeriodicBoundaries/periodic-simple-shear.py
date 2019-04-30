@@ -2,6 +2,7 @@
 # 2009 © Václav Šmilauer <eudoxos@arcig.cz>
 # 2011 ©Bruno Chareyre <bruno.chareyre@hmg.inpg.fr>
 "Test and demonstrate use of PeriTriaxController."
+from __future__ import print_function
 from yade import pack,qt
 
 O.periodic=True
@@ -29,8 +30,8 @@ phase=0
 def triaxDone():
 	global phase
 	if phase==0:
-		print 'Here we are: stress',triax.stress,'strain',triax.strain,'stiffness',triax.stiff
-		print '\nNow shearing. Press ▶ (the start button) to start shearing.\n'
+		print('Here we are: stress',triax.stress,'strain',triax.strain,'stiffness',triax.stiff)
+		print('\nNow shearing. Press ▶ (the start button) to start shearing.\n')
 		O.cell.velGrad=Matrix3(0,6,0, 0,0,0, 0,0,0)
 		triax.stressMask=7
 		triax.goal=[-1e4,-1e4,-1e4]

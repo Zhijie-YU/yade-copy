@@ -44,7 +44,7 @@ BOOST_PYTHON_MODULE(_packSpheres){
 		;
   boost::python::class_<SpherePack::_iterator>("SpherePackIterator",boost::python::init<SpherePack::_iterator&>())
 		.def("__iter__",&SpherePack::_iterator::iter)
-		.def("next",&SpherePack::_iterator::next)
+		.def("__next__",&SpherePack::_iterator::next)
 	;
 }
 

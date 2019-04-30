@@ -138,6 +138,7 @@ REGISTER_SERIALIZABLE(TwoPhaseFlowEngineT);
 class PhaseCluster : public Serializable
 {
 		double totalCellVolume;
+		bool factorized;
 // 		CellHandle entryPoreHandle;
 
 	public :
@@ -167,7 +168,7 @@ class PhaseCluster : public Serializable
 // 		cholmod_dense** pEx = &ex;
 // 		cholmod_l_start(&comC);
 		void solvePressure();
-		void resetSolver() {if (LC) cholmod_l_free_factor(&LC, &comC); if (ex) cholmod_l_free_dense(&ex, &comC);}
+		void resetSolver() {if (LC) cholmod_l_free_factor(&LC, &comC); if (ex) cholmod_l_free_dense(&ex, &comC); factorized=false;}
 		#endif
 		
 		void reset() {label=entryPore=-1;volume=entryRadius=interfacialArea=0; pores.clear(); interfaces.clear(); resetSolver();}
@@ -223,6 +224,7 @@ class PhaseCluster : public Serializable
 		,((LC,NULL))((ex,NULL))((pComC,&comC)),
 		#ifdef CHOLMOD_LIBS
 		cholmod_l_start(pComC);//initialize cholmod solver
+		factorized=false;
 		#endif
 		,
 		.def("getPores",&PhaseCluster::getPores,"get the list of pores by index")
@@ -231,10 +233,10 @@ class PhaseCluster : public Serializable
 		.def("setCapPressure",&PhaseCluster::setCapPressure,(boost::python::arg("numf"),boost::python::arg("pCap")),"set local capillary pressure")
 		.def("getCapPressure",&PhaseCluster::getCapPressure,(boost::python::arg("numf")),"get local capillary pressure")
 		.def("setCapVol",&PhaseCluster::setCapVol,(boost::python::arg("numf"),boost::python::arg("vCap")),"set position of the meniscus - in terms of volume")
-		.def("getCapVol",&PhaseCluster::getCapVol,(boost::python::arg("numf"),boost::python::arg("vCap")),"get position of the meniscus - in terms of volume")
-		.def("getConductivity",&PhaseCluster::getConductivity,(boost::python::arg("numf"),boost::python::arg("K")),"get conductivity")
-		.def("updateCapVol",&PhaseCluster::updateCapVol,(boost::python::arg("numf"),boost::python::arg("dt")),"increments throat's volume by flux*dt")
-		.def("updateCapVolList",&PhaseCluster::updateCapVolList,(boost::python::arg("dt")),"increments throat's volume of each interface by flux*dt")
+		.def("getCapVol",&PhaseCluster::getCapVol,(boost::python::arg("numf")),"get position of the meniscus - in terms of volume")
+		.def("getConductivity",&PhaseCluster::getConductivity,(boost::python::arg("numf")),"get conductivity")
+		.def("updateCapVol",&PhaseCluster::updateCapVol,(boost::python::arg("numf"),boost::python::arg("dt")),"increments throat's volume of given interface by flux*dt")
+		.def("updateCapVolList",&PhaseCluster::updateCapVolList,(boost::python::arg("dt")),"increments throat's volume of all interfaces by flux*dt")
 		.def("solvePressure",&PhaseCluster::solvePressure,"Solve 1-phase flow in one single cluster defined by its id.")
 		)
 };
@@ -309,7 +311,7 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	vector<int> pyClusterInvadePore(int cellId) {
 		int label = solver->T[solver->currentTes].cellHandles[cellId]->info().label;
 		if (label<1) {LOG_WARN("the pore is not in a cluster, label="<<label); return vector<int>();}
-		return clusterInvadePore(clusters[label].get(), solver->T[solver->currentTes].cellHandles[cellId]);}
+		return clusterInvadePore(clusters[label].get(), solver->tesselation().cellHandles[cellId]);}
 	vector<int> pyClusterInvadePoreFast(int cellId) {
 		int label = solver->T[solver->currentTes].cellHandles[cellId]->info().label;
 		if (label<1) {LOG_WARN("the pore is not in a cluster, label="<<label); return vector<int>();}
@@ -320,7 +322,14 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 
 	//compute forces
 	void computeFacetPoreForcesWithCache(bool onlyCache=false);	
-	void computeCapillaryForce() {computeFacetPoreForcesWithCache(false);}
+	void computeCapillaryForce(bool addForces, bool permanently) {
+		computeFacetPoreForcesWithCache(false);
+		if (addForces) {
+			for (FiniteVerticesIterator v = solver->tesselation().Triangulation().finite_vertices_begin(); v != solver->tesselation().Triangulation().finite_vertices_end(); ++v) {
+				if (permanently) scene->forces.setPermForce(v->info().id(),makeVector3r(v->info().forces));
+				else scene->forces.addForce(v->info().id(),makeVector3r(v->info().forces));}
+		}
+	}
 	
 	//combine with pendular model
 	boost::python::list getPotentialPendularSpheresPair() {
@@ -600,14 +609,14 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	.def("getMaxImbibitionPc",&TwoPhaseFlowEngine::getMaxImbibitionPc,"Get the maximum entry capillary pressure for the next imbibition step.")
 	.def("getSaturation",&TwoPhaseFlowEngine::getSaturation,(boost::python::arg("isSideBoundaryIncluded")),"Get saturation of entire packing. If isSideBoundaryIncluded=false (default), the pores of side boundary are excluded in saturation calculating; if isSideBoundaryIncluded=true (only in isInvadeBoundary=true drainage mode), the pores of side boundary are included in saturation calculating.")
 	.def("invasion",&TwoPhaseFlowEngine::invasion,"Run the drainage invasion.")
-	.def("computeCapillaryForce",&TwoPhaseFlowEngine::computeCapillaryForce,"Compute capillary force. ")
+	.def("computeCapillaryForce",&TwoPhaseFlowEngine::computeCapillaryForce,(boost::python::arg("addForces")=false,boost::python::arg("permanently")=false),"Compute capillary force. Optionaly add them to body forces, for current iteration or permanently.")
 // 	.def("saveVtk",&TwoPhaseFlowEngine::saveVtk,(boost::python::arg("folder")="./VTK",boost::python::arg("withBoundaries")=false),"Save pressure field in vtk format. Specify a folder name for output.")
 	.def("getPotentialPendularSpheresPair",&TwoPhaseFlowEngine::getPotentialPendularSpheresPair,"Get the list of sphere ID pairs of potential pendular liquid bridge.")
 	// Clusters
 	.def("getClusters",&TwoPhaseFlowEngine::pyClusters/*,(boost::python::arg("folder")="./VTK")*/,"Get the list of clusters.")
 	.def("clusterInvadePore",&TwoPhaseFlowEngine::pyClusterInvadePore,boost::python::arg("cellId"),"drain the pore identified by cellId and update the clusters accordingly.")
 	.def("clusterInvadePoreFast",&TwoPhaseFlowEngine::pyClusterInvadePoreFast,boost::python::arg("cellId"),"drain the pore identified by cellId and update the clusters accordingly. This 'fast' version is faster and it also preserves interfaces through cluster splitting. OTOH it does not update entry Pc nor culsters volume (it could if needed)")
-	.def("clusterOutvadePore",&TwoPhaseFlowEngine::clusterOutvadePore,(boost::python::arg("startingId"),boost::python::arg("imbibedId"),boost::python::arg("index")=0),"imbibe the pore identified by imbibedId and merge the newly connected clusters if it happens. startingId->imbibedId defines the throat through which imbibition occurs. Giving index of the facet in cluster::interfaces should speedup its removal")
+	.def("clusterOutvadePore",&TwoPhaseFlowEngine::clusterOutvadePore,(boost::python::arg("startingId"),boost::python::arg("imbibedId"),boost::python::arg("index")=-1),"imbibe the pore identified by imbibedId and merge the newly connected clusters if it happens. startingId->imbibedId defines the throat through which imbibition occurs. Giving index of the facet in cluster::interfaces should speedup its removal")
 	// others
 	.def("getCellVolume",&TwoPhaseFlowEngine::cellVolume,"get the volume of each cell")
 	.def("isCellNeighbor",&TwoPhaseFlowEngine::isCellNeighbor,(boost::python::arg("cell1_ID"), boost::python::arg("cell2_ID")),"check if cell1 and cell2 are neigbors.")

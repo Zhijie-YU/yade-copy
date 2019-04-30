@@ -105,22 +105,19 @@ def randomColor():
 
 # Meshing
 def clear_mesh(gmshmeshhandle_):
-    sceneelements=gmshmeshhandle_[1];
+	sceneelements=gmshmeshhandle_[1];
 
-    #first remove elements and nodes from the scene
-    for elem in sceneelements:
-	bdy=elem[0];
-	nodes=elem[1];
-	O.bodies.erase(bdy.id);
-	for node in nodes:
-	    O.bodies.erase(node.id);
+	#first remove elements and nodes from the scene
+	for elem in sceneelements:
+		bdy=elem[0];
+		nodes=elem[1];
+		O.bodies.erase(bdy.id);
+		for node in nodes:
+			O.bodies.erase(node.id);
 
 def tetrahedronvolume(nodes):
-
-	    
-     V =0.166666666*numpy.linalg.det([[nodes[0][0], nodes[1][0] ,nodes[2][0] ,nodes[3][0]],[nodes[0][1], nodes[1][1], nodes[2][1] ,nodes[3][1]], [nodes[0][2] ,nodes[1][2], nodes[2][2], nodes[3][2]], [ 1,1,1,1]]);
-	
-     return V
+	V =0.166666666*numpy.linalg.det([[nodes[0][0], nodes[1][0] ,nodes[2][0] ,nodes[3][0]],[nodes[0][1], nodes[1][1], nodes[2][1] ,nodes[3][1]], [nodes[0][2] ,nodes[1][2], nodes[2][2], nodes[3][2]], [ 1,1,1,1]]);
+	return V
 
 def tetrahedral_mesh_generator(filename,tetrahedralelementshape,elementmat,interfaceelementshape,interfacemat):
 	
@@ -128,7 +125,7 @@ def tetrahedral_mesh_generator(filename,tetrahedralelementshape,elementmat,inter
 	[nodeList,elementList,interactionList]=mshreader(filename)
 
 	nodes=nodeList
-  	
+
 	meshelements=elementList
 
 	interfacepairs=interactionList
@@ -155,18 +152,18 @@ def tetrahedral_mesh_generator(filename,tetrahedralelementshape,elementmat,inter
 
 		for pair in pairofnodes:
 
-           		firstid=pair[0];
-           		secondid=pair[1];
+			firstid=pair[0];
+			secondid=pair[1];
 			el1nodebodies=scenebodies[elementpair[0]][1];
 			el2nodebodies=scenebodies[elementpair[1]][1];
-            		node1=el1nodebodies[firstid]
-            		node2=el2nodebodies[secondid]
- 	    		interfaceelementpairs.append([node1, node2])
+			node1=el1nodebodies[firstid]
+			node2=el2nodebodies[secondid]
+			interfaceelementpairs.append([node1, node2])
 
-        	[elbody, nodebodies]=interaction_element(interfacemat,interfaceelementpairs,interfaceelementshape);
+		[elbody, nodebodies]=interaction_element(interfacemat,interfaceelementpairs,interfaceelementshape);
 		scenebodies.append([elbody,nodebodies])
 
-        return scenebodies
+	return scenebodies
 
 
 #Read mesh file and get elements nodes and interactions
@@ -192,7 +189,7 @@ def mshreader(meshfile="file.mesh",shift=Vector3.Zero,scale=1.0,orientation=Quat
 	interactionList=[]	
 	findVerticesString=0
 	
-	while (lines[findVerticesString].split()[0]<>'$Nodes'): #Find the string with the number of Vertices
+	while (lines[findVerticesString].split()[0]!='$Nodes'): #Find the string with the number of Vertices
 		findVerticesString+=1
 	findVerticesString+=1
 	numNodes = int(lines[findVerticesString].split()[0])
@@ -202,7 +199,7 @@ def mshreader(meshfile="file.mesh",shift=Vector3.Zero,scale=1.0,orientation=Quat
 		nodelistVector3.append(orientation*Vector3(float(data[1])*scale,float(data[2])*scale,float(data[3])*scale)+shift)
 	
 	findElementString=findVerticesString+numNodes
-	while (lines[findElementString].split()[0]<>'$Elements'): #Find the string with the number of Elements
+	while (lines[findElementString].split()[0]!='$Elements'): #Find the string with the number of Elements
 		findElementString+=1
 	findElementString+=1
 	numElements = int(lines[findElementString].split()[0])
@@ -218,9 +215,9 @@ def mshreader(meshfile="file.mesh",shift=Vector3.Zero,scale=1.0,orientation=Quat
 			id2 = int(data[6])-1
 			id3 = int(data[7])-1
 			id4 = int(data[8])-1
-		        elementList.append([id1,id2,id3,id4])
+			elementList.append([id1,id2,id3,id4])
 	#Create the interaction list
- 	i=0
+	i=0
 	numVolElements=elementList.__len__()
 	for elem in elementList:
 		j=i+1
@@ -354,20 +351,20 @@ def finite_element(material,shape,nodes,faces,radius,dynamic=None,fixed=True,wir
 	if(interface==False):
 	#Deformable Element
 		for vec in nodes:        # Second Example
-        	    nod=node(vec,radius)
-		    O.bodies.append(nod)
-		    b.shape.addNode(nod)
-		    nodes_ret.append(nod)
+			nod=node(vec,radius)
+			O.bodies.append(nod)
+			b.shape.addNode(nod)
+			nodes_ret.append(nod)
 		#add faces for drawing purposes
 		for face in faces:
-		    b.shape.addFace(face)
+			b.shape.addFace(face)
 	else:
 	#Deformable Cohesive Element
 		for nodepair in nodes:        # Second Example
-		    b.shape.addPair(nodepair[0],nodepair[1])
+			b.shape.addPair(nodepair[0],nodepair[1])
 		#add faces for drawing purposes
 		for face in faces:
-		    b.shape.addFace(face)
+			b.shape.addFace(face)
 
 	V=1;#For symbolical
 	geomInert=Vector3(1,1,1)#For symbolical

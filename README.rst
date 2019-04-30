@@ -38,10 +38,12 @@ postprocessing and debugging.
 
 **Miscellaneous:**
 
-- `Yade buildbot <http://yade-dem.org/buildbot/>`_
-- `Yade page on ohloh-project <https://www.ohloh.net/p/yade/>`_
-- `Yade on Debian PTS <http://packages.qa.debian.org/y/yade.html>`_
-- `Yade in Ubuntu <https://launchpad.net/ubuntu/+source/yade>`_
-- `Home page <http://www.launchpad.net/yade>`_
 - `Wiki <https://yade-dem.org/wiki/>`_
 - `Screenshots <https://www.yade-dem.org/wiki/Screenshots_and_videos>`_
+- `Tutorial <https://yade-dem.org/doc/tutorial-examples.html>`_
+- `Videos <https://yade-dem.org/doc/tutorial-more-examples-fast.html>`_
+- `Yade page on Open Hub <http://www.openhub.net/p/yade/>`_
+- `Yade on Debian PTS <http://packages.qa.debian.org/y/yade.html>`_
+- `Yade on Debian salsa <https://salsa.debian.org/science-team/yade/commits/master>`_
+- `Yade in Ubuntu <https://launchpad.net/ubuntu/+source/yade>`_
+- `Launchpad page <http://www.launchpad.net/yade>`_

@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
+from __future__ import print_function
 from yade import plot
 
 #### short description of script
-print 'This script shows a tensile test of a net by using the UniaxialStrainer'
+print('This script shows a tensile test of a net by using the UniaxialStrainer')
 
 #### define parameters for the net
 # wire diameter
@@ -29,8 +30,8 @@ wireMat = O.materials.append( WireMat( young=young,poisson=poisson,frictionAngle
 kw = {'color':[1,1,0],'wire':True,'highlight':False,'fixed':False,'material':netMat}
 [netpack,lx,ly] = hexaNet( radius=radius, cornerCoord=[0,0,0], xLength=1.0, yLength=0.55, mos=0.08, a=0.04, b=0.04, startAtCorner=False, isSymmetric=True, **kw )
 O.bodies.append(netpack)
-print 'Real net length in x-direction [m]: ', lx
-print 'Real net length in y-direction [m]: ', ly
+print('Real net length in x-direction [m]: ', lx)
+print('Real net length in y-direction [m]: ', ly)
 
 
 #### get bodies for single wire at the boundary in y-direction and change properties

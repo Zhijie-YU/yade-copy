@@ -6,6 +6,7 @@
 ############################################
 # Cundall non-viscous damping
 # try zero damping and watch total energy...
+from __future__ import print_function
 damping = 0.2
 # initial angular velocity
 angVel = 3.0
@@ -102,7 +103,7 @@ def myAddPlotData():
 	E_kin_rotation    = 0
 	E_pot		  = 0
 	E_plastic	  = 0
-	E_tracker	  = dict(O.energy.items())
+	E_tracker	  = dict(list(O.energy.items()))
 
 	if(two_spheres):## for more bodies we better use the energy tracker, because it's tracking all bodies
 		E_kin_translation = E_tracker['kinTrans']
@@ -141,7 +142,7 @@ def myAddPlotData():
 		total_plus_damp	  = total_plus_damp	 ,
 	)
 
-print "Now calling plot.plot() to show the figures. The timestep is artificially low so that you can watch graphs being updated live."
+print("Now calling plot.plot() to show the figures. The timestep is artificially low so that you can watch graphs being updated live.")
 plot.liveInterval=2
 plot.plot(subPlots=False)
 #from yade import qt

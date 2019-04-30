@@ -1,7 +1,9 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 "Beam-like behaviour with cylinderConnections for roots interaction with spheres."
+from __future__ import print_function
 
+from builtins import range
 from yade import pack
 from yade.gridpfacet import *
 
@@ -49,13 +51,13 @@ O.materials.append(FrictMat(young=4.0e6,poisson=0.5,frictionAngle=frictionAngle1
 Ns=90
 sp=pack.SpherePack()
 
-if os.path.exists("cloud4cylinders"+`Ns`):
- 	print "loading spheres from file"
-	sp.load("cloud4cylinders"+`Ns`)
+if os.path.exists("cloud4cylinders"+repr(Ns)):
+	print("loading spheres from file")
+	sp.load("cloud4cylinders"+repr(Ns))
 else:
- 	print "generating spheres"
- 	Ns=sp.makeCloud(Vector3(-0.3,0.2,-1.0),Vector3(+0.3,+0.5,+1.0),-1,.2,Ns,False,0.8)
-	sp.save("cloud4cylinders"+`Ns`)
+	print("generating spheres")
+	Ns=sp.makeCloud(Vector3(-0.3,0.2,-1.0),Vector3(+0.3,+0.5,+1.0),-1,.2,Ns,False,0.8)
+	sp.save("cloud4cylinders"+repr(Ns))
 
 O.bodies.append([sphere(center,rad,material='spheremat') for center,rad in sp])
 

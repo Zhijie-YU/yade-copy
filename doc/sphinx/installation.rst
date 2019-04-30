@@ -138,20 +138,21 @@ to add yade external ppa from https://launchpad.net/~yade-users/+archive/externa
 The following commands have to be executed in the command line of your corresponding
 distribution. Just copy&paste to the terminal. Note, to execute these commands you
 need root privileges.
+ 
+* **Ubuntu 18.04, 18.10**, **Debian 9, 10** and their derivatives::
 
-* **Ubuntu**, **Debian** and their derivatives::
+		sudo apt install cmake git freeglut3-dev libloki-dev libboost-all-dev fakeroot \
+		dpkg-dev build-essential g++ python3-dev python3-ipython python3-matplotlib \
+		libsqlite3-dev python3-numpy python3-tk gnuplot libgts-dev python3-pygraphviz \
+		libvtk6-dev libeigen3-dev python3-xlib python3-pyqt5 pyqt5-dev-tools \
+		python3-pyqt5.qtwebkit gtk2-engines-pixbuf python3-pyqt5.qtsvg libqglviewer-dev-qt5 \
+		python3-pil libjs-jquery python3-sphinx python3-git libxmu-dev libxi-dev libcgal-dev \
+		help2man libbz2-dev zlib1g-dev python3-minieigen libopenblas-dev libsuitesparse-dev \
+		libmetis-dev python3-bibtexparser python3-future
+		
+* For **Ubuntu 16.04** ``libqglviewer-dev-qt5`` is to be replaced by ``libqglviewer-dev`` and ``python3-ipython`` by ``ipython3``.
 
-		sudo apt-get install cmake git freeglut3-dev libloki-dev \
-		libboost-all-dev fakeroot dpkg-dev build-essential g++ \
-		python-dev ipython python-matplotlib libsqlite3-dev python-numpy python-tk gnuplot \
-		libgts-dev python-pygraphviz libvtk6-dev python-numpy libeigen3-dev \
-		python-xlib python-pyqt5 pyqt5-dev-tools python-pyqt5.qtwebkit gtk2-engines-pixbuf python-argparse python-pyqt5.qtsvg \
-		libqglviewer-dev python-imaging libjs-jquery python-sphinx python-git python-bibtex \
-		libxmu-dev libxi-dev libcgal-dev help2man libbz2-dev zlib1g-dev python-minieigen	\
-		libopenmpi-dev openmpi-bin openmpi-common
-		
-* For **Ubuntu 18.04** ``libqglviewer-dev`` is to be replaced by ``libqglviewer-dev-qt5``, ``python-imaging`` is to be replaced by ``python-pil``, and the additional package ``qt5-default`` is required
-		
+* For building documentation (the ``make doc`` invocation explained below) additional package ``texlive-xetex`` is required. On some multi-language systems an error ``Building format(s) --all. This may take some time... fmtutil failed.`` may occur, in that case a package ``locales-all`` is required.
 
 Some of the packages (for example, cmake, eigen3) are mandatory, some of them
 are optional. Watch for notes and warnings/errors, which are shown
@@ -161,11 +162,6 @@ some of Yade features will be disabled (see the messages at the end of the confi
 Additional packages, which can become mandatory later::
 
 		sudo apt-get install python-gts
-
-For effective usage of direct solvers in the PFV-type fluid coupling, the following libraries are recommended: ``openblas``, ``suitesparse``, and ``metis``.
-All three of them are available in many different versions in each distribution. Different combinations are possible and not all of them will work. The following was found to be effective on recent debian-based systems. ::
-
-		sudo apt-get install libopenblas-dev libsuitesparse-dev libmetis-dev
 
 Some packages listed here are relatively new and they can be absent
 in your distribution (for example, libmetis-dev or python-gts). They can be
@@ -231,6 +227,7 @@ As of Yade version git-2315bd8 (or 2018.02b release), the following options are 
 	* ENABLE_CGAL: enable CGAL option (ON by default)
 	* ENABLE_VTK: enable VTK-export option (ON by default)
 	* ENABLE_OPENMP: enable OpenMP-parallelizing option (ON by default)
+	* ENABLE_MPI: Enable MPI enviroment and communication, required for Yade-OpenFOAM coupling (OFF by default)
 	* ENABLE_GTS: enable GTS-option (ON by default)
 	* ENABLE_GL2PS: enable GL2PS-option (ON by default)
 	* ENABLE_LINSOLV: enable LINSOLV-option (ON by default)
@@ -244,17 +241,17 @@ As of Yade version git-2315bd8 (or 2018.02b release), the following options are 
 	* ENABLE_POTENTIAL_PARTICLES: enable potential particles option (OFF by default)
 	* ENABLE_DEFORM: enable constant volume deformation engine (OFF by default)
 	* ENABLE_OAR: generate a script for oar-based task scheduler (OFF by default)
-	* ENABLE_MPI: Enable MPI enviroment and communication, required for Yade-OpenFOAM coupling (OFF by default)
 	* runtimePREFIX: used for packaging, when install directory is not the same as runtime directory (/usr/local by default)
 	* CHUNKSIZE: specifiy the chunk size if you want several sources to be compiled at once. Increases compilation speed but RAM-consumption during compilation as well (1 by default)
 	* VECTORIZE: enables vectorization and alignment in Eigen3 library, experimental (OFF by default)
 	* USE_QT5: use QT5 for GUI (ON by default)
 	* CHOLMOD_GPU link Yade to custom SuiteSparse installation and activate GPU accelerated PFV (OFF by default)
+	* PYTHON_VERSION: force python version to the given one, set -1 to automatically use the last version on the system (-1 by default)
 
 For using more extended parameters of cmake, please follow the corresponding
 documentation on `https://cmake.org/documentation <https://cmake.org/documentation/>`_.
 
-.. warning:: To provide Qt4->Qt5 migration one needs to provide an additional option USE_QT5.
+.. warning:: To provide Qt4→Qt5 migration one needs to provide an additional option USE_QT5.
  This option is ON by default but should be set according to the Qt version which was used
  to compile libQGLViewer. On Debian/Ubuntu operating systems libQGLViewer
  of version 2.6.3 and higher are compiled against Qt5 (for other operating systems
@@ -291,6 +288,8 @@ the new built can be started by navigating to /path/to/installfolder/bin and cal
     cd /path/to/installfolder/bin
     ./yade-2014-02-20.git-a7048f4
 
+.. comment: is it possible to invoke python yade.config.revision and put it above as a text in the doc?
+
 For building the documentation you should at first execute the command ``make install``
 and then ``make doc`` to build it. The generated files will be stored in your current
 install directory /path/to/installfolder/share/doc/yade-your-version. Once again writing permissions are necessary for installing into /usr/local/share/doc/. To open your local documentation go into the folder html and open the file index.html with a browser.
@@ -308,6 +307,31 @@ upon detecting the C and C++ compiler to use::
 
 Clang does not support OpenMP-parallelizing for the moment, that is why the
 feature will be disabled.
+
+Python 2 backward compatibility
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Python 2 support ends at the beginning of 2020. However, Yade can be compiled and used with python 2:
+
+* On **Ubuntu 18.04, 18.10**, **Debian 9, 10** and their derivatives install the python 2 version of the packages (and other required packages)::
+
+		sudo apt install cmake git freeglut3-dev libloki-dev libboost-all-dev fakeroot \
+		dpkg-dev build-essential g++ python-dev ipython python-matplotlib \
+		libsqlite3-dev python-numpy python-tk gnuplot libgts-dev python-pygraphviz \
+		libvtk6-dev python-numpy libeigen3-dev python-xlib python-pyqt5 pyqt5-dev-tools \
+		python-pyqt5.qtwebkit gtk2-engines-pixbuf python-argparse python-pyqt5.qtsvg \
+		libqglviewer-dev-qt5 python-pil libjs-jquery python-sphinx python-git python-bibtex \
+		libxmu-dev libxi-dev libcgal-dev help2man libbz2-dev zlib1g-dev python-minieigen \
+		libopenblas-dev libsuitesparse-dev libmetis-dev libopenmpi-dev openmpi-bin \
+		openmpi-common python-bibtexparser python3-future python-future python-gts
+
+* For **Ubuntu 16.04** ``libqglviewer-dev-qt5`` is to be replaced by ``libqglviewer-dev``, ``python-pil`` is to be replaced by ``python-imaging``.
+
+* force python 2 in the cmake command line: ``cmake -DPYTHON_VERSION=2 -DCMAKE_INSTALL_PREFIX=../install ../trunk``
+
+Note that the cmake ``PYTHON_VERSION`` option can be set to force any python version, for example ``-DPYTHON_VERSION=3.5`` is valid.
+
+Also see notes about :ref:`converting python 2 scripts into python 3<convert-python2-to3>`.
 
 Speed-up compilation
 ^^^^^^^^^^^^^^^^^^^^^

@@ -193,12 +193,12 @@ triax.goal1=triax.goal2=triax.goal3=-10000
 
 ### a function saving variables
 #def history():
-  	#plot.addData(e11=-triax.strain[0], e22=-triax.strain[1], e33=-triax.strain[2],
-  		    #ev=-triax.strain[0]-triax.strain[1]-triax.strain[2],
-		    #s11=-triax.stress(triax.wall_right_id)[0],
-		    #s22=-triax.stress(triax.wall_top_id)[1],
-		    #s33=-triax.stress(triax.wall_front_id)[2],
-		    #i=O.iter)
+	#plot.addData(e11=-triax.strain[0], e22=-triax.strain[1], e33=-triax.strain[2],
+			#ev=-triax.strain[0]-triax.strain[1]-triax.strain[2],
+			#s11=-triax.stress(triax.wall_right_id)[0],
+			#s22=-triax.stress(triax.wall_top_id)[1],
+			#s33=-triax.stress(triax.wall_front_id)[2],
+			#i=O.iter)
 
 #if 1:
   ## include a periodic engine calling that function in the simulation loop

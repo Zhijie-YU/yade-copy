@@ -1,3 +1,4 @@
+from __future__ import print_function
 #########################################################################################################################################################################
 # Author: Raphael Maurin, raphael.maurin@imft.fr
 # 07/07/2016
@@ -77,9 +78,9 @@ O.engines = [
 	InsertionSortCollider([Bo1_Sphere_Aabb(), Bo1_Wall_Aabb(),Bo1_Facet_Aabb(),Bo1_Box_Aabb()],label='contactDetection',allowBiggerThanPeriod = True),
 	# Calculate the different interactions
 	InteractionLoop(
-   	[Ig2_Sphere_Sphere_ScGeom(), Ig2_Box_Sphere_ScGeom()],
-   	[Ip2_ViscElMat_ViscElMat_ViscElPhys()],
-   	[Law2_ScGeom_ViscElPhys_Basic()]
+	[Ig2_Sphere_Sphere_ScGeom(), Ig2_Box_Sphere_ScGeom()],
+	[Ip2_ViscElMat_ViscElMat_ViscElPhys()],
+	[Law2_ScGeom_ViscElPhys_Basic()]
 	,label = 'interactionLoop'),				
 	#Apply an hydrodynamic force to the particles
 	HydroForceEngine(densFluid = densFluidPY,viscoDyn = kinematicViscoFluid*densFluidPY,zRef = groundPosition,gravity = gravityVector,deltaZ = fluidHeight/ndimz,expoRZ = 0.,lift = False,nCell = ndimz,vCell = 1.,vxFluid = np.zeros(ndimz),phiPart = np.zeros(ndimz),vxPart = np.zeros(ndimz),vFluctX = np.zeros(len(O.bodies)),vFluctY = np.zeros(len(O.bodies)),vFluctZ = np.zeros(len(O.bodies)),ids = idApplyForce, label = 'hydroEngine'),

@@ -1,3 +1,4 @@
+from __future__ import print_function
 #CW BOON 2018
 # Use the following algorithms:
 # CW Boon, GT Houlsby, S Utili (2012).  A new algorithm for contact detection between convex polygonal and polyhedral particles in the discrete element method.  Computers and Geotechnics 44, 73-82. 
@@ -364,7 +365,7 @@ def goToNextStage2():
 		removeDamping()
 		removeDampingBool=True	
 	if O.iter>5000 and SRcounter == 0: # and uf<0.005:
-		print O.iter
+		print(O.iter)
 		O.pause()
 		vtkRecorder.iterPeriod=1
 		for b in O.bodies:

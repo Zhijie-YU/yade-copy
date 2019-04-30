@@ -5,6 +5,8 @@
 See :ref:`timing` section of the programmer's manual, `wiki page <http://yade-dem.org/index.php/Speed_profiling_using_TimingInfo_and_TimingDeltas_classes>`_ for some examples.
 
 """
+from __future__ import print_function
+
 
 from yade.wrapper import *
 
@@ -43,19 +45,19 @@ def _delta_stats(deltas,totalTime,level):
 	ret=0
 	deltaTime=sum([d[1] for d in deltas.data])
 	for d in deltas.data:
-		print _formatLine(d[0],d[1],d[2],totalTime,level); ret+=1
+		print(_formatLine(d[0],d[1],d[2],totalTime,level)); ret+=1
 	if len(deltas.data)>1:
-		print _formatLine('TOTAL',deltaTime,sum(d[2] for d in deltas.data),totalTime,level); ret+=1
+		print(_formatLine('TOTAL',deltaTime,sum(d[2] for d in deltas.data),totalTime,level)); ret+=1
 	return ret
 
 def _engines_stats(engines,totalTime,level):
 	lines=0; hereLines=0
 	for e in engines:
 		if not isinstance(e,Functor):
-			print _formatLine(u'"'+e.label+'"' if e.label else e.__class__.__name__,e.execTime,e.execCount,totalTime,level); lines+=1; hereLines+=1
+			print(_formatLine(u'"'+e.label+'"' if e.label else e.__class__.__name__,e.execTime,e.execCount,totalTime,level)); lines+=1; hereLines+=1
 		if e.timingDeltas: 
 			if isinstance(e,Functor):
-				print _formatLine(e.__class__.__name__,sum(d[1] for d in e.timingDeltas.data),sum(d[2] for d in e.timingDeltas.data),totalTime,level); lines+=1; hereLines+=1
+				print(_formatLine(e.__class__.__name__,sum(d[1] for d in e.timingDeltas.data),sum(d[2] for d in e.timingDeltas.data),totalTime,level)); lines+=1; hereLines+=1
 				execTime=sum([d[1] for d in e.timingDeltas.data])
 			else: execTime=e.execTime
 			lines+=_delta_stats(e.timingDeltas,execTime,level+1)
@@ -66,7 +68,7 @@ def _engines_stats(engines,totalTime,level):
 			lines+=_engines_stats(e.lawDispatcher.functors,e.execTime,level+1)
 		elif isinstance(e,ParallelEngine):
 			for slave in e.slaves:
-				print "\\"
+				print("\\")
 #<<<<<<< Updated upstream
 				#if not isinstance(slave,list): lines+=_engines_stats([slave],slave.execTime,level+1)
 				#else:
@@ -77,10 +79,10 @@ def _engines_stats(engines,totalTime,level):
 				if not isinstance(slave,list): lines+=_engines_stats([slave],e.execTime,level+1)
 				else:
 					for el in slave: _engines_stats([el],e.execTime,level+1)
-			print "/"
+			print("/")
 #>>>>>>> Stashed changes
 	if hereLines>1 and not isinstance(e,Functor):
-		print _formatLine('TOTAL',totalTime,-1,totalTime,level); lines+=1
+		print(_formatLine('TOTAL',totalTime,-1,totalTime,level)); lines+=1
 	return lines
 
 def stats():
@@ -132,7 +134,7 @@ def stats():
 
 	"""
 
-	print 'Name'.ljust(_statCols['label'])+' '+'Count'.rjust(_statCols['count'])+' '+'Time'.rjust(_statCols['time'])+' '+'Rel. time'.rjust(_statCols['relTime'])
-	print '-'*(sum([_statCols[k] for k in _statCols])+len(_statCols)-1)
+	print('Name'.ljust(_statCols['label'])+' '+'Count'.rjust(_statCols['count'])+' '+'Time'.rjust(_statCols['time'])+' '+'Rel. time'.rjust(_statCols['relTime']))
+	print('-'*(sum([_statCols[k] for k in _statCols])+len(_statCols)-1))
 	_engines_stats(O.engines,sum([e.execTime for e in O.engines]),0)
-	print
+	print()

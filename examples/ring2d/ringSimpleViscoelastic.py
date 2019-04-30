@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import print_function
+from builtins import range
 from yade import ymport
 
 ## Omega
@@ -22,10 +24,10 @@ walls = O.bodies.append(ymport.stl('ring.stl',material=facetMat))
 
 def fill_cylinder_with_spheres(sphereRadius,cylinderRadius,cylinderHeight,cylinderOrigin,cylinderSlope):
 	spheresCount=0
-	for h in xrange(0,int(cylinderHeight/sphereRadius/2)):
-			for r in xrange(1,int(cylinderRadius/sphereRadius/2)):
+	for h in range(0,int(cylinderHeight/sphereRadius/2)):
+			for r in range(1,int(cylinderRadius/sphereRadius/2)):
 				dfi = asin(0.5/r)*2
-				for a in xrange(0,int(6.28/dfi)):
+				for a in range(0,int(6.28/dfi)):
 					x = cylinderOrigin[0]+2*r*sphereRadius*cos(dfi*a)
 					y = cylinderOrigin[1]+2*r*sphereRadius*sin(dfi*a)
 					z = cylinderOrigin[2]+h*2*sphereRadius
@@ -37,7 +39,7 @@ def fill_cylinder_with_spheres(sphereRadius,cylinderRadius,cylinderHeight,cylind
 # Spheres
 spheresCount=0
 spheresCount+=fill_cylinder_with_spheres(sphereRadius,0.5,0.10,[0,0,0],radians(0))
-print "Number of spheres: %d" % spheresCount
+print("Number of spheres: %d" % spheresCount)
 
 
 ## Engines 
@@ -70,7 +72,7 @@ o.engines=[
 
 for b in O.bodies:
 	if isinstance(b.shape,Sphere):
-		 b.state.blockedDOFs='zXY'
+		b.state.blockedDOFs='zXY'
 
 O.dt=0.02*tc
 

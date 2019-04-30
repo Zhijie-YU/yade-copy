@@ -3,6 +3,8 @@
 #
 # module documentation
 #
+
+from builtins import range
 import sys,os,os.path
 
 outDir=sys.argv[2] if len(sys.argv)>2 else 'book/_build/'
@@ -43,7 +45,7 @@ for d in (outDir,outDir+'/latex',outDir+'/html',outDir+'/html/_static'):
 #for m in mm: moduleDoc(m,mods[m])
 
 #with open('modules.rst','w') as f:
-	#f.write("Yade modules\n=============\n\n.. toctree::\n\t:maxdepth: 2\n\n")
+	#f.write("Yade modules reference\n=============\n\n.. toctree::\n\t:maxdepth: 2\n\n")
 	#for m in mm: f.write('\tyade.%s.rst\n\n'%m)
 
 
@@ -114,8 +116,8 @@ def genWrapperRst():
 	wrapper=file('yade.wrapper.rst','w')
 	wrapper.write(""".. _yade.wrapper::
 
-Class reference (yade.wrapper module)
-=======================================
+Yade wrapper class reference
+============================
 
 .. toctree::
   :maxdepth: 2
@@ -248,7 +250,7 @@ for vol in volumes:
 				
 				out=[]
 				for i in range(0,len(lines)):
-					if (i<>len(lines) and
+					if (i!=len(lines) and
 							lines[i].strip()=="\\begin{Verbatim}[commandchars=\\\\\{\\}]" and
 							lines[i+1].strip()=="\\end{Verbatim}"):
 							lines[i]=''; lines[i+1]=''

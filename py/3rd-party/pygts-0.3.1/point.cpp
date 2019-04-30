@@ -38,6 +38,10 @@
   #define SELF_CHECK
 #endif
 
+// https://codeyarns.com/2014/03/11/how-to-selectively-ignore-a-gcc-warning/
+// https://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Pragmas.html
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wwrite-strings"
 
 /*-------------------------------------------------------------------------*/
 /* Methods exported to python */
@@ -826,8 +830,8 @@ setx(PygtsPoint *self, PyObject *value, void *closure)
   if(PyFloat_Check(value)) {
     PYGTS_POINT_AS_GTS_POINT(self)->x = PyFloat_AsDouble(value);
   }
-  else if(PyInt_Check(value)) {
-    PYGTS_POINT_AS_GTS_POINT(self)->x = (gdouble)PyInt_AsLong(value);
+  else if(PyLong_Check(value)) {
+    PYGTS_POINT_AS_GTS_POINT(self)->x = (gdouble)PyLong_AsLong(value);
   }
   else {
     PyErr_SetString(PyExc_TypeError,"expected a float");
@@ -852,8 +856,8 @@ sety(PygtsPoint *self, PyObject *value, void *closure)
   if(PyFloat_Check(value)) {
     PYGTS_POINT_AS_GTS_POINT(self)->y = PyFloat_AsDouble(value);
   }
-  else if(PyInt_Check(value)) {
-    PYGTS_POINT_AS_GTS_POINT(self)->y = (gdouble)PyInt_AsLong(value);
+  else if(PyLong_Check(value)) {
+    PYGTS_POINT_AS_GTS_POINT(self)->y = (gdouble)PyLong_AsLong(value);
   }
   else {
     PyErr_SetString(PyExc_TypeError,"expected a float");
@@ -878,8 +882,8 @@ setz(PygtsPoint *self, PyObject *value, void *closure)
   if(PyFloat_Check(value)) {
     PYGTS_POINT_AS_GTS_POINT(self)->z = PyFloat_AsDouble(value);
   }
-  else if(PyInt_Check(value)) {
-    PYGTS_POINT_AS_GTS_POINT(self)->z = (gdouble)PyInt_AsLong(value);
+  else if(PyLong_Check(value)) {
+    PYGTS_POINT_AS_GTS_POINT(self)->z = (gdouble)PyLong_AsLong(value);
   }
   else {
     PyErr_SetString(PyExc_TypeError,"expected a float");
@@ -902,7 +906,7 @@ static PyGetSetDef getset[] = {
 /* Python type methods */
 
 static PyObject *
-new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+new_(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
   PyObject *o;
   PygtsObject *obj;
@@ -968,15 +972,14 @@ init(PygtsPoint *self, PyObject *args, PyObject *kwds)
   return 0;
 }
 
-
 static int 
-compare(PygtsPoint *p1_, PygtsPoint *p2_)
+compare(PyObject *p1_, PyObject *p2_)
 {
   GtsPoint *p1, *p2;
 
 #if PYGTS_DEBUG
-  pygts_point_check((PyObject*)p1_);
-  pygts_point_check((PyObject*)p2_);
+  pygts_point_check(p1_);
+  pygts_point_check(p2_);
 #endif
 
   p1 = PYGTS_POINT_AS_GTS_POINT(p1_);
@@ -985,11 +988,23 @@ compare(PygtsPoint *p1_, PygtsPoint *p2_)
   return pygts_point_compare(p1,p2);
 }
 
+#if PY_MAJOR_VERSION >= 3
+  static PyObject* rich_compare(PyObject *o1, PyObject* o2, int op){
+    if(o2==Py_None) Py_RETURN_FALSE; // comparing with nothing
+    switch(op){
+      case Py_EQ:{
+         if(compare(o1,o2)) Py_RETURN_TRUE;
+         Py_RETURN_FALSE;
+      }
+      default: Py_RETURN_NOTIMPLEMENTED;
+    }
+  }
+#endif
+
 
 /* Methods table */
 PyTypeObject PygtsPointType = {
-  PyObject_HEAD_INIT(NULL)
-  0,                         /* ob_size */
+  PyVarObject_HEAD_INIT(NULL,0)
   "gts.Point"  ,             /* tp_name */
   sizeof(PygtsPoint),        /* tp_basicsize */
   0,                         /* tp_itemsize */
@@ -997,7 +1012,11 @@ PyTypeObject PygtsPointType = {
   0,                         /* tp_print */
   0,                         /* tp_getattr */
   0,                         /* tp_setattr */
-  (cmpfunc)compare,          /* tp_compare */
+  #if PY_MAJOR_VERSION >= 3
+    0,
+  #else
+    (cmpfunc)compare,          /* tp_compare */
+  #endif
   0,                         /* tp_repr */
   0,                         /* tp_as_number */
   0,                         /* tp_as_sequence */
@@ -1013,7 +1032,11 @@ PyTypeObject PygtsPointType = {
   "Point object",            /* tp_doc */
   0,		             /* tp_traverse */
   0,		             /* tp_clear */
-  0,		             /* tp_richcompare */
+  #if PY_MAJOR_VERSION >= 3
+    (richcmpfunc)rich_compare, /* tp_richcompare */
+  #else
+    0,                       /* tp_richcompare */
+  #endif
   0,		             /* tp_weaklistoffset */
   0,		             /* tp_iter */
   0,		             /* tp_iternext */
@@ -1027,7 +1050,7 @@ PyTypeObject PygtsPointType = {
   0,                         /* tp_dictoffset */
   (initproc)init,            /* tp_init */
   0,                         /* tp_alloc */
-  (newfunc)new               /* tp_new */
+  (newfunc)new_               /* tp_new */
 };
 
 
@@ -1060,7 +1083,7 @@ pygts_point_check(PyObject* o)
       check = TRUE;
       for(i=0;i<N;i++) {
 	obj = PyTuple_GET_ITEM(o,i);
-	if(!PyFloat_Check(obj) && !PyInt_Check(obj)) {
+	if(!PyFloat_Check(obj) && !PyLong_Check(obj)) {
 	  check = FALSE;
 	}
       }
@@ -1153,22 +1176,22 @@ pygts_point_from_sequence(PyObject *tuple) {
   for(i=0;i<N;i++) {
     obj = PyTuple_GET_ITEM(tuple,i);
 
-    if(!PyFloat_Check(obj) && !PyInt_Check(obj)) {
+    if(!PyFloat_Check(obj) && !PyLong_Check(obj)) {
       PyErr_SetString(PyExc_TypeError,"expected a list or tuple of floats");
       Py_DECREF(tuple);
       return NULL;
     }
     if(i==0) {
       if(PyFloat_Check(obj)) x = PyFloat_AsDouble(obj);
-      else  x = (double)PyInt_AsLong(obj);
+      else  x = (double)PyLong_AsLong(obj);
     }
     if(i==1) {
       if(PyFloat_Check(obj)) y = PyFloat_AsDouble(obj);
-      else  y = (double)PyInt_AsLong(obj);
+      else  y = (double)PyLong_AsLong(obj);
     }
     if(i==2) {
       if(PyFloat_Check(obj)) z = PyFloat_AsDouble(obj);
-      else  z = (double)PyInt_AsLong(obj);
+      else  z = (double)PyLong_AsLong(obj);
     }
   }
   Py_DECREF(tuple);
@@ -1225,3 +1248,6 @@ pygts_point_compare(GtsPoint* p1,GtsPoint* p2)
   if(r1<r2) return -1;
   return 1;
 }
+
+#pragma GCC diagnostic pop
+

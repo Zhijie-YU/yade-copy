@@ -14,6 +14,7 @@
 # The only tunable sign places the sphere either on the top ot at the bottom of the facet
 # and sets gravity accordingly. It can be +1 or -1
 #
+from __future__ import print_function
 sign=-1
 #
 
@@ -45,11 +46,11 @@ O.saveTmp()
 O.dt=1e-4
 
 
-print '** virgin dispatch matrix:'
+print('** virgin dispatch matrix:')
 O.engines[2].lawDispatcher.dispMatrix()
-print '** class indices'
+print('** class indices')
 O.run(1000,True)
-print '** used dispatch matrix'
+print('** used dispatch matrix')
 O.engines[2].lawDispatcher.dispMatrix()
 
 
@@ -57,10 +58,10 @@ def setGravity():
 	gz=integrator.gravity[2]
 	integrator.gravity=[0,0,1.05*gz]
 	if abs(gz)>=2500:
-		print "Gravity reset & slow down"
+		print("Gravity reset & slow down")
 		O.dt=1e-6;
 		integrator.gravity=[0,0,0]
-	if abs(gz)>0: print gz
+	if abs(gz)>0: print(gz)
 
 try:
 	from yade import qt

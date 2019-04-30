@@ -2,7 +2,9 @@
 # -*- coding: utf-8 -*-
 
 '''This example shows usage of save and load clumps.'''
+from __future__ import print_function
 
+from builtins import range
 from yade import pack,export,qt,ymport
 
 #define material for all bodies:
@@ -46,12 +48,12 @@ id_clump2 = clump2[0]
 def getClumpInfo():
 	for b in O.bodies:
 		if b.isClump:
-			print 'Clump ',b.id,' has following members:'
-			keys = b.shape.members.keys()
+			print('Clump ',b.id,' has following members:')
+			keys = list(b.shape.members.keys())
 			for ii in range(0,len(keys)):
-				print '- Body ',keys[ii]
-			print 'inertia:',b.state.inertia
-			print 'mass:',b.state.mass,'\n'
+				print('- Body ',keys[ii])
+			print('inertia:',b.state.inertia)
+			print('mass:',b.state.mass,'\n')
 
 
 #### show how to use addToClump():
@@ -65,19 +67,19 @@ O.bodies.addToClump([id_new],id_clump1)
 #add a clump to a clump:
 O.bodies.addToClump([id_clump2],id_clump1)
 
-print '\nSTATE after adding the second clump to clump ------------'
+print('\nSTATE after adding the second clump to clump ------------')
 getClumpInfo()
 
-print "Save clumps"
+print("Save clumps")
 export.textClumps("savedClumps.txt")
-print "Load clumps"
+print("Load clumps")
 ymport.textClumps("savedClumps.txt", shift=Vector3(0,0,1.5))
 
-print "After saving"
+print("After saving")
 getClumpInfo()
 
 O.dt=1e-6
 
-print '\nPress Play button ... '
+print('\nPress Play button ... ')
 renderer = qt.Renderer()
 qt.View()

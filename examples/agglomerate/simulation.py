@@ -1,3 +1,4 @@
+from __future__ import print_function
 ######################################################################
 # Gravity deposition as a simple simulation illustrating creation of
 # cohesive contacts and deleting the unwanted between different
@@ -5,6 +6,8 @@
 #
 # Using CpmMat, but the same procedure can be used with any material
 ######################################################################
+from builtins import zip
+from builtins import range
 from yade import ymport
 
 wall = O.bodies.append(wall((0,0,3),2))
@@ -13,10 +16,10 @@ O.materials.append(CpmMat(neverDamage=True,frictionAngle=0))
 
 # load spheres from file, including information of their agglomerates ids
 attrs = []
-print "\nPlease see README if you have errors when running this example.\n"
+print("\nPlease see README if you have errors when running this example.\n")
 sp = ymport.textExt('/tmp/compressed.txt',format='x_y_z_r_attrs',attrs=attrs)
 n = max(int(a[0]) for a in attrs)+1
-colors = [randomColor() for _ in xrange(n)]
+colors = [randomColor() for _ in range(n)]
 for s,a in zip(sp,attrs):
 	aa = int(a[0])
 	s.agglomerate = aa

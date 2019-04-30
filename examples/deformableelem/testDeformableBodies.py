@@ -98,7 +98,7 @@ def applyforcetoelements():
 #			plot.addData(force=O.forces.f(i));
 
 def addplot():
-	 plot.addData(force=O.forces.f(forcebodies[1])[0],pos=(O.bodies[forcebodies[1]].state.pos[0]-initialpositions[forcebodies[1]][0]),vel=O.bodies[forcebodies[1]].state.vel[0],t=O.time,time=O.time,tm=O.time)
+	plot.addData(force=O.forces.f(forcebodies[1])[0],pos=(O.bodies[forcebodies[1]].state.pos[0]-initialpositions[forcebodies[1]][0]),vel=O.bodies[forcebodies[1]].state.vel[0],t=O.time,time=O.time,tm=O.time)
 		
 for i in forcebodies:
 	O.bodies[i].state.pos+=Vector3(0,0,0.05);
@@ -125,13 +125,13 @@ for i in forcebodies:
 O.dt=1e-8;
 
 O.engines=[
-	    ForceResetter(),	
-	    ## Apply internal force to the deformable elements and internal force of the interaction element	 
-	    FEInternalForceEngine([If2_Lin4NodeTetra_LinIsoRayleighDampElast(),If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat()]),
-	    PyRunner(iterPeriod=1,command='applyforcetoelements()'),
-	    NewtonIntegrator(damping=0,gravity=[0,0,0]),
+	ForceResetter(),	
+	## Apply internal force to the deformable elements and internal force of the interaction element	 
+	FEInternalForceEngine([If2_Lin4NodeTetra_LinIsoRayleighDampElast(),If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat()]),
+	PyRunner(iterPeriod=1,command='applyforcetoelements()'),
+	NewtonIntegrator(damping=0,gravity=[0,0,0]),
 #	    ## Plotting data: adds plots after one step of the integrator engine
-	    PyRunner(iterPeriod=1,command='addplot()')
+	PyRunner(iterPeriod=1,command='addplot()')
 
 
 ];

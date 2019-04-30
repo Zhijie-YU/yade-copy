@@ -1,7 +1,10 @@
+from __future__ import print_function
 ######################################################################
 # Compress the loose packing into dense packing. Each agglomerate is
 # considered as clump in this stage
 ######################################################################
+from builtins import zip
+from builtins import range
 from yade import export,ymport
 import random
 random.seed(1)
@@ -13,11 +16,11 @@ wallIds = O.bodies.append(walls)
 
 # load spheres from file, including information of their agglomerates ids
 attrs = []
-print "\nPlease see README if you have errors when running this example.\n"
+print("\nPlease see README if you have errors when running this example.\n")
 sp = ymport.textExt('/tmp/divided.txt',format='x_y_z_r_attrs',attrs=attrs)
 n = max(int(a[0]) for a in attrs)+1
-colors = [randomColor() for _ in xrange(n)]
-agglomerates = [[] for _ in xrange(n)]
+colors = [randomColor() for _ in range(n)]
+agglomerates = [[] for _ in range(n)]
 for s,a in zip(sp,attrs):
 	aa = int(a[0])
 	s.agglomerate = aa

@@ -2,6 +2,8 @@
 # encoding: utf-8
 
 # The script implements the show case in this article [Mani2013]
+from __future__ import print_function
+from builtins import range
 from yade import utils, plot
 o = Omega()
 fr = 0.5;rho=2000
@@ -68,33 +70,33 @@ o.engines = [
 
 
 def showData():
-  print "Step %d"%O.iter
-  print "idB=%d, Vf=%s, Vmin=%s;"%(id1, O.bodies[id1].state.Vf, O.bodies[id1].state.Vmin)
-  print "idB=%d, Vf=%s, Vmin=%s;"%(id2, O.bodies[id2].state.Vf, O.bodies[id2].state.Vmin)
-  print "idB=%d, Vf=%s, Vmin=%s;"%(id3, O.bodies[id3].state.Vf, O.bodies[id3].state.Vmin)
-  print "idB=%d, Vf=%s, Vmin=%s;"%(id4, O.bodies[id4].state.Vf, O.bodies[id4].state.Vmin)
-  print "idB=%d, Vf=%s, Vmin=%s;"%(id5, O.bodies[id5].state.Vf, O.bodies[id5].state.Vmin)
+  print("Step %d"%O.iter)
+  print("idB=%d, Vf=%s, Vmin=%s;"%(id1, O.bodies[id1].state.Vf, O.bodies[id1].state.Vmin))
+  print("idB=%d, Vf=%s, Vmin=%s;"%(id2, O.bodies[id2].state.Vf, O.bodies[id2].state.Vmin))
+  print("idB=%d, Vf=%s, Vmin=%s;"%(id3, O.bodies[id3].state.Vf, O.bodies[id3].state.Vmin))
+  print("idB=%d, Vf=%s, Vmin=%s;"%(id4, O.bodies[id4].state.Vf, O.bodies[id4].state.Vmin))
+  print("idB=%d, Vf=%s, Vmin=%s;"%(id5, O.bodies[id5].state.Vf, O.bodies[id5].state.Vmin))
   
   try:
-    print "Interaction[1, 2].Vb=%s"%(O.interactions[id1,id2].phys.Vb)
+    print("Interaction[1, 2].Vb=%s"%(O.interactions[id1,id2].phys.Vb))
   except:
     pass
   
   try:
-    print "Interaction[2, 3].Vb=%s"%(O.interactions[id2,id3].phys.Vb)
+    print("Interaction[2, 3].Vb=%s"%(O.interactions[id2,id3].phys.Vb))
   except:
     pass
   
   try:
-    print "Interaction[3, 4].Vb=%s"%(O.interactions[id3,id4].phys.Vb)
+    print("Interaction[3, 4].Vb=%s"%(O.interactions[id3,id4].phys.Vb))
   except:
     pass
   
   try:
-    print "Interaction[3, 5].Vb=%s"%(O.interactions[id3,id5].phys.Vb)
+    print("Interaction[3, 5].Vb=%s"%(O.interactions[id3,id5].phys.Vb))
   except:
     pass
-  print 
+  print()
 
 
 showData()

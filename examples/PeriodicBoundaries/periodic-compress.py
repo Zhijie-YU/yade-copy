@@ -23,12 +23,12 @@ O.engines=[
 		[Ip2_FrictMat_FrictMat_FrictPhys()],
 		[Law2_ScGeom_FrictPhys_CundallStrack()],
 	),
-	PeriIsoCompressor(charLen=.5,stresses=[-50e9,-1e8],doneHook="print 'FINISHED'; O.pause() ",keepProportions=True),
+	PeriIsoCompressor(charLen=.5,stresses=[-50e9,-1e8],doneHook="print('FINISHED'); O.pause() ",keepProportions=True),
 	NewtonIntegrator(damping=.4)
 ]
 O.dt=PWaveTimeStep()
 O.saveTmp()
-#print O.cell.refSize
+#print(O.cell.refSize)
 from yade import qt; qt.Controller(); qt.View()
 O.run()
 O.wait()
@@ -41,8 +41,8 @@ timing.stats()
 #sp=pack.SpherePack()
 #sp.fromSimulation() # take spheres from simulation; cellSize is set as well
 #O.reset()
-#print sp.cellSize
+#print(sp.cellSize)
 #sp.cellFill((30,30,30))
-#print sp.cellSize
+#print(sp.cellSize)
 #for s in sp:
 #	O.bodies.append(sphere(s[0],s[1]))

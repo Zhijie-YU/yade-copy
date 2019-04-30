@@ -1,12 +1,13 @@
 # coding: utf-8
 # 2011 ©Bruno Chareyre <bruno.chareyre@hmg.inpg.fr>
 "Demonstrate the compression of a periodic cell with non-trivial initial geometry."
+from __future__ import print_function
 from yade import pack,qt
 O.periodic=True
 
 O.cell.hSize=Matrix3(1.0, -0.15, -0.10,
-		     -0.2 ,1.5, 0.3,
-		    0.3, -0.3, 1.0)
+				-0.2 ,1.5, 0.3,
+				0.3, -0.3, 1.0)
 sp=pack.SpherePack()
 num=sp.makeCloud(hSize=O.cell.hSize, rMean=-0.01,rRelFuzz=.2, num=500,periodic=True, porosity=0.52,distributeMass=False)
 O.bodies.append([sphere(s[0],s[1]) for s in sp])
@@ -32,15 +33,15 @@ phase=0
 def triaxDone():
 	global phase
 	if phase==0:
-		print 'Here we are: stress',triax.stress,'strain',triax.strain
+		print('Here we are: stress',triax.stress,'strain',triax.strain)
 		#Here we reset the transformation, the compressed packing corresponds to null strain
 		O.cell.trsf=Matrix3.Identity
-		print 'Now εxx will go from 0 to .4 while σzz and σyy will be kept the same.'
+		print('Now εxx will go from 0 to .4 while σzz and σyy will be kept the same.')
 		triax.stressMask=6
 		triax.goal=(-0.4,-1e4,-1e4)
 
 		phase+=1
 	elif phase==1:
-		print 'Here we are: stress',triax.stress,'strain',triax.strain
-		print 'Done, pausing now.'
+		print('Here we are: stress',triax.stress,'strain',triax.strain)
+		print('Done, pausing now.')
 		O.pause()

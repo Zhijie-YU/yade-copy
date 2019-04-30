@@ -1,3 +1,4 @@
+from __future__ import print_function
 from yade import plot,pack
 """
 A simple script of a Brazilian splitting test.
@@ -77,8 +78,8 @@ def stopIfDamaged():
 	fMax = max(plot.data["f"])
 	f = plot.data["f"][-1]
 	if f/fMax < .6:
-		print "Damaged, stopping."
-		print "ft = ",max(plot.data["stress"])
+		print("Damaged, stopping.")
+		print("ft = ",max(plot.data["stress"]))
 		O.pause()
 
 # plot stuff

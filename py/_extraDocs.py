@@ -17,7 +17,7 @@
 #
 #    to the c++ documentation.
 
-import wrapper
+from . import wrapper
 
 # Update docstring of your class/function like this:
 #
