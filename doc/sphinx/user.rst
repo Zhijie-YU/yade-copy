@@ -1751,7 +1751,7 @@ Questions and answers
 
 .. Hint:: Please use Launchpad interface at https://answers.launchpad.net/yade/ for `asking questions <http://www.yade-dem.org/wiki/Howtoask>`_ about Yade.
 
-In case you're not familiar with computer oriented discussion lists, please read `this wiki page <https://www.yade-dem.org/wiki/Howtoask>`_ (a Yade-oriented and shortened version of `How To Ask Questions The Smart Way <http://catb.org/~esr/faqs/smart-questions.html>`_) before posting, in order to increase your chances getting help. Do not forget to state what *version* of Yade you use (shown when you start Yade), whether you installed it from source code or a package, what operating system (such as Ubuntu 18.04), and if you have done any local modifications to source code in case of compiled version.
+In case you're not familiar with computer oriented discussion lists, please read `this wiki page <https://www.yade-dem.org/wiki/Howtoask>`_ (a Yade-oriented and shortened version of `How To Ask Questions The Smart Way <http://catb.org/~esr/faqs/smart-questions.html>`_) before posting, in order to increase your chances getting help. Do not forget to state what *version* of Yade you use (shown when you start Yade, or even better as printed by function :yref:`yade.libVersions.printAllVersions`), whether you installed it from source code or a package, what operating system (such as Ubuntu 18.04), and if you have done any local modifications to source code in case of compiled version.
 
 Mailing lists
 --------------

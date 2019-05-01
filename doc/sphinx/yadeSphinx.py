@@ -47,10 +47,10 @@ yade.%s module
 #
 # put all yade modules here, as {module:[submodules]}
 #
-# don't forget to put the module in index.rst as well!
-# FIXED: in file doc/sphinx/conf.py there is a moduleMap={……} variable which must reflect what is written below.
+# NOTE: in file doc/sphinx/conf.py there is a moduleMap={……} variable which must reflect what is written below.
 mods={
-          'export'          : []
+          'libVersions'     : ['_libVersions']
+        , 'export'          : []
         , 'post2d'          : []
         , 'pack'            : ['_packSpheres','_packPredicates','_packObb']
         , 'plot'            : []

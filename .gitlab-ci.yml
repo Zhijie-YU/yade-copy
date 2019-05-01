@@ -7,27 +7,59 @@ stages:
   - doc
   - pages
 
-cmake:
+# https://docs.gitlab.com/ee/ci/yaml/#onlyexcept-basic
+# I create two "stage: cmake" instructions.
+# 1.1. only: master        will use -DCHUNKSIZE=1, to avoid future compilation errors caused by DCHUNKSIZE other than 1
+cmake_master:
   stage: cmake
   only:
     - master
-    - merge_request
   script:
     - mkdir build && cd build
-    - cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX=../install -DPYTHON_VERSION=3 -DDISABLE_SAVE_TEMPS=1 ..
-  tags:
-  - lightweight
+    - cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCHUNKSIZE=1 -DCMAKE_INSTALL_PREFIX=../install -DPYTHON_VERSION=3 -DDISABLE_SAVE_TEMPS=1 ..
   artifacts:
     paths:
       - build
-      
+
+
+# 1.2. only: merge_request will use -DCHUNKSIZE=4, to make compilation faster by 3 minutes
+cmake_MR:
+  stage: cmake
+  only:
+    - merge_request
+  script:
+    - mkdir build && cd build
+    - cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCHUNKSIZE=4 -DCMAKE_INSTALL_PREFIX=../install -DPYTHON_VERSION=3 -DDISABLE_SAVE_TEMPS=1 ..
+  artifacts:
+    paths:
+      - build
+
+
+# Perhaps two more will added later
+# 1.4. only: tags       Perhaps creating tags would trigger a build, e.g. tagging a new release?
+# 1.5. only: schedules  For scheluded pipelines. Perhaps it will be e.g. for https://gitlab.com/yade-dev/trunk/issues/58
+#                       It is possible to send an environment variable to the pipeline from the schedule. So here maybe a selection of
+#                       what .deb package to build could be performed using an env variable.
+
+
+# 2. build stage
 make:
   stage: build
   only:
     - master
     - merge_request
   script:
-    - export JOBSNUM=$(case $CI_RUNNER_DESCRIPTION in "y_4pak_64cpu_256RAM_4TB_docker") echo "40" ;; "c_4pak_64cpu_256RAM_4TB_docker") echo "40" ;; "c_6pak_48cpu_128RAM_4TB_docker") echo "42" ;; "y_6pak_48cpu_128RAM_4TB_docker") echo "42" ;; "yade-runner") echo "12" ;; "yade-runner-01") echo "1" ;; *) echo "40";; esac)
+    - export JOBSNUM=$(case $CI_RUNNER_DESCRIPTION in 
+        "y_4pak_64cpu_256RAM_4TB_docker") echo "43" ;; 
+        "c_4pak_64cpu_256RAM_4TB_docker") echo "43" ;; 
+        "y_6pak_48cpu_128RAM_4TB_docker") echo "45" ;; 
+        "c_6pak_48cpu_128RAM_4TB_docker") echo "45" ;; 
+        "y_7pak_48cpu_128RAM_1TB_docker") echo "45" ;; 
+        "c_7pak_48cpu_128RAM_1TB_docker") echo "45" ;; 
+        "yade-runner") echo "12" ;; 
+        "yade-runner-01") echo "1" ;; 
+        *) echo "8";;
+        esac)
     - echo $JOBSNUM
     - cd build
     - make -j $JOBSNUM
@@ -36,9 +68,14 @@ make:
   artifacts:
     paths:
       - install
-  dependencies: 
-    - cmake      
+  tags:
+    - fast
+  dependencies:
+    - cmake_master
+    - cmake_MR
 
+
+# 3.1. test stage
 test:
   stage: test
   only:
@@ -46,11 +83,11 @@ test:
     - merge_request
   script:
     - install/bin/yade-ci --test
-  tags:
-  - lightweight
   dependencies:
     - make
 
+
+# 3.2. check stage
 check:
   stage: test
   only:
@@ -58,11 +95,11 @@ check:
     - merge_request
   script:
     - install/bin/yade-ci --checks
-  tags:
-  - lightweight
   dependencies:
     - make
 
+
+# 4. doc stage
 doc:
   stage: doc
   only:
@@ -72,14 +109,15 @@ doc:
     - cd build
     - xvfb-run -s "-screen 0 1600x1200x24" make doc
   dependencies:
-    - cmake
+    - cmake_master
+    - cmake_MR
     - make
-  tags:
-  - lightweight
   artifacts:
     paths:
       - install
-      
+
+
+# 5. pages stage; uploads documentation to the website
 pages:
   stage: pages
   only:
@@ -90,9 +128,8 @@ pages:
     - mv install/share/doc/yade-ci/Yade.epub public
   dependencies:
     - doc
-  tags:
-  - lightweight
   artifacts:
     paths:
       - public
+
 

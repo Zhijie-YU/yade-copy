@@ -103,6 +103,8 @@ For those behind a firewall, you can download the sources from our `GitLab <http
 
 Release and trunk sources are compiled in exactly the same way.
 
+.. _prerequisites:
+
 Prerequisites
 ^^^^^^^^^^^^^
 

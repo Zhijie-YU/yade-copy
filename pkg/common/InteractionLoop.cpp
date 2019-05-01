@@ -70,6 +70,9 @@ void InteractionLoop::action(){
 		const shared_ptr<Body>& b2_=Body::byId(I->getId2(),scene);
 
 		if(!b1_ || !b2_){
+			// This code is duplicated in Dispatching.cpp:123 and InteractionLoop.cpp:73
+			// FIXME - interesting! This message appears multiple time for the same         I->getId1()        I->getId2()   !! Almost as if it never gets deleted!
+			//         I saw this when running examples/PotentialBlocks/WedgeYADE.py, after iter 5200 some bodies are deleted. And this loop tries to delete the same interactions over and over again.
 			LOG_DEBUG("Body #"<<(b1_?I->getId2():I->getId1())<<" vanished, erasing intr #"<<I->getId1()<<"+#"<<I->getId2()<<"!");
 			scene->interactions->requestErase(I);
 			continue;

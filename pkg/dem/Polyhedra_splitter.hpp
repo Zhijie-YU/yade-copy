@@ -18,7 +18,7 @@ class PolyhedraSplitter : public PeriodicEngine{
 		void Symmetrize(Matrix3r & bStress);
 
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR_PY(
-		PolyhedraSplitter,PeriodicEngine,"Engine that splits polyhedras."
+		PolyhedraSplitter,PeriodicEngine,"Engine that splits polyhedras.\n\n.. warning:: PolyhedraSplitter returns different results depending on CGAL version! For details see https://gitlab.com/yade-dev/trunk/issues/45"
 		,
 		,
 		/*ctor*/

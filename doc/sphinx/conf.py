@@ -72,8 +72,11 @@ def yadesrc_role(role,rawtext,lineno,inliner,options={},content=[]):
 	return [nodes.reference(rawtext,docutils.utils.unescape(txt),refuri='https://gitlab.com/yade-dev/trunk/blob/master/%s'%id)],[] ### **options should be passed to nodes.reference as well
 
 # map modules to their html (rst) filenames. Used for sub-modules, where e.g. SpherePack is yade._packSphere.SpherePack, but is documented from yade.pack.rst
+#
+# NOTE: in file doc/sphinx/yadeSphinx.py there is a mods={……} variable which must reflect what is written below.
 moduleMap={
-	'yade._packPredicates'    :'yade.pack'
+	  'yade._libVersions'       :'yade.libVersions'
+	, 'yade._packPredicates'    :'yade.pack'
 	, 'yade._packSpheres'       :'yade.pack'
 	, 'yade._packObb'           :'yade.pack'
 	, 'yade._utils'             :'yade.utils'

@@ -69,8 +69,17 @@ def addPlotData():
 #qt.Controller()
 #V = qt.View()
 
-O.run(250, True); checkForcesBodies(25.44893, 4)
-O.run(50, True); checkForcesBodies(28.791353, 4)
-O.run(10, True); checkForcesBodies(30.731547, 4)
-O.run(20, True); checkForcesBodies(33.483438, 7)
+import yade.libVersions
+
+cgalVer=yade.libVersions.getVersion('cgal')
+
+if(cgalVer > (4,9,0)):
+    print("CGAL version is ",cgalVer,". Will test for cgal version > 4.9")
+    O.run(166, True); checkForcesBodies(-21.7037, 7)
+else:
+    print("CGAL version is ",cgalVer,". Will test for cgal version <= 4.9")
+    O.run(250, True); checkForcesBodies(25.44893, 4)
+    O.run(50, True); checkForcesBodies(28.791353, 4)
+    O.run(10, True); checkForcesBodies(30.731547, 4)
+    O.run(20, True); checkForcesBodies(33.483438, 7)
 

@@ -223,14 +223,25 @@ void OpenGLRenderer::render(const shared_ptr<Scene>& _scene,Body::id_t selection
 
 void OpenGLRenderer::renderAllInteractionsWire(){
 	FOREACH(const shared_ptr<Interaction>& i, *scene->interactions){
-		if(!i->functorCache.geomExists) continue;
+		// geometry must exist              , sometimes a body can get deleted
+		if((not i->functorCache.geomExists)) {
+			continue;
+		}
+		const boost::shared_ptr<const Body> b1 = Body::byId(i->getId1(),scene);
+		const boost::shared_ptr<const Body> b2 = Body::byId(i->getId2(),scene);
+		// If the Body gets deleted after the two lines above, then we hold the last instance of it. And it will be deleted when this part of the loop ends
+		// using `const` makes this threadsafe, because shared_ptr holds a threadsafe atomic count of instances, while const means that we are not writing there.
+		// Only reading the soon-to-be-deleted (in next 50 miliseconds) body position.
+		if((not b1) or (not b2)) {
+			continue;
+		}
 		glColor3v(i->isReal()? Vector3r(0,1,0) : Vector3r(.5,0,1));
-		Vector3r p1=Body::byId(i->getId1(),scene)->state->pos;
+		Vector3r p1=b1->state->pos;
 		const Vector3r& size=scene->cell->getSize();
 		Vector3r shift2(i->cellDist[0]*size[0],i->cellDist[1]*size[1],i->cellDist[2]*size[2]);
 		// in sheared cell, apply shear on the mutual position as well
 		shift2=scene->cell->shearPt(shift2);
-		Vector3r rel=Body::byId(i->getId2(),scene)->state->pos+shift2-p1;
+		Vector3r rel=b2->state->pos+shift2-p1;
 		if(scene->isPeriodic) p1=scene->cell->wrapShearedPt(p1);
 		glBegin(GL_LINES); glVertex3v(p1);glVertex3v(Vector3r(p1+rel));glEnd();
 	}

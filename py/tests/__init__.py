@@ -4,11 +4,22 @@
 import unittest,inspect,sys
 
 # add any new test suites to the list here, so that they are picked up by testAll
-allTests=['wrapper','core','pbc','clump','cohesive-chain','engines']
+allTests=[
+	  'dummyTest'
+	, 'wrapper'
+	, 'core'
+	, 'pbc'
+	, 'clump'
+	, 'cohesive-chain'
+	, 'engines'
+	, 'utilsModule'
+	, 'libVersions'
+]
 
-# all yade modules (ugly...)
-import yade.export,yade.linterpolation,yade.pack,yade.plot,yade.post2d,yade.timing,yade.utils,yade.ymport,yade.geom,yade.gridpfacet
-allModules=(yade.export,yade.linterpolation,yade.pack,yade.plot,yade.post2d,yade.timing,yade.utils,yade.ymport,yade.geom,yade.gridpfacet)
+# add any new yade module (ugly...)
+import yade.export,yade.linterpolation,yade.pack,yade.plot,yade.post2d,yade.timing,yade.utils,yade.ymport,yade.geom,yade.gridpfacet,yade.libVersions
+allModules=(yade.export,yade.linterpolation,yade.pack,yade.plot,yade.post2d,yade.timing,yade.utils,yade.ymport,yade.geom,yade.gridpfacet,yade.libVersions)
+
 try:
 	import yade.qt
 	allModules+=(yade.qt,)
@@ -27,6 +38,11 @@ def testModule(module):
 	suite=unittest.defaultTestLoader.loadTestsFromName(module)
 	return unittest.TextTestRunner(stream=sys.stdout,verbosity=2).run(suite)
 
+# https://docs.python.org/3/library/unittest.html
+# https://stackoverflow.com/questions/10099491/how-does-pythons-unittest-module-detect-test-cases
+# In short: to add a TestCase a class must be written inside python module, like this:
+# class TestSomeYadeModule(unittest.TestCase):
+#	……
 def testAll():
 	"""Run all tests defined in all yade.tests.* modules and return
 	TestResult object for further examination."""
@@ -35,6 +51,4 @@ def testAll():
 	for mod in allModules:
 		suite.addTest(doctest.DocTestSuite(mod))
 	return unittest.TextTestRunner(stream=sys.stdout,verbosity=2).run(suite)
-
-	
 

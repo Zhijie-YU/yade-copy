@@ -119,7 +119,12 @@ void IGeomDispatcher::action(){
 			const shared_ptr<Body>& b1=(*bodies)[I->getId1()];
 			const shared_ptr<Body>& b2=(*bodies)[I->getId2()];
 
-			if(!b1 || !b2){ LOG_DEBUG("Body #"<<(b1?I->getId2():I->getId1())<<" vanished, erasing intr #"<<I->getId1()<<"+#"<<I->getId2()<<"!"); scene->interactions->requestErase(I); continue; }
+			if(!b1 || !b2){
+				// This code is duplicated in Dispatching.cpp:123 and InteractionLoop.cpp:73
+				LOG_DEBUG("Body #"<<(b1?I->getId2():I->getId1())<<" vanished, erasing intr #"<<I->getId1()<<"+#"<<I->getId2()<<"!");
+				scene->interactions->requestErase(I);
+				continue;
+			}
 
 			bool wasReal=I->isReal();
 			if (!b1->shape || !b2->shape) { assert(!wasReal); continue; } // some bodies do not have shape

@@ -1087,9 +1087,9 @@ Matrix3r TetrahedronInertiaTensor(const vector<Vector3r>& v){
 		x4*y3+x1*y4+x2*y4+x3*y4+2*x4*y4)/120.;
 
 	Matrix3r ret; ret<<
-		a   , -b__, -c__,
-		-b__, b   , -a__,
-		-c__, -a__, c    ;
+		 a  , -c__, -b__,
+		-c__,  b  , -a__,
+		-b__, -a__,  c   ;
 	return ret;
 
 	#undef x1

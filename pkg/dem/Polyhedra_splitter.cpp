@@ -78,6 +78,12 @@ void SplitPolyhedraDouble(const PSplitTwo & split){
 
 void PolyhedraSplitter::action()
 {
+	static bool first=true;
+	if(first) {
+		LOG_WARN("be careful, the PolyhedraSplitter returns different results depending on CGAL version! This will not produce reproducible calculations. For details see https://gitlab.com/yade-dev/trunk/issues/45");
+		first=false;
+	}
+
 	const shared_ptr<Scene> _rb=shared_ptr<Scene>();
 	shared_ptr<Scene> rb=(_rb?_rb:Omega::instance().getScene());
 
