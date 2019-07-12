@@ -129,11 +129,11 @@ class PolyhedraGeom: public IGeom{
 		std::vector<int> sep_plane;
 		bool isShearNew;
 	protected:
-		YADE_CLASS_BASE_DOC_ATTRS_CTOR(PolyhedraGeom,IGeom,"Geometry of interaction between 2 :yref:`vector<Polyhedra>`, including volumetric characteristics",
+		YADE_CLASS_BASE_DOC_ATTRS_CTOR(PolyhedraGeom,IGeom,"Geometry of interaction between 2 :yref:`Polyhedra`, including volumetric characteristics",
 			((Real,penetrationVolume,NaN,,"Volume of overlap [m³]"))
 			((Real,equivalentCrossSection,NaN,,"Cross-section area of the overlap (perpendicular to the normal) - not used"))
 			((Real,equivalentPenetrationDepth,NaN,,"volume / equivalentCrossSection - not used"))
-			((Vector3r,contactPoint,Vector3r::Zero(),,"Contact point (global coords), centriod of the overlapping polyhedron"))
+			((Vector3r,contactPoint,Vector3r::Zero(),,"Contact point (global coords), centroid of the overlapping polyhedron"))
 			((Vector3r,shearInc,Vector3r::Zero(),,"Shear displacement increment in the last step"))
 			((Vector3r,normal,Vector3r::Zero(),,"Normal direction of the interaction"))
 			((Vector3r,twist_axis,Vector3r::Zero(),,""))

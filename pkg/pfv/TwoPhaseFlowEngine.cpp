@@ -16,7 +16,7 @@ YADE_PLUGIN((TwoPhaseFlowEngine));
 YADE_PLUGIN((PhaseCluster));
 
 PhaseCluster::~PhaseCluster(){
-	#ifdef CHOLMOD_LIBS
+	#ifdef LINSOLV
 	resetSolver();
 	#endif
 }
@@ -35,7 +35,7 @@ void PhaseCluster::solvePressure()
 		vector<double> RHSvol;
 		
 		vector<CellHandle> pCells;//the pores in which pressure will be solved
-#ifdef CHOLMOD_LIBS
+#ifdef LINSOLV
 		for (vector<CellHandle>::iterator cellIt =  pores.begin(); cellIt!=pores.end(); cellIt++) {
 			CellHandle cell = *cellIt;
 			if ((!cell->info().Pcondition) && !cell->info().blocked) {cell->info().index= ncols++; pCells.push_back(cell);}
@@ -2652,9 +2652,10 @@ vector<int> TwoPhaseFlowEngine::clusterOutvadePore(unsigned startingId, unsigned
 	CellHandle& newPore = solver->tesselation().cellHandles[imbibedId];
 	PhaseCluster* cluster = clusters[origin->info().label].get();
 	cluster->resetSolver();//reset the linear system
-	//unsigned facet; // Note by Janek: warning: unused variable ‘facet’ [-Wunused-variable]
 	clusterGetPore(cluster,newPore);
-	unsigned facetIdx;
+	//NOTE: the code below could be a starting point for more efficient removal, it's currently useless (and parameter index as well)
+	// Further, removing from lists should be faster than from vectors, OTOH we probably also need access by index.
+	/*unsigned facetIdx;
 	if (	index>=0 and unsigned(index)<cluster->interfaces.size() and
 		cluster->interfaces[index].first.first == startingId and
 		cluster->interfaces[index].first.second == imbibedId)  {
@@ -2663,10 +2664,7 @@ vector<int> TwoPhaseFlowEngine::clusterOutvadePore(unsigned startingId, unsigned
 	  if (index>=0) LOG_WARN("index mismatch wrt. cell ids");
 	  for (facetIdx=0; cluster->interfaces[facetIdx].first.first != startingId or cluster->interfaces[facetIdx].first.second!=imbibedId; facetIdx++)
 		{if ((facetIdx+1)>=cluster->interfaces.size()) LOG_WARN("interface not found");}
-	} 
-	
-	vector<unsigned> interfacesToRemove = {facetIdx};
-	vector<unsigned> interfacesToAdd;
+	}*/	
 	bool updateIntfs=false;//if turned true later we will have to clean interfaces
 	vector<int> merged = {cluster->label};
 	
@@ -2763,7 +2761,7 @@ vector<int> TwoPhaseFlowEngine::clusterInvadePoreFast(PhaseCluster* cluster, Cel
 	if (label!=cluster->label) LOG_WARN("wrong label");
 	if (cell->info().Pcondition) {if (solver->debugOut) LOG_WARN("invading a Pcondition pore (ignored)"); return vector<int>(1,label);}
 	const RTriangulation& Tri = solver->T[solver->currentTes].Triangulation();
-#ifdef CHOLMOD_LIBS
+#ifdef LINSOLV
 	cluster->resetSolver();
 #endif
 	unsigned id = cell->info().id;

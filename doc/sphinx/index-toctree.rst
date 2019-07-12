@@ -67,6 +67,8 @@ Theoretical background and extensions
 
   HydroForceEngine.rst
 
+  potentialparticles.rst
+
 ######################################
 Performance enhancements
 ######################################

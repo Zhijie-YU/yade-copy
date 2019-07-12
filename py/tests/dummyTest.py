@@ -1,5 +1,4 @@
 import unittest
-import yade.libVersions
 
 class TestDummy(unittest.TestCase):
 	def setUp(self):

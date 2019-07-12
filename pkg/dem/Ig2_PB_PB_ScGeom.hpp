@@ -3,7 +3,6 @@
 /* CW Boon, GT Houlsby, S Utili (2013).  A new algorithm for contact detection between convex polygonal and polyhedral particles in the discrete element method.  Computers and Geotechnics 44, 73-82. */
 /* The numerical library is changed from CPLEX to CLP because subscription to the academic initiative is required to use CPLEX for free */
 
-
 #ifdef YADE_POTENTIAL_BLOCKS
 
 #pragma once
@@ -15,23 +14,12 @@
 #include<Eigen/Core>
 #include <stdio.h>
 
-# if 0
-#include <mosek.h> 
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#endif
-
 #include <ClpSimplex.hpp>
 #include <CoinHelperFunctions.hpp>
 #include <CoinTime.hpp>
 #include <CoinBuild.hpp>
 #include <CoinModel.hpp>
-//#include "/home/boon/coin-Clp/Clp/src/ClpSimplex.hpp"
-//#include "/home/boon/coin-Clp/CoinUtils/src/CoinHelperFunctions.hpp"
-//#include "/home/boon/coin-Clp/CoinUtils/src/CoinTime.hpp"
-//#include "/home/boon/coin-Clp/CoinUtils/src/CoinBuild.hpp"
-//#include "/home/boon/coin-Clp/CoinUtils/src/CoinModel.hpp"
+
 #include <iomanip>
 #include <cassert>
 
@@ -39,15 +27,6 @@ class Ig2_PB_PB_ScGeom: public IGeomFunctor
 {
 
 	//protected:
-		//static std::ofstream output;
-#if 0
-		std::string myfile;
-		std::string Key;
-		MSKrescodee mosekTaskEnv;
-		MSKenv_t    mosekEnv;
-	
-#endif
-
 
 	public :
 		virtual bool go(const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& se32, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c);
@@ -58,11 +37,11 @@ class Ig2_PB_PB_ScGeom: public IGeomFunctor
 		void getPtOnParticle2(const shared_ptr<Shape>& cm1, const State& state1, Vector3r previousPt, Vector3r normal, Vector3r& newlocalPoint);
 		void getPtOnParticleArea(const shared_ptr<Shape>& cm1, const State& state1, Vector3r previousPt, Vector3r normal, Vector3r& newlocalPoint);
 		bool getPtOnParticleAreaNormal(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r previousPt, const Vector3r prevDir, const int prevNo, Vector3r& newlocalPoint, Vector3r& newNormal, int& newNo);
-		bool contactPtMosekF2(const shared_ptr<Shape>& cm1, const State& state1, const shared_ptr<Shape>& cm2, const State& state2, Vector3r &contactPt);
 		double getDet(const Eigen::MatrixXd A);
+
 		bool customSolve(const shared_ptr<Shape>& cm1, const State& state1, const shared_ptr<Shape>& cm2, const State& state2, Vector3r &contactPt, bool warmstart);
-		
 		double evaluatePhys(const shared_ptr<Shape>& cm1,  const State& state1, const Vector3r newTrial, double& phi_b, double& phi_r, double& JRC, double& JSC, double& cohesion, double& ks, double& kn, double& tension, double &lambda0, double &heatCapacity, double &hwater, bool &intactRock, int &activePlanesNo, int &jointType);
+
 		Vector3r getNormal(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r newTrial);
 		
 		void BrentZeroSurf(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r bracketA, const Vector3r bracketB, Vector3r& zero);
@@ -73,29 +52,19 @@ class Ig2_PB_PB_ScGeom: public IGeomFunctor
 	/////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
-
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(Ig2_PB_PB_ScGeom,IGeomFunctor,"PB",		
 			((double, accuracyTol, pow(10,-7),, "accuracy desired, tolerance criteria for SOCP"))
 			((double, stepAngle, pow(10,-2),, ""))
 			((double,interactionDetectionFactor,1.0,,""))
 			((Vector3r, twoDdir, Vector3r(0,1,0),, "direction of 2D"))
 			((bool,twoDimension,false,,"bool whether 2D")),
-			//((std::string,myfile,"./PotentialBlocks"+"","string")),
-			//timingDeltas=shared_ptr<TimingDeltas>(new TimingDeltas);
-			//mosekTaskEnv = MSK_makeenv(&mosekEnv,NULL,NULL,NULL,NULL);
-			//mosekTaskEnv = MSK_initenv(mosekEnv);
 	);
 
-	
-	
 
 	FUNCTOR2D(PotentialBlock,PotentialBlock);
 	// needed for the dispatcher, even if it is symmetric
 	DEFINE_FUNCTOR_ORDER_2D(PotentialBlock,PotentialBlock);
 	DECLARE_LOGGER;
-
-	
-	
 
 };
 

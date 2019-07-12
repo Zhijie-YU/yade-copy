@@ -9,7 +9,6 @@ compFricDegree = 3 # initial contact friction during the confining phase
 finalFricDegree = 30 # contact friction during the deviatoric loading
 mn,mx=Vector3(0,0,0),Vector3(1,1,0.4) # corners of the initial packing
 graindensity=2600
-errors=0
 toleranceWarning =1.e-11
 toleranceCritical=1.e-6
 
@@ -250,7 +249,7 @@ file=open('Test.txt',"w")
 checkdifference=0
 def equilibriumtest():
    global F33,F22,checkdifference,errors
-   #unbalanced=utils.unbalancedForce()
+   #unbalanced=unbalancedForce()
    F33=abs(O.forces.f(flow.wallIds[flow.ymax])[1])
    F22=abs(O.forces.f(flow.wallIds[flow.ymin])[1])
    #F11 =abs(O.forces.f(flow.wallIds[flow.xmax])[0]),
@@ -263,23 +262,21 @@ def equilibriumtest():
      if checkdifference==0:
        print('check F done')
        if deltaF>0.01*press:
-         print('Error: too high difference between forces acting at the bottom and upper walls')
-         errors+=1
+         raise YadeCheckError('Error: too high difference between forces acting at the bottom and upper walls')
          #O.pause()
        checkdifference=1
  
 
 once=0
 def fluxtest():  
-   global once,errors,QinOk
+   global once,QinOk
    no=0
    QinOk=-Qin-deltabubble
    error=QinOk-total
    if error>toleranceWarning:
       print("Warning: difference between total water volume flowing through bottom wall and water loss due to air bubble generations",QinOk," vs. total water volume flowing inside dry or partially saturated cells",total)
    if error>toleranceCritical:
-      print("The difference is more, than the critical tolerance!")
-      errors+=1
+      raise YadeCheckError("The difference is more, than the critical tolerance!")
    file.write(str(O.time)+" "+str(QinOk)+" "+str(error)+" \n")
    for ii in range(nvoids):
      if bar[ii]>=initiallevel:
@@ -292,14 +289,10 @@ def fluxtest():
          if voidvol-total>toleranceWarning:
            print("Warning: initial volume of dry voids",voidvol," vs. total water volume flowing inside dry or partially saturated cells",total)
          if voidvol-total>toleranceCritical:
-           print("The difference is more, than the critical tolerance!")
-           errors+=1
-         print(errors)
-         file.write(str(imbtime)+" "+str(voidvol)+" "+str(total)+" "+str(QinOk)+" "+str(errors)+"\n")
+           raise YadeCheckError("The difference is more, than the critical tolerance!")
+         file.write(str(imbtime)+" "+str(voidvol)+" "+str(total)+" "+str(QinOk)+"\n")
          once=1
          timing.stats()
-         if (errors):
-                resultStatus +=1
    
 
 def addPlotData():
@@ -330,5 +323,9 @@ O.timingEnabled=True
 #file.close()
 #plot.saveDataTxt('plots.txt',vars=('i1','t','Fupper','Fbottom','Q','T'))
 
-
+import tempfile, shutil
+dirpath = tempfile.mkdtemp()
+for fileName in ['./vtk', './Test.txt' ]:
+  if (os.path.exists(fileName)): shutil.move(fileName,dirpath)
+  print("File %s moved into %s/ directory"%(fileName,dirpath))
 

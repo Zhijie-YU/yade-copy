@@ -13,6 +13,7 @@
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/variate_generator.hpp>
+#include <boost/optional.hpp>
 
 YADE_PLUGIN((HydroForceEngine));
 
@@ -217,7 +218,10 @@ void HydroForceEngine::averageProfile(){
 
 void HydroForceEngine::averageProfilePP(){
 	//Initialization
-	double volPart;
+	// I had a warning ‘volPart’ may be used uninitialized in this function [-Wmaybe-uninitialized], but I don't know what should be the initialization value
+	// so instead I use optional which remembers when it is not initialized. // Janek
+	// BTW, you should better use Real instead of double.
+	boost::optional<double> volPart = boost::make_optional<double>(false,-10);
 	Vector3r uRel = Vector3r::Zero();
 	Vector3r fDrag  = Vector3r::Zero();
 
@@ -257,7 +261,7 @@ void HydroForceEngine::averageProfilePP(){
                         velAverageZ[n]/=phiAverage[n];
 			dragAverage[n]/=phiAverage[n];
 			//Normalize the concentration after
-			phiAverage[n]*=(volPart/vCell);
+			phiAverage[n]*=(volPart.value()/vCell);
 		}
 		else {
 			velAverageX[n] = 0.0;

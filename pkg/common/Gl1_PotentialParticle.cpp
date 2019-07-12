@@ -1,4 +1,5 @@
 /*CWBoon 2015 */
+#include<lib/compatibility/VTKCompatibility.hpp> // fix InsertNextTupleValue → InsertNextTuple name change (and others in the future)
 #ifdef YADE_POTENTIAL_PARTICLES
 #include "Gl1_PotentialParticle.hpp"
 
@@ -56,17 +57,17 @@
 
 #ifdef YADE_OPENGL
 void Gl1_PotentialParticle::calcMinMax(const PotentialParticle& pp) {
-	int planeNo = pp.d.size();
-	Real maxD = pp.d[0];
+//	int planeNo = pp.d.size();
+//	Real maxD = pp.d[0];
 
-	for (int i=0; i<planeNo; ++i) {
-		if (pp.d[i] > maxD) {
-			maxD = pp.d[i];
-		}
-	}
+//	for (int i=0; i<planeNo; ++i) {
+//		if (pp.d[i] > maxD) {
+//			maxD = pp.d[i];
+//		}
+//	}
 
-	min = -aabbEnlargeFactor*pp.minAabbRotated;
-	max =  aabbEnlargeFactor*pp.maxAabbRotated;
+	min = -aabbEnlargeFactor*pp.minAabb;
+	max =  aabbEnlargeFactor*pp.maxAabb;
 
 	Real dx = (max[0]-min[0])/((Real)(sizeX-1));
 	Real dy = (max[1]-min[1])/((Real)(sizeY-1));
@@ -80,7 +81,7 @@ void Gl1_PotentialParticle::generateScalarField(const PotentialParticle& pp) {
 	for(int i=0; i<sizeX; i++) {
 		for(int j=0; j<sizeY; j++) {
 			for(int k=0; k<sizeZ; k++) {
-				scalarField[i][j][k] = evaluateF(pp,  min[0]+ Real(i)*isoStep[0],  min[1]+ Real(j)*isoStep[1],  min[2]+Real(k)*isoStep[2]);//
+				scalarField[i][j][k] = evaluateF(pp,  min[0]+ Real(i)*isoStep[0],  min[1]+ Real(j)*isoStep[1],  min[2]+Real(k)*isoStep[2]);
 			}
 		}
 	}
@@ -94,6 +95,8 @@ Real Gl1_PotentialParticle::aabbEnlargeFactor;
 bool Gl1_PotentialParticle::store;
 bool Gl1_PotentialParticle::initialized;
 
+
+bool Gl1_PotentialParticle::wire;
 
 void Gl1_PotentialParticle::go( const shared_ptr<Shape>& cm, const shared_ptr<State>& state ,bool wire2, const GLViewInfo&) {
 
@@ -120,7 +123,7 @@ void Gl1_PotentialParticle::go( const shared_ptr<Shape>& cm, const shared_ptr<St
 			generateScalarField(*cmbody);
 			mc.computeTriangulation(scalarField,0.0);
 			SF[b->id].triangles = mc.getTriangles();
-			SF[b->id].normals = mc.getNormals();
+//			SF[b->id].normals = mc.getNormals();
 			SF[b->id].nbTriangles = mc.getNbTriangles();
 			for(unsigned int i=0; i<scalarField.size(); i++) {
 				for(unsigned int j=0; j<scalarField[i].size(); j++) scalarField[i][j].clear();
@@ -131,32 +134,70 @@ void Gl1_PotentialParticle::go( const shared_ptr<Shape>& cm, const shared_ptr<St
 		initialized = true;
 	}
 
-	// FIXME : check that : one of those 2 lines are useless
-	glMaterialv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, Vector3r(cm->color[0],cm->color[1],cm->color[2]));
-	glColor3v(cm->color);
+
+		const vector<Vector3r>& triangles = SF[shapeId].triangles; //mc.getTriangles();
+		int nbTriangles = SF[shapeId].nbTriangles; // //mc.getNbTriangles();
+//		const vector<Vector3r>& normals = SF[shapeId].normals; //mc.getNormals();
+
+		glMaterialv(GL_FRONT_AND_BACK, GL_AMBIENT_AND_DIFFUSE, Vector3r(pp->color[0],pp->color[1],pp->color[2]));
+		glColor3v(pp->color);
+
+		if (wire || wire2) {
+			glDisable(GL_CULL_FACE);
+			glDisable(GL_LIGHTING);
+			glBegin(GL_LINES);
+			for(int i=0; i<3*nbTriangles; i+=3) {
+				glVertex3v(triangles[i+0]); glVertex3v(triangles[i+1]);
+				glVertex3v(triangles[i+0]); glVertex3v(triangles[i+2]);
+				glVertex3v(triangles[i+1]); glVertex3v(triangles[i+2]);
+			}
+			glEnd();
+		} else {
+			glDisable(GL_CULL_FACE);
+//			glEnable(GL_CULL_FACE);
+//			glEnable(GL_NORMALIZE);
+			glEnable(GL_LIGHTING); // 2D
+
+			// Use the normal vector of each face
+			Vector3r centroid=Vector3r(0,0,0);
+			glBegin(GL_TRIANGLES);
+			for(int i=0; i<3*nbTriangles; i+=3) {
+				const auto a = triangles[i+0];
+				const auto b = triangles[i+1];
+				const auto c = triangles[i+2];
+				
+				Vector3r n=(b-a).cross(c-a);
+				n.normalize();
+				Vector3r faceCenter=(a+b+c)/3.;
+				if((-faceCenter-centroid).dot(n)<0) n=-n;
+				
+				glNormal3v(n);
+				glVertex3v(a);
+				glVertex3v(b);
+				glVertex3v(c);
+			}
+			glEnd();
+
+			// Alternativelly, use the normal vector of each vertex. To use this, the "normals" variable must be uncommented above and in the headers' file.
+//			glBegin(GL_TRIANGLES);
+//			for(int i=0; i<3*nbTriangles; i+=3) {
+//				glNormal3v(normals[i+0]); glVertex3v(triangles[i+0]); 
+//				glNormal3v(normals[i+1]); glVertex3v(triangles[i+1]);
+//				glNormal3v(normals[i+2]); glVertex3v(triangles[i+2]);
+//			}
+//			glEnd();
 
 
-	const vector<Vector3r>& triangles = SF[shapeId].triangles; //mc.getTriangles();
-	int nbTriangles = SF[shapeId].nbTriangles; // //mc.getNbTriangles();
-	const vector<Vector3r>& normals = SF[shapeId].normals; //mc.getNormals();
 
-	glDisable(GL_CULL_FACE);
-	glEnable(GL_LIGHTING); // 2D
-	glEnable(GL_NORMALIZE);
-	glBegin(GL_TRIANGLES);
-
-	for(int i=0; i<3*nbTriangles; ++i) {
-		glNormal3v(normals[i]);
-		glVertex3v(triangles[i]);
-		glNormal3v(normals[++i]);
-		glVertex3v(triangles[i]);
-		glNormal3v(normals[++i]);
-		glVertex3v(triangles[i]);
-	}
-	glEnd();
-
+		}
 	return;
 }
+
+
+
+
+
+
 
 
 
@@ -164,7 +205,6 @@ Real Gl1_PotentialParticle::evaluateF(const PotentialParticle& pp, Real x, Real 
 	Real k = pp.k;
 	Real r = pp.r;
 	Real R = pp.R;
-
 
 	int planeNo = pp.a.size();
 
@@ -374,27 +414,26 @@ void PotentialParticleVTKRecorder::action() {
 		Real ymax=-ymin;
 		Real zmin=-std::max(pb->minAabb.z(),pb->maxAabb.z());
 		Real zmax=-zmin;
-		if(twoDimension==true) {
-			ymax = 0.0;
-			ymin = 0.0;
+
+		if (twoDimension == true){
+			if(sampleY < 2){ ymin = 0.0; ymax = 0.0; } 
+		   else if(sampleZ < 2){ zmin = 0.0; zmax = 0.0; }
 		}
+
 		sample->SetModelBounds(xmin, xmax, ymin, ymax, zmin, zmax);
 		//sample->SetModelBounds(pb->minAabb.x(), pb->maxAabb.x(), pb->minAabb.y(), pb->maxAabb.y(), pb->minAabb.z(), pb->maxAabb.z());
 		int sampleXno = sampleX;
 		int sampleYno = sampleY;
 		int sampleZno = sampleZ;
-		if(fabs(xmax-xmin)/static_cast<Real>(sampleX) > maxDimension) {
-			sampleXno = static_cast<int>(fabs(xmax-xmin)/maxDimension);
+		if(fabs(xmax-xmin)/static_cast<Real>(sampleX) > maxDimension) { sampleXno = static_cast<int>(fabs(xmax-xmin)/maxDimension); }
+		if(fabs(ymax-ymin)/static_cast<Real>(sampleY) > maxDimension) {	sampleYno = static_cast<int>(fabs(ymax-ymin)/maxDimension); }
+		if(fabs(zmax-zmin)/static_cast<Real>(sampleZ) > maxDimension) { sampleZno = static_cast<int>(fabs(zmax-zmin)/maxDimension); }
+
+		if (twoDimension == true){
+			if(sampleY < 2){ sampleYno = 1; }
+		   else if(sampleZ < 2){ sampleZno = 1;	}
 		}
-		if(fabs(ymax-ymin)/static_cast<Real>(sampleY) > maxDimension) {
-			sampleYno = static_cast<int>(fabs(ymax-ymin)/maxDimension);
-		}
-		if(fabs(zmax-zmin)/static_cast<Real>(sampleZ) > maxDimension) {
-			sampleZno = static_cast<int>(fabs(zmax-zmin)/maxDimension);
-		}
-		if(twoDimension==true) {
-			sampleYno=1;
-		}
+
 		sample->SetSampleDimensions(sampleXno,sampleYno,sampleZno);
 		sample->ComputeNormalsOff();
 		//sample->Update();
@@ -428,7 +467,7 @@ void PotentialParticleVTKRecorder::action() {
 		c[2]=color[2];
 		int nbCells=polydata->GetNumberOfPoints();
 		for (int i=0; i<nbCells; i++) {
-			pbColors->InsertNextTupleValue(c);
+			pbColors->INSERT_NEXT_TYPED_TUPLE(c);
 		}
 		polydata->GetPointData()->SetScalars(pbColors);
 		//polydata->Update();
@@ -469,14 +508,14 @@ void PotentialParticleVTKRecorder::action() {
 			v[0]=vel[0];
 			v[1]=vel[1];
 			v[2]=vel[2];
-			pbLinVelVec->InsertNextTupleValue(v);
+			pbLinVelVec->INSERT_NEXT_TUPLE(v);
 			pbLinVelLen->InsertNextValue(vel.norm());
 			const Vector3r& angVel = b->state->angVel;
 			float av[3]; //av = { angVel[0],angVel[1],angVel[2] };
 			av[0]=angVel[0];
 			av[1]=angVel[1];
 			av[2]=angVel[2];
-			pbAngVelVec->InsertNextTupleValue(av);
+			pbAngVelVec->INSERT_NEXT_TUPLE(av);
 			pbAngVelLen->InsertNextValue(angVel.norm());
 		}
 		// ################ velocity ###########################
@@ -548,8 +587,8 @@ void PotentialParticleVTKRecorder::action() {
 			// gives _signed_ scalar of normal force, following the convention used in the respective constitutive law
 			float fn[3]= {(float)phys->normalForce[0], (float)phys->normalForce[1], (float)phys->normalForce[2]};
 			float fs[3]= {(float)phys->shearForce[0],  (float)phys->shearForce[1],  (float)phys->shearForce[2]};
-			pbNormalForce->InsertNextTupleValue(fn);
-			pbShearForce->InsertNextTupleValue(fs);
+			pbNormalForce->INSERT_NEXT_TUPLE(fn);
+			pbShearForce->INSERT_NEXT_TUPLE(fs);
 			count++;
 		}
 		if(count>0) {

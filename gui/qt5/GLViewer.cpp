@@ -63,9 +63,6 @@ GLViewer::GLViewer(int _viewId, const shared_ptr<OpenGLRenderer>& _renderer, QGL
 	if(viewId==0) setWindowTitle("Primary view");
 	else setWindowTitle(("Secondary view #"+boost::lexical_cast<string>(viewId)).c_str());
 
-	show();
-	
-	mouseMovesCamera();
 	manipulatedClipPlane=-1;
 
 	if(manipulatedFrame()==0) setManipulatedFrame(new qglviewer::ManipulatedFrame());
@@ -109,7 +106,9 @@ GLViewer::GLViewer(int _viewId, const shared_ptr<OpenGLRenderer>& _renderer, QGL
 	setKeyDescription(Qt::Key_9,"Load [Alt: save] view configuration #2");
 	setKeyDescription(Qt::Key_Space,"Center scene (same as Alt-C); clip plane: activate/deactivate");
 
+	mouseMovesCamera();
 	centerScene();
+	show();
 }
 
 bool GLViewer::isManipulating(){
@@ -295,7 +294,7 @@ void GLViewer::keyPressEvent(QKeyEvent *e)
 #endif
 
 	else if(e->key()!=Qt::Key_Escape && e->key()!=Qt::Key_Space) QGLViewer::keyPressEvent(e);
-	updateGL();
+	updateGLViewer();
 }
 /* Center the scene such that periodic cell is contained in the view */
 void GLViewer::centerPeriodic(){

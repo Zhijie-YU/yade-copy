@@ -273,7 +273,7 @@ def facet(vertices,dynamic=None,fixed=True,wire=True,color=None,highlight=False,
 	return b
 
 
-def tetraPoly(vertices,dynamic=True,fixed=False,wire=True,color=None,highlight=False,noBound=False,material=-1,mask=1,chain=-1):
+def tetraPoly(vertices,fixed=False,wire=True,color=None,highlight=False,noBound=False,material=-1,mask=1,chain=-1):
 	"""Create tetrahedron (actually simple Polyhedra) with given parameters.
 
 	:param [Vector3,Vector3,Vector3,Vector3] vertices: coordinates of vertices in the global coordinate system.
@@ -291,7 +291,7 @@ def tetraPoly(vertices,dynamic=True,fixed=False,wire=True,color=None,highlight=F
 	b.chain=chain
 	return b
 
-def tetra(vertices,strictCheck=True,dynamic=True,fixed=False,wire=True,color=None,highlight=False,noBound=False,material=-1,mask=1,chain=-1):
+def tetra(vertices,strictCheck=True,fixed=False,wire=True,color=None,highlight=False,noBound=False,material=-1,mask=1,chain=-1):
 	"""Create tetrahedron with given parameters.
 
 	:param [Vector3,Vector3,Vector3,Vector3] vertices: coordinates of vertices in the global coordinate system.
@@ -319,7 +319,7 @@ def tetra(vertices,strictCheck=True,dynamic=True,fixed=False,wire=True,color=Non
 	b.chain = chain
 	return b
 
-def polyhedron(vertices,dynamic=True,fixed=False,wire=True,color=None,highlight=False,noBound=False,material=-1,mask=1,chain=-1):
+def polyhedron(vertices,fixed=False,wire=True,color=None,highlight=False,noBound=False,material=-1,mask=1,chain=-1):
 	"""Create polyhedron with given parameters.
 
 	:param [[Vector3]] vertices: coordinates of vertices in the global coordinate system.
@@ -360,11 +360,12 @@ def facetCylinder(*args,**kw):
 	return geom.facetCylinder(*args,**kw)
 	
 def aabbWalls(extrema=None,thickness=0,oversizeFactor=1.5,**kw):
-	"""Return 6 boxes that will wrap existing packing as walls from all sides;
-	extrema are extremal points of the Aabb of the packing (will be calculated if not specified)
-	thickness is wall thickness (will be 1/10 of the X-dimension if not specified)
-	Walls will be enlarged in their plane by oversizeFactor.
-	returns list of 6 wall Bodies enclosing the packing, in the order minX,maxX,minY,maxY,minZ,maxZ.
+	"""Return 6 boxes that will wrap existing packing as walls from all sides.
+	
+	:param extrema: extremal points of the Aabb of the packing, as a list of two Vector3, or any equivalent type (will be calculated if not specified)
+	:param float thickness: is wall thickness (will be 1/10 of the X-dimension if not specified)
+	:param float oversizeFactor: factor to enlarge walls in their plane.
+	:returns: a list of 6 wall Bodies enclosing the packing, in the order minX,maxX,minY,maxY,minZ,maxZ.
 	"""
 	walls=[]
 	if not extrema: extrema=aabbExtrema()
@@ -407,7 +408,7 @@ def perpendicularArea(axis):
 	return (ext[1][other[0]]-ext[0][other[0]])*(ext[1][other[1]]-ext[0][other[1]])
 
 def fractionalBox(fraction=1.,minMax=None):
-	"""retrurn (min,max) that is the original minMax box (or aabb of the whole simulation if not specified)
+	"""Return (min,max) that is the original minMax box (or aabb of the whole simulation if not specified)
 	linearly scaled around its center to the fraction factor"""
 	if not minMax: minMax=aabbExtrema()
 	half=[.5*(minMax[1][i]-minMax[0][i]) for i in [0,1,2]]

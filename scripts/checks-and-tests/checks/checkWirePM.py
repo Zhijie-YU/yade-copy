@@ -145,4 +145,4 @@ if abs((Fn-6458.9)/6458.9)>tolerance :
 	errors+=1
 
 if (errors):
-	resultStatus +=1	#Test is failed
+	raise YadeCheckError("Test is failed")

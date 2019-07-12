@@ -27,6 +27,10 @@
 
 #include "pygts.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+
+
 
 #if PYGTS_DEBUG
   #define SELF_CHECK if(!pygts_edge_check((PyObject*)self)) {         \
@@ -636,3 +640,6 @@ pygts_parent_edge_class(void)
 
   return klass;
 }
+
+#pragma GCC diagnostic pop
+

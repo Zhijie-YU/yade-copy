@@ -3,42 +3,37 @@
 /* CW Boon, GT Houlsby, S Utili (2015).  Designing Tunnel Support in Jointed Rock Masses Via the DEM.  Rock Mechanics and Rock Engineering,  48 (2), 603-632. */
 #ifdef YADE_POTENTIAL_BLOCKS
 #pragma once
-#include<pkg/dem/PotentialBlock.hpp>
-#include<pkg/dem/PotentialBlock2AABB.hpp>
+#include <pkg/dem/PotentialBlock.hpp>
+#include <pkg/dem/PotentialBlock2AABB.hpp>
 
 #include <vector>
 #include <pkg/common/PeriodicEngines.hpp>
 
 #include <stdio.h>
 
-
-
-
-
 #include <vtkPolyData.h>
-#include<vtkXMLUnstructuredGridWriter.h>
 
 // https://codeyarns.com/2014/03/11/how-to-selectively-ignore-a-gcc-warning/
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wcomment"
 // Code that generates this warning, Note: we cannot do this trick in yade. If we have a warning in yade, we have to fix it! See also https://gitlab.com/yade-dev/trunk/merge_requests/73
 // This method will work once g++ bug https://gcc.gnu.org/bugzilla/show_bug.cgi?id=53431#c34 is fixed.
-#include<vtkTriangle.h>
+#include <vtkTriangle.h>
 #pragma GCC diagnostic pop
 
-#include<vtkSmartPointer.h>
-#include<vtkFloatArray.h>
-#include<vtkCellArray.h>
-#include<vtkCellData.h>
+#include <vtkSmartPointer.h>
+#include <vtkFloatArray.h>
+#include <vtkCellArray.h>
+#include <vtkCellData.h>
 #include <vtkStructuredPoints.h>
-#include<vtkStructuredPointsWriter.h>
-#include<vtkWriter.h>
-#include<vtkExtractVOI.h>
-#include<vtkXMLImageDataWriter.h>
-#include<vtkXMLStructuredGridWriter.h>
-#include<vtkTransformPolyDataFilter.h>
-#include<vtkTransform.h>
-#include<vtkXMLUnstructuredGridWriter.h>
+#include <vtkStructuredPointsWriter.h>
+#include <vtkWriter.h>
+#include <vtkExtractVOI.h>
+#include <vtkXMLImageDataWriter.h>
+#include <vtkXMLStructuredGridWriter.h>
+#include <vtkXMLUnstructuredGridWriter.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkTransform.h>
 #include <vtkAppendPolyData.h>
 #include <vtkCylinderSource.h>
 
@@ -47,11 +42,7 @@
 #include <CoinTime.hpp>
 #include <CoinBuild.hpp>
 #include <CoinModel.hpp>
-//#include "/home/boon/coin-Clp/Clp/src/ClpSimplex.hpp"
-//#include "/home/boon/coin-Clp/CoinUtils/src/CoinHelperFunctions.hpp"
-//#include "/home/boon/coin-Clp/CoinUtils/src/CoinTime.hpp"
-//#include "/home/boon/coin-Clp/CoinUtils/src/CoinBuild.hpp"
-//#include "/home/boon/coin-Clp/CoinUtils/src/CoinModel.hpp"
+
 
 class RockLiningGlobal: public PeriodicEngine{	
 	protected:

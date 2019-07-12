@@ -4,34 +4,30 @@
 /* The numerical library is changed from CPLEX to CLP because subscription to the academic initiative is required to use CPLEX for free */
 #ifdef YADE_POTENTIAL_BLOCKS
 
+#include <core/Clump.hpp>
+#include <pkg/dem/KnKsPBLaw.hpp>
 
-
-#include<core/Clump.hpp>
-#include<pkg/dem/KnKsPBLaw.hpp>
-
-#include<pkg/dem/GlobalStiffnessTimeStepper.hpp>
-#include<pkg/common/ElastMat.hpp>
-#include<pkg/dem/TriaxialStressController.hpp>
-#include<pkg/dem/TriaxialCompressionEngine.hpp>
+#include <pkg/dem/GlobalStiffnessTimeStepper.hpp>
+#include <pkg/common/ElastMat.hpp>
+#include <pkg/dem/TriaxialStressController.hpp>
+#include <pkg/dem/TriaxialCompressionEngine.hpp>
 #include <pkg/dem/TriaxialStateRecorder.hpp>
-#include<pkg/common/Aabb.hpp>
-#include<core/Scene.hpp>
-#include<pkg/common/InsertionSortCollider.hpp>
-#include<core/Interaction.hpp>
-#include<pkg/common/Dispatching.hpp>
-#include<pkg/common/GravityEngines.hpp>
-#include<pkg/dem/NewtonIntegrator.hpp>
-#include<pkg/dem/PotentialBlock.hpp>
-#include<pkg/common/Dispatching.hpp>
-#include<core/Body.hpp>
-#include<pkg/common/Box.hpp>
-#include<pkg/common/Sphere.hpp>
-#include<pkg/common/Facet.hpp>
-#include<pkg/common/Wall.hpp>
-#include<pkg/common/ForceResetter.hpp>
-#include<pkg/common/InteractionLoop.hpp>
-#include<pkg/dem/Shop.hpp>
-#include<pkg/dem/PotentialBlock.hpp>
+#include <pkg/common/Aabb.hpp>
+#include <core/Scene.hpp>
+#include <pkg/common/InsertionSortCollider.hpp>
+#include <core/Interaction.hpp>
+#include <pkg/common/Dispatching.hpp>
+#include <pkg/common/GravityEngines.hpp>
+#include <pkg/dem/NewtonIntegrator.hpp>
+#include <pkg/dem/PotentialBlock.hpp>
+#include <core/Body.hpp>
+#include <pkg/common/Box.hpp>
+#include <pkg/common/Sphere.hpp>
+#include <pkg/common/Facet.hpp>
+#include <pkg/common/Wall.hpp>
+#include <pkg/common/ForceResetter.hpp>
+#include <pkg/common/InteractionLoop.hpp>
+#include <pkg/dem/Shop.hpp>
 #include <boost/filesystem/convenience.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/numeric/conversion/bounds.hpp>
@@ -40,7 +36,6 @@
 #include <boost/random/linear_congruential.hpp>
 #include <boost/random/uniform_real.hpp>
 #include <boost/random/variate_generator.hpp>
-#include <boost/random/normal_distribution.hpp>
 #include<pkg/dem/SpherePack.hpp>
 //#include<pkg/dem/MicroMacroAnalyser.hpp>
 
@@ -83,31 +78,40 @@ bool BlockGen::generate(string& message)
 	firstBlockCentre.z() = 0.0; //0.5*(boundarySizeZmax + boundarySizeZmin);
 	blk.push_back(Block(firstBlockCentre,kForPP, rForPP, RForPP));
 	
-	Real xmin = fabs(firstBlockCentre.x() - boundarySizeXmin);
+	Real xmin = fabs( firstBlockCentre.x() - boundarySizeXmin);
 	Real xmax = fabs(-firstBlockCentre.x() + boundarySizeXmax);
-	Real ymin = fabs(firstBlockCentre.y() - boundarySizeYmin);
+	Real ymin = fabs( firstBlockCentre.y() - boundarySizeYmin);
 	Real ymax = fabs(-firstBlockCentre.y() + boundarySizeYmax);
-	Real zmin = fabs(firstBlockCentre.z() - boundarySizeZmin);
+	Real zmin = fabs( firstBlockCentre.z() - boundarySizeZmin);
 	Real zmax = fabs(-firstBlockCentre.z() + boundarySizeZmax);
-	blk[0].a.push_back(1.0); blk[0].a.push_back(-1.0); blk[0].a.push_back(0.0); blk[0].a.push_back(0.0); blk[0].a.push_back(0.0); blk[0].a.push_back(0.0); 
-	blk[0].b.push_back(0.0); blk[0].b.push_back(0.0);  blk[0].b.push_back(1.0); blk[0].b.push_back(-1.0); blk[0].b.push_back(0.0); blk[0].b.push_back(0.0);
-	blk[0].c.push_back(0.0); blk[0].c.push_back(0.0);  blk[0].c.push_back(0.0); blk[0].c.push_back(0.0); blk[0].c.push_back(1.0); blk[0].c.push_back(-1.0);
-	blk[0].d.push_back(xmax); blk[0].d.push_back(xmin);  blk[0].d.push_back(ymax); blk[0].d.push_back(ymin); blk[0].d.push_back(zmax); blk[0].d.push_back(zmin); 
-	blk[0].redundant.push_back(false); blk[0].redundant.push_back(false); blk[0].redundant.push_back(false); blk[0].redundant.push_back(false); blk[0].redundant.push_back(false); blk[0].redundant.push_back(false);
-	blk[0].JRC.push_back(15.0);blk[0].JRC.push_back(15.0);blk[0].JRC.push_back(15.0);blk[0].JRC.push_back(15.0);blk[0].JRC.push_back(15.0);blk[0].JRC.push_back(15.0);
-	blk[0].JCS.push_back(pow(10,6));blk[0].JCS.push_back(pow(10,6));blk[0].JCS.push_back(pow(10,6));blk[0].JCS.push_back(pow(10,6));blk[0].JCS.push_back(pow(10,6));blk[0].JCS.push_back(pow(10,6));
-	blk[0].sigmaC.push_back(pow(10,6));blk[0].sigmaC.push_back(pow(10,6));blk[0].sigmaC.push_back(pow(10,6));blk[0].sigmaC.push_back(pow(10,6));blk[0].sigmaC.push_back(pow(10,6));blk[0].sigmaC.push_back(pow(10,6));
-	blk[0].phi_r.push_back(40.0);blk[0].phi_r.push_back(40.0);blk[0].phi_r.push_back(40.0);blk[0].phi_r.push_back(40.0);blk[0].phi_r.push_back(40.0);blk[0].phi_r.push_back(40.0);
-	blk[0].phi_b.push_back(40.0);blk[0].phi_b.push_back(40.0);blk[0].phi_b.push_back(40.0);blk[0].phi_b.push_back(40.0);blk[0].phi_b.push_back(40.0);blk[0].phi_b.push_back(40.0);
-	blk[0].asperity.push_back(5.0);blk[0].asperity.push_back(5.0);blk[0].asperity.push_back(5.0);blk[0].asperity.push_back(5.0);blk[0].asperity.push_back(5.0);blk[0].asperity.push_back(5.0);
-	blk[0].cohesion.push_back(0.0);blk[0].cohesion.push_back(0.0);blk[0].cohesion.push_back(0.0);blk[0].cohesion.push_back(0.0);blk[0].cohesion.push_back(0.0);blk[0].cohesion.push_back(0.0);
-	blk[0].tension.push_back(0.0);blk[0].tension.push_back(0.0);blk[0].tension.push_back(0.0);blk[0].tension.push_back(0.0);blk[0].tension.push_back(0.0);blk[0].tension.push_back(0.0);
-	blk[0].isBoundaryPlane.push_back(false);blk[0].isBoundaryPlane.push_back(false);blk[0].isBoundaryPlane.push_back(false);blk[0].isBoundaryPlane.push_back(false);blk[0].isBoundaryPlane.push_back(false);blk[0].isBoundaryPlane.push_back(false);
-	blk[0].lambda0.push_back(0.0);blk[0].lambda0.push_back(0.0);blk[0].lambda0.push_back(0.0);blk[0].lambda0.push_back(0.0);blk[0].lambda0.push_back(0.0);blk[0].lambda0.push_back(0.0);
-	blk[0].heatCapacity.push_back(0.0);blk[0].heatCapacity.push_back(0.0);blk[0].heatCapacity.push_back(0.0);blk[0].heatCapacity.push_back(0.0);blk[0].heatCapacity.push_back(0.0);blk[0].heatCapacity.push_back(0.0);
-	blk[0].hwater.push_back(-1.0);blk[0].hwater.push_back(-1.0);blk[0].hwater.push_back(-1.0);blk[0].hwater.push_back(-1.0);blk[0].hwater.push_back(-1.0);blk[0].hwater.push_back(-1.0);
-	blk[0].intactRock.push_back(false);blk[0].intactRock.push_back(false);blk[0].intactRock.push_back(false);blk[0].intactRock.push_back(false);blk[0].intactRock.push_back(false);blk[0].intactRock.push_back(false);
-	blk[0].jointType.push_back(0); blk[0].jointType.push_back(0); blk[0].jointType.push_back(0); blk[0].jointType.push_back(0); blk[0].jointType.push_back(0); blk[0].jointType.push_back(0);
+
+	// Geometric definition of the initial cuboidal block
+	blk[0].a = {  1.0, -1.0,  0.0,  0.0,  0.0,  0.0 };
+	blk[0].b = {  0.0,  0.0,  1.0, -1.0,  0.0,  0.0 };
+	blk[0].c = {  0.0,  0.0,  0.0,  0.0,  1.0, -1.0 };
+	blk[0].d = { xmax, xmin, ymax, ymin, zmax, zmin };
+
+
+	for(unsigned int i=0; i<blk[0].a.size(); i++){
+		blk[0].redundant.push_back(false);
+		blk[0].JRC.push_back(15.0);
+		blk[0].JCS.push_back(pow(10,6));
+		blk[0].sigmaC.push_back(pow(10,6));
+		blk[0].phi_r.push_back(40.0);
+		blk[0].phi_b.push_back(40.0);
+		blk[0].asperity.push_back(5.0);
+		blk[0].cohesion.push_back(0.0);
+		blk[0].tension.push_back(0.0);
+		blk[0].isBoundaryPlane.push_back(false);
+		blk[0].lambda0.push_back(0.0);
+		blk[0].heatCapacity.push_back(0.0);
+		blk[0].hwater.push_back(-1.0);
+		blk[0].intactRock.push_back(false);
+		blk[0].jointType.push_back(0);
+
+		std::cout << blk[0].intactRock[i] << endl;
+	}
+
 
 	/* List of Discontinuities */
 	vector<Discontinuity> joint;
@@ -1475,17 +1479,15 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 		block.d[k]= -1.0*(block.a[k]*(centroid.x()-prevCentre.x()) + block.b[k]*(centroid.y()-prevCentre.y()) + block.c[k]*(centroid.z()-prevCentre.z())  - block.d[k]);	
 	}
 
-
-
 	minX = -1.0*(centroid.x()-prevCentre.x()-minX);
 	minY = -1.0*(centroid.y()-prevCentre.y()-minY);
 	minZ = -1.0*(centroid.z()-prevCentre.z()-minZ);
 	maxX = -1.0*(centroid.x()-prevCentre.x()-maxX);
 	maxY = -1.0*(centroid.y()-prevCentre.y()-maxY);
 	maxZ = -1.0*(centroid.z()-prevCentre.z()-maxZ);
-	Vector3r max(maxX,maxY,maxZ);
-	Vector3r  min(-minX,-minY,-minZ);
-	
+
+	Vector3r max( maxX, maxY, maxZ);
+	Vector3r min(-minX,-minY,-minZ);
 
 	maxXoverall = 1.05*std::max(fabs(maxX),fabs(minX));
 	maxYoverall = 1.05*std::max(fabs(maxY),fabs(minY));
@@ -1493,12 +1495,11 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 	Vector3r tempMax(maxXoverall,maxYoverall,maxZoverall);
 	//std::cout<<"max: "<<tempMax<<endl;
 
-
 	body = shared_ptr<Body>(new Body);
 	shared_ptr<Aabb> aabb(new Aabb);
 	shared_ptr<PotentialBlock> pBlock(new PotentialBlock);
-	pBlock->minAabbRotated = 1.02*min;
-	pBlock->maxAabbRotated = 1.02*max;
+	pBlock->minAabbRotated = 1.0*min;
+	pBlock->maxAabbRotated = 1.0*max;
 
 	body->setDynamic(true);
 	//Real volume = 0.0;
@@ -1508,6 +1509,8 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 //std::cout<<"beforeInertia"<<endl;
 	calculateInertia(block,Ixx,Iyy,Izz, Ixy, Ixz, Iyz);
 	//std::cout<<"Ixx: "<<Ixx<<", Iyy: "<<Iyy<<", Izz: "<<Izz<<", Ixy: "<<Ixy<<", Ixz: "<<Ixz<<", Iyz: "<<Iyz<<endl;
+
+	//FIXME: I believe setting the Inertia values below equal to zero when they are too small should be revised or removed. Choosing different combination of units, the inertia values could get quite small values. Also I can't think of any case, where zero values could be of use. Vasileios Angelidakis
 	if(fabs(Ixx) <pow(10,-15) ){Ixx = 0.0;}
 	if(fabs(Iyy) <pow(10,-15) ){Iyy = 0.0;}
 	if(fabs(Izz) <pow(10,-15) ){Izz = 0.0;}
@@ -1520,8 +1523,6 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 	char jobz = 'V'; char uplo = 'L'; int N=3; double A[9]; int lda=3; double eigenValues[3]; double work[15]; int lwork = 15; int info = 0; 
 	A[0] = Ixx; A[1]=Ixy; A[2]=Ixz; A[3]=Ixy; A[4]= Iyy; A[5]=Iyz; A[6]=Ixz; A[7]=Iyz; A[8]=Izz; 
 	dsyev_(&jobz, &uplo, &N, &A[0], &lda, &eigenValues[0], &work[0], &lwork, &info);
-
-	
 
 	Vector3r eigenVec1 (A[0],A[1],A[2]); eigenVec1.normalize();
 	Vector3r eigenVec2 (A[3],A[4],A[5]); eigenVec2.normalize();
@@ -1548,7 +1549,7 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 	double q1 = (lapackEigenVec(1,2) - lapackEigenVec(2,1) )/(4*q0);
 	double q2 = (lapackEigenVec(2,0) - lapackEigenVec(0,2) )/(4*q0);
 	double q3 = (lapackEigenVec(0,1) - lapackEigenVec(1,0) )/(4*q0);
-	q.w() = q0; q.x()=q1; q.y()=q2; q.z()=q3; q.normalize(); 
+	q.w()=q0; q.x()=q1; q.y()=q2; q.z()=q3; q.normalize(); 
 	q=Quaternionr::Identity();
 
 	if(exactRotation == true){
@@ -1557,12 +1558,12 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 		double maxInertia = std::max(std::max(std::max(lapackEigenVal(0,0),lapackEigenVal(1,1)),lapackEigenVal(2,2)),2.0/5.0*body->state->mass/density*minSize*minSize);
 		body->state->inertia= inertiaFactor*Vector3r(maxInertia*density,maxInertia*density,maxInertia*density);
 	}
-	body->state->pos=block.centre;
-	body->state->ori =  q.conjugate(); 
+	body->state->pos = block.centre;
+	body->state->ori = q.conjugate(); 
 
 	shared_ptr<FrictMat> mat(new FrictMat);
-	mat->frictionAngle		= frictionDeg * Mathr::PI/180.0;
-	aabb->color		= Vector3r(0,1,0);
+	mat->frictionAngle = frictionDeg * Mathr::PI/180.0;
+	aabb->color	   = Vector3r(0,1,0);
 
 //std::cout<<"afterInertia"<<endl;
 	int planeNo = block.a.size();
@@ -1667,14 +1668,20 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 	pBlock->r = block.r;// + initialOverlap; 
 	pBlock->k = block.k;
 	pBlock->AabbMinMax=true;
-	pBlock->minAabb = 1.02*min;
-	pBlock->maxAabb = 1.02*max;
+	pBlock->minAabb = 1.0*min;
+	pBlock->maxAabb = 1.0*max;
 	pBlock->R =  std::max(max.norm(),min.norm()); //findExtreme(block); //block.R; //tempMax.norm(); //
 	//if(min.norm()/max.norm() <0.125 || min.norm()/max.norm() > 8.0){return false;}
-	pBlock->id =number;
-	pBlock->color           = Vector3r(Mathr::UnitRandom(),Mathr::UnitRandom(),Mathr::UnitRandom()); //std::max(std::max(maxXoverall, maxYoverall),maxZoverall) ; //
+	pBlock->id = number;
+
+	if (color[0]==1e-15 && color[1]==1e-15 && color[2]==1e-15) {
+		pBlock->color = Vector3r(Mathr::UnitRandom(),Mathr::UnitRandom(),Mathr::UnitRandom()); //std::max(std::max(maxXoverall, maxYoverall),maxZoverall) ; //
+	} else {
+		pBlock->color = color;
+	}
+
 	if(block.isBoundary == true){
-		pBlock->color  = Vector3r(0,100,0);
+		pBlock->color  = Vector3r(0,0.4,0);
 		body->setDynamic(false);
 	}
 	pBlock->isBoundary = block.isBoundary;
@@ -1708,9 +1715,9 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 				D[0]=d1;
 				D[1]=d2;
 				D[2]=d3;
-				Ax[0]=plane1.x(); Ax[3]=plane1.y(); Ax[6]=plane1.z();  Aplanes(0,0)= Ax[0]; Aplanes(0,1) = Ax[3]; Aplanes(0,2) = Ax[6];
-				Ax[1]=plane2.x(); Ax[4]=plane2.y(); Ax[7]=plane2.z();  Aplanes(1,0) = Ax[1]; Aplanes(1,1) = Ax[4];Aplanes(1,2) = Ax[7];
-				Ax[2]=plane3.x(); Ax[5]=plane3.y(); Ax[8]=plane3.z();  Aplanes(2,0) = Ax[2]; Aplanes(2,1) = Ax[5];Aplanes(2,2) = Ax[8];
+				Ax[0]=plane1.x(); Ax[3]=plane1.y(); Ax[6]=plane1.z();  Aplanes(0,0) = Ax[0]; Aplanes(0,1) = Ax[3]; Aplanes(0,2) = Ax[6];
+				Ax[1]=plane2.x(); Ax[4]=plane2.y(); Ax[7]=plane2.z();  Aplanes(1,0) = Ax[1]; Aplanes(1,1) = Ax[4]; Aplanes(1,2) = Ax[7];
+				Ax[2]=plane3.x(); Ax[5]=plane3.y(); Ax[8]=plane3.z();  Aplanes(2,0) = Ax[2]; Aplanes(2,1) = Ax[5]; Aplanes(2,2) = Ax[8];
 				//bool parallel = false;
 				//if (fabs(plane1.dot(plane2))<1.0002 && fabs(plane1.dot(plane2))>0.9998){parallel = true;}
 				//if (fabs(plane1.dot(plane3))<1.0002 && fabs(plane1.dot(plane3))>0.9998){parallel = true;}
@@ -1729,8 +1736,8 @@ bool BlockGen::createBlock(shared_ptr<Body>& body,  struct Block block, int numb
 						for (int i=0; i<planeNo; i++){
 							Real plane =  pBlock->a[i]*vertex.x() + pBlock->b[i]*vertex.y() + pBlock->c[i]*vertex.z()  - pBlock->d[i]- pBlock->r; if (plane>pow(10,-3)){inside = false;} 	
 						}
-					
-						
+
+
 						if (inside == true){
 							//std::cout<<"vertex: "<<vertex<<", planeV1: "<<planeV1<<", planeV2: "<<planeV2<<", planeV3: "<<planeV3<<", plane1: "<<plane1<<", plane2: "<<plane2<<", plane3: "<<plane3<<", det: "<<det<<endl;
 
@@ -1800,7 +1807,7 @@ void BlockGen::createActors(shared_ptr<Scene>& scene){
 	cd-> stepAngle=calAreaStep;
 	cd->twoDimension = twoDimension;
 	interactionGeometryDispatcher->add(cd);
-	
+
 	shared_ptr<IPhysDispatcher> interactionPhysicsDispatcher(new IPhysDispatcher);
 	shared_ptr<Ip2_FrictMat_FrictMat_KnKsPBPhys> ss(new Ip2_FrictMat_FrictMat_KnKsPBPhys);
 	ss->Knormal = Kn;
@@ -1808,14 +1815,14 @@ void BlockGen::createActors(shared_ptr<Scene>& scene){
 	ss->kn_i = Kn;
 	ss->ks_i = Ks;
 	ss->viscousDamping = viscousDamping;
-	ss->useOverlapVol = useOverlapVol;
+		ss->useOverlapVol = useOverlapVol; //FIXME not used
 	ss->useFaceProperties = useFaceProperties;
 	ss->unitWidth2D = unitWidth2D;
 	ss->calJointLength = calJointLength;
 	ss->twoDimension = twoDimension;
-	ss->brittleLength = brittleLength;
-	ss->u_peak = peakDisplacement;
-	ss->maxClosure = maxClosure;
+		ss->brittleLength = brittleLength; //FIXME not used
+		ss->u_peak = peakDisplacement; //FIXME not used
+		ss->maxClosure = maxClosure; //FIXME not used
 	interactionPhysicsDispatcher->add(ss);
 
 	//shared_ptr<GravityEngine> gravityCondition(new GravityEngine);
@@ -1839,7 +1846,7 @@ void BlockGen::createActors(shared_ptr<Scene>& scene){
 	ids->physDispatcher=interactionPhysicsDispatcher;
 	ids->lawDispatcher=shared_ptr<LawDispatcher>(new LawDispatcher);
 	shared_ptr<Law2_SCG_KnKsPBPhys_KnKsPBLaw> see(new Law2_SCG_KnKsPBPhys_KnKsPBLaw);
-	see->traceEnergy = traceEnergy;
+	see->traceEnergy = traceEnergy; //FIXME not used
 	see->Talesnick = Talesnick;
 	see->neverErase = neverErase;
 	ids->lawDispatcher->add(see);
@@ -1856,8 +1863,9 @@ void BlockGen::createActors(shared_ptr<Scene>& scene){
 	//scene->initializers.clear();	
 }
 
-
-
+//Not used: BlockGen::evaluateFNoSphere
+//Not used: BlockGen::contactBoundaryLPCLPslack
+//Not used: BlockGen::positionRootBody
 
 Real BlockGen::evaluateFNoSphere(struct Block block, Vector3r presentTrial){
 	Real x = presentTrial[0]-block.centre[0];
@@ -2154,7 +2162,7 @@ Vector3r BlockGen::calCentroid(struct Block block, double & blockVol){
 				double d1 = block.d[i] + block.r;	
 				double d2 = block.d[j] + block.r;
 				double d3 = block.d[k] + block.r;
-	
+
 				D[0]=d1;
 				D[1]=d2;
 				D[2]=d3;

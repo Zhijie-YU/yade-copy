@@ -1195,7 +1195,10 @@ void FlowBoundingSphere<Tesselation>::saveVtk(const char* folder, bool withBound
 	basicVTKwritter vtkWrite(0,0);
 	saveMesh(vtkWrite,withBoundaries,allIds,fictiousN,filename);
 	
+	// Right after remeshing "currentTes" points to the new mesh which doesn't contain valid pressure yet, this is detected by noCache=true, in such case get data from previous mesh
 	RTriangulation& Tri = T[noCache?(!currentTes):currentTes].Triangulation();
+	VectorCell& cellHandles=T[noCache?(!currentTes):currentTes].cellHandles;
+	
 	if (permeabilityMap){
 		vtkWrite.begin_data("Permeability",CELL_DATA,SCALARS,FLOAT);
 		for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != Tri.finite_cells_end(); ++cell) {
@@ -1205,14 +1208,14 @@ void FlowBoundingSphere<Tesselation>::saveVtk(const char* folder, bool withBound
 		vtkWrite.end_data();}
 	else{//normal case
 		vtkWrite.begin_data("Pressure",CELL_DATA,SCALARS,FLOAT);
-		for (unsigned kk=0; kk<allIds.size(); kk++) vtkWrite.write_data(tesselation().cellHandles[allIds[kk]]->info().p());
+		for (unsigned kk=0; kk<allIds.size(); kk++) vtkWrite.write_data(cellHandles[allIds[kk]]->info().p());
 		vtkWrite.end_data();
 
 		if (thermalEngine) {
 			vtkWrite.begin_data("Temperature",CELL_DATA,SCALARS,FLOAT);
 			for (unsigned kk=0; kk<allIds.size(); kk++){
-				bool isDrawable = tesselation().cellHandles[allIds[kk]]->info().isReal() && tesselation().cellHandles[allIds[kk]]->vertex(0)->info().isReal() && tesselation().cellHandles[allIds[kk]]->vertex(1)->info().isReal() && tesselation().cellHandles[allIds[kk]]->vertex(2)->info().isReal() && tesselation().cellHandles[allIds[kk]]->vertex(3)->info().isReal();
-				 if(isDrawable) vtkWrite.write_data(tesselation().cellHandles[allIds[kk]]->info().temp());
+				bool isDrawable = cellHandles[allIds[kk]]->info().isReal() && cellHandles[allIds[kk]]->vertex(0)->info().isReal() && cellHandles[allIds[kk]]->vertex(1)->info().isReal() && cellHandles[allIds[kk]]->vertex(2)->info().isReal() && cellHandles[allIds[kk]]->vertex(3)->info().isReal();
+				 if(isDrawable) vtkWrite.write_data(cellHandles[allIds[kk]]->info().temp());
 			vtkWrite.end_data();
 			}
 			
@@ -1233,8 +1236,8 @@ void FlowBoundingSphere<Tesselation>::saveVtk(const char* folder, bool withBound
 		vtkWrite.end_data();
 
 		vtkWrite.begin_data("Velocity",CELL_DATA,VECTORS,FLOAT);
-		for (unsigned kk=0; kk<allIds.size(); kk++) vtkWrite.write_data(tesselation().cellHandles[allIds[kk]]->info().averageVelocity()[0],
-			tesselation().cellHandles[allIds[kk]]->info().averageVelocity()[1],tesselation().cellHandles[allIds[kk]]->info().averageVelocity()[2]);
+		for (unsigned kk=0; kk<allIds.size(); kk++) vtkWrite.write_data(cellHandles[allIds[kk]]->info().averageVelocity()[0],
+			cellHandles[allIds[kk]]->info().averageVelocity()[1],cellHandles[allIds[kk]]->info().averageVelocity()[2]);
 		vtkWrite.end_data();
 	}
 	vtkWrite.close();

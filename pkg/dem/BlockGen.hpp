@@ -24,30 +24,24 @@
 
 class GlobalStiffnessTimeStepper;
 
-class BlockGen : public FileGenerator
-{
+class BlockGen : public FileGenerator {
 	private	:
-				
-		
-		
 		void createActors(shared_ptr<Scene>& scene);
-		void positionRootBody(shared_ptr<Scene>& scene);
-		
-		shared_ptr<GlobalStiffnessTimeStepper> globalStiffnessTimeStepper;
-		
+		void positionRootBody(shared_ptr<Scene>& scene); //FIXME not used: To be deleted in the future
 
-	protected:
+		shared_ptr<GlobalStiffnessTimeStepper> globalStiffnessTimeStepper;
+
+	protected :
 //		std::ofstream output2;        // it was always creating files "BlkGen" "BlockGenFindExtreme.txt", but they are not used in the code, so I commented this out, Janek
 //		std::string myfile;
 		std::string Key;
 //		static std::ofstream output;
 		
-	public : 
+	public :
 		~BlockGen ();
 		bool generate(string&);
 		template<class T>
-		double gen_normal_3(T &generator){ return generator();}
-		
+		double gen_normal_3(T &generator){ return generator(); }
 
 		struct Discontinuity{
 			Vector3r centre;
@@ -120,86 +114,74 @@ class BlockGen : public FileGenerator
 			vector<bool> intactRock;
 			vector<int> jointType;
 			vector<struct Planes> planes;
+
+			Vector3r color;
 		};
-		
 
-	
-
-		
-
-	double getSignedArea(const Vector3r pt1,const Vector3r pt2, const Vector3r pt3);
-	double getDet(const Eigen::MatrixXd A);
-	double getCentroidTetrahedron(const Eigen::MatrixXd A);
-
+		double getSignedArea(const Vector3r pt1,const Vector3r pt2, const Vector3r pt3);
+		double getDet(const Eigen::MatrixXd A);
+			double getCentroidTetrahedron(const Eigen::MatrixXd A); //FIXME not used: To be deleted in the future
 
 		bool createBlock(shared_ptr<Body>& body, struct BlockGen::Block block, int no);
-		bool contactDetection(struct BlockGen::Discontinuity joint, struct BlockGen::Block block,  Vector3r& touchingPt);
+			bool contactDetection(struct BlockGen::Discontinuity joint, struct BlockGen::Block block, Vector3r& touchingPt); //FIXME not used: To be deleted in the future
 		
-		bool contactDetectionLPCLP(struct BlockGen::Discontinuity joint, struct BlockGen::Block block,  Vector3r& touchingPt);
-		bool contactDetectionLPCLPglobal(struct BlockGen::Discontinuity joint, struct BlockGen::Block block,  Vector3r& touchingPt);
+		bool contactDetectionLPCLP(struct BlockGen::Discontinuity joint, struct BlockGen::Block block, Vector3r& touchingPt);
+		bool contactDetectionLPCLPglobal(struct BlockGen::Discontinuity joint, struct BlockGen::Block block, Vector3r& touchingPt);
 	
-		bool checkRedundancyLPCLP(struct BlockGen::Discontinuity joint, struct BlockGen::Block block,  Vector3r& touchingPt);
-		bool startingPointFeasibility(struct BlockGen::Block block,  Vector3r& initialPoint);
+		bool checkRedundancyLPCLP(struct BlockGen::Discontinuity joint, struct BlockGen::Block block, Vector3r& touchingPt);
+			bool startingPointFeasibility(struct BlockGen::Block block, Vector3r& initialPoint); //FIXME not used: To be deleted in the future
 	
-		double inscribedSphereCLP(struct BlockGen::Block block,  Vector3r& initialPoint, bool twoDimension);
+		double inscribedSphereCLP(struct BlockGen::Block block, Vector3r& initialPoint, bool twoDimension);
 		
-		
-		bool contactBoundaryLPCLP(struct BlockGen::Discontinuity joint, struct BlockGen::Block block,  Vector3r& touchingPt);
-		bool contactBoundaryLPCLPslack(struct BlockGen::Discontinuity joint, struct BlockGen::Block block,  Vector3r& touchingPt);
-		
+		bool contactBoundaryLPCLP(struct BlockGen::Discontinuity joint, struct BlockGen::Block block, Vector3r& touchingPt);
+			bool contactBoundaryLPCLPslack(struct BlockGen::Discontinuity joint, struct BlockGen::Block block, Vector3r& touchingPt); //FIXME not used: To be deleted in the future
 		
 
-	
-		
-		
-		
 		void calculateInertia(struct Block block, Real& Ixx, Real& Iyy, Real& Izz,Real& Ixy, Real& Ixz, Real& Iyz);
-		
 		Vector3r calCentroid(struct Block block, double & blockVol);
-		
 		bool checkCentroid(struct Block block, Vector3r presentTrial);
-		Real evaluateFNoSphere(struct Block block, Vector3r presentTrial);
+			Real evaluateFNoSphere(struct Block block, Vector3r presentTrial); //FIXME not used: To be deleted in the future
 		
 	
 
 		YADE_CLASS_BASE_DOC_ATTRS_INIT_CTOR_PY(
-		BlockGen,FileGenerator,"Prepare a scene for triaxial tests. See full documentation at :yref:`TriaxialTest`" // https://yade-dem.org/doc/yade.wrapper.html#yade.wrapper.TriaxialTest
+		BlockGen,FileGenerator,"Prepare a scene for Block Generation using the Potential Blocks. "
 		,
-   		/* public */
+		/* public */
 		((Real,dampingMomentum,0.2,,"Coefficient of global damping"))
-		((Real, maxClosure, 0.0002, ,"not used"))
-		((Real, peakDisplacement, 0.02, ,"not used"))
-		((double, brittleLength, 2.0, ,"not used"))
-		((Real,damp3DEC,0.8,,"not used"))
+			((Real, maxClosure, 0.0002, ,"not used"))  //FIXME not used: To be deleted in the future
+			((Real, peakDisplacement, 0.02, ,"not used"))  //FIXME not used: To be deleted in the future
+			((double, brittleLength, 2.0, ,"not used"))  //FIXME not used: To be deleted in the future
+			((Real,damp3DEC,0.8,,"not used"))  //FIXME not used: To be deleted in the future
 		((Real,unitWidth2D,1.0,,"out of plane distance"))
-		((Real,density,2600,,"density of blocks"))
+		((Real,density,2600,,"density of blocks")) //FIXME Many default values could be empty. Better for the user to get an error than use a default value if they forget to define it.
 		((Real,Kn,pow(10,-5),,"contact normal stiffness"))
 		((Real,Ks,pow(10,-5),,"contact shear stiffness"))
 		((Real,frictionDeg,18.0,,"friction angle [°]"))
 		((Vector3r,globalOrigin,Vector3r(0.0,0.0,0.0),,"friction angle [°]"))
 		((Real,inertiaFactor,1.0,,"scaling of inertia"))
 		((Real,rForPP,0.1,,"r in Potential Particles"))
-		((Real,kForPP,0.01,,"k in Potential Particles"))
-		((Real,RForPP,3.5,,"R in Potential Particles"))
-		((int,numberOfGrids,1,,"not used"))
-		((bool,probabilisticOrientation,false,,"boolean to generate rock joints randomly"))
-		((bool,Talesnick,false,,"boolean for contact law, used for validating code previously against model test"))
-		((bool,neverErase,false,,"boolean whether to erase non interacting contacts"))
-		((bool,calJointLength,false,,"boolean whether to calculate jointLength"))
-		((bool,twoDimension,false,,"boolean whether it is 2D"))
-                ((Real,shrinkFactor,1.0,,"ratio to shrink r"))
+		((Real,kForPP,0.01,,"k in Potential Particles")) //FIXME not actually used
+		((Real,RForPP,3.5,,"R in Potential Particles")) //FIXME not actually used
+			((int,numberOfGrids,1,,"not used"))  //FIXME not used: To be deleted in the future
+		((bool,probabilisticOrientation,false,,"Whether to generate rock joints randomly"))
+		((bool,Talesnick,false,,"Whether to choose the Talesnick contact law, used for validating code previously against model test"))
+		((bool,neverErase,false,,"Whether to erase non interacting contacts"))
+		((bool,calJointLength,false,,"Whether to calculate jointLength"))
+		((bool,twoDimension,false,,"Whether the model is 2D"))
+		((Real,shrinkFactor,1.0,,"ratio to shrink r"))
 		((Real,viscousDamping,0.8,,"viscous damping"))
-		((bool, intactRockDegradation, false, ,"boolean to active degradation of parameters for contact"))
+		((bool, intactRockDegradation, false, ,"Whether to active degradation of parameters for contact"))
 		((Real,initialOverlap,0.0,,"initial overlap between blocks"))
 		((Vector3r,gravity,Vector3r(0.0,-9.81,0.0),,"gravity"))
 		((Real,defaultDt,-1,,"Max time-step. Used as initial value if defined. Latter adjusted by the time stepper."))
 		((int,timeStepUpdateInterval,50,,"interval for :yref:`GlobalStiffnessTimeStepper`"))
-		((bool,traceEnergy,true,,"boolean to traceEnergy - not used"))
-		((bool,exactRotation,true,,"boolean to use more accurate quarternions"))
+			((bool,traceEnergy,true,,"Whether to traceEnergy - not used"))  //FIXME not used: To be deleted in the future
+		((bool,exactRotation,true,,"Whether to handle the rotational motion of aspherical bodies more accurately."))
 		((Real,minSize,50.0,,"minimum size for all blocks"))
 		((Real,minSize2,50.0,,"minimum size for blocks with joint Type=2, minSize2 is smaller than minSize"))
 		((Real,maxRatio,3.0,,"minimum ratio for all blocks"))
-		((Real,maxRatio2,1000.0,,"not used"))
+			((Real,maxRatio2,1000.0,,"not used"))  //FIXME not used: To be deleted in the future
 		((Real,boundarySizeXmax,1.0,,"max X of domain"))
 		((Real,boundarySizeYmax,1.0,,"max Y of domain"))
 		((Real,boundarySizeZmax,1.0,,"max Z of domain"))
@@ -217,25 +199,27 @@ class BlockGen : public FileGenerator
 		((vector<double>,joint_c,,,"list of c of plane normal"))
 		((vector<double>,joint_d,,,"list of d in plane equation"))
 		/* check for different joint types */
-		((bool, persistentPlanes,false,,"boolean to check persistence"))
-		((bool, jointProbabilistic,false,,"boolean to check for filename jointProbabilistic"))	
-		((bool, jointProbabilisticRockBridge,false,,"boolean to check for filename jointProbabilisticRockBridge"))	
-		((bool, opening,false,,"boolean to check for filename opening"))	
-		((bool, boundaries,false,,"boolean to check for filename boundaries"))
-		((bool, slopeFace,false,,"boolean to check for filename "))
-		((bool, sliceBoundaries,false,,"boolean to check for filename "))
-		((bool, useGlobalStiffnessTimeStepper,false,,"boolean "))
+		((bool, persistentPlanes,false,,"Whether to check persistence"))
+		((bool, jointProbabilistic,false,,"Whether to check for filename jointProbabilistic"))	
+		((bool, jointProbabilisticRockBridge,false,,"Whether to check for filename jointProbabilisticRockBridge"))	
+		((bool, opening,false,,"Whether to check for filename opening"))	
+		((bool, boundaries,false,,"Whether to check for filename boundaries"))
+		((bool, slopeFace,false,,"Whether to check for filename "))
+		((bool, sliceBoundaries,false,,"Whether to check for filename "))
+		((bool, useGlobalStiffnessTimeStepper,false,,"Whether to use :yref:`GlobalStiffnessTimeStepper` "))
 		/* which contact law to use */
-		((bool, useBartonBandis,false,,"not used"))
+			((bool, useBartonBandis,false,,"not used"))  //FIXME not used: To be deleted (or better, developed) in the future
 		((bool, useFaceProperties, false, , "boolean to use face properties"))
-		((bool, useOverlapVol,false,,"not used"))
-		((std::string,filenamePersistentPlanes,"/home/booncw/yade/BranchA/scripts/Tunnel/jointPersistent.csv",,"filename to look for joint properties"))
-		((std::string,filenameProbabilisticRockBridge,"/home/booncw/yade/BranchA/scripts/boon/Tunnel/jointProbabilistic.csv",,"filename to look for joint with probabilistic models"))
-		((std::string,filenameProbabilistic,"/home/booncw/yade/BranchA/scripts/boon/Tunnel/jointProbabilistic.csv",,"filename to look for joint with probabilistic models"))
-		((std::string,filenameBoundaries,"/home/booncw/yade/BranchA/scripts/boon/Tunnel/boundaries.csv",,"filename to look for joint with probabilistic models"))
-		((std::string,filenameOpening,"/home/booncw/yade/BranchA/scripts/boon/Tunnel/opening.csv",,"filename to look for joint outline of joints"))
-		((std::string,filenameSlopeFace,"/home/booncw/yade/BranchA/scripts/boon/Tunnel/opening.csv",,"filename to look for joint outline of joints"))
-		((std::string,filenameSliceBoundaries,"/home/booncw/yade/BranchA/scripts/boon/Tunnel/sliceBoundaries.csv",,"filename to look for joint outline of joints"))
+			((bool, useOverlapVol,false,,"not used"))  //FIXME not used: To be deleted in the future
+		((std::string,filenamePersistentPlanes,"./Tunnel/jointPersistent.csv",,"filename to look for joint properties"))
+		((std::string,filenameProbabilisticRockBridge,"./Tunnel/jointProbabilistic.csv",,"filename to look for joint with probabilistic models"))
+		((std::string,filenameProbabilistic,"./Tunnel/jointProbabilistic.csv",,"filename to look for joint with probabilistic models"))
+		((std::string,filenameBoundaries,"./Tunnel/boundaries.csv",,"filename to look for joint with probabilistic models"))
+		((std::string,filenameOpening,"./Tunnel/opening.csv",,"filename to look for joint outline of joints"))
+		((std::string,filenameSlopeFace,"./Tunnel/opening.csv",,"filename to look for joint outline of joints"))
+		((std::string,filenameSliceBoundaries,"./Tunnel/sliceBoundaries.csv",,"filename to look for joint outline of joints"))
+
+		((Vector3r,color,Vector3r(1e-15,1e-15,1e-15),,"color of generated blocks (random color will be assigned to each sub-block if a color is not specified)"))
 		//((double*, array_a,,,"a"))	
 		,
 		/* init */
@@ -254,7 +238,7 @@ class BlockGen : public FileGenerator
 #ifdef __cplusplus
 extern "C" {
 #endif
-	 void dgesv_(const int *N, const int *nrhs, double *Hessian, const int *lda, int *ipiv, double *gradient, const int *ldb, int *info);
+	void dgesv_(const int *N, const int *nrhs, double *Hessian, const int *lda, int *ipiv, double *gradient, const int *ldb, int *info);
 	void dsyev_(const char *jobz, const char *uplo, const int *N, double *A, const int *lda, double *W, double *work, int *lwork, int *info);
 #ifdef __cplusplus
 };

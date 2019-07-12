@@ -25,11 +25,15 @@ void Ip2_FrictMat_FrictMat_FrictPhys::go( const shared_ptr<Material>& b1
 	Real Eb 	= mat2->young;
 	Real Va 	= mat1->poisson;
 	Real Vb 	= mat2->poisson;
+	Real kna = Ea * Ra;
+	Real knb = Eb * Rb;
+	Real ksa = kna * Va;
+	Real ksb = knb * Vb;
 
-	//half the harmonic average of the two stiffnesses, when (2*Ri*Ei) is the stiffness of a contact point on sphere "i"
-	Real Kn = 2*Ea*Ra*Eb*Rb/(Ea*Ra+Eb*Rb);
+	//match maker or half the harmonic average of the two stiffnesses, when (2*Ri*Ei=2*kni) is the stiffness of a contact point on sphere "i"
+	Real Kn = (!kn) ? 2*kna*knb/(kna+knb) : (*kn)(mat1->id,mat2->id,kna,knb);
 	//same for shear stiffness
-	Real Ks = 2*Ea*Ra*Va*Eb*Rb*Vb/(Ea*Ra*Va+Eb*Rb*Vb);
+	Real Ks = (!ks) ? 2*ksa*ksb/(ksa+ksb) : (*ks)(mat1->id,mat2->id,ksa,ksb);
 
 	Real frictionAngle = (!frictAngle) ? std::min(mat1->frictionAngle,mat2->frictionAngle) : (*frictAngle)(mat1->id,mat2->id,mat1->frictionAngle,mat2->frictionAngle);
 	contactPhysics->tangensOfFrictionAngle = std::tan(frictionAngle);

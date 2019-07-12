@@ -1,20 +1,16 @@
 # encoding: utf-8
 from __future__ import print_function
 
-from yade import pack,utils,export,plot
+from yade import pack,export,plot
 import math,os,sys
 print('checkColliderCorrectness for InsertionSortCollider')
-
-failCollider=False
 
 #### This is useful for printing the linenumber in the script
 # import inspect
 # print inspect.currentframe().f_lineno
 
 if((opts.threads != None and opts.threads != 1) or (opts.cores != None and opts.cores != '1')):
-	print("This test will only work on single core, because it must be fully reproducible, but -j "+str(opts.threads)+" or --cores "+str(opts.cores)+" is used.")
-	print(inspect.currentframe().f_lineno)
-	failCollider=True
+	raise YadeCheckError("This test will only work on single core, because it must be fully reproducible, but -j "+str(opts.threads)+" or --cores "+str(opts.cores)+" is used.")
 
 from yade import pack
 
@@ -23,6 +19,17 @@ from yade import pack
 results={True:[None,None],False:[None,None]}
 
 #checksPath="." # this line was used for working on this script locally.
+
+def dumpRealInteractions():
+	dat=[]
+	for b in O.bodies:
+		intrs=[]
+		for i in b.intrs():
+			intrs.append(i.id1 if i.id2==b.id else i.id2)
+		intrs.sort()
+		dat.append(intrs)
+	#NOTE: there should be a list.sort() here for minimal comparison, but ordering appears to e deterministic still... 
+	return dat
 
 for usePeriod in [True,False]:
 	O.periodic=usePeriod
@@ -65,8 +72,8 @@ for usePeriod in [True,False]:
 	
 	testedCollider=typedEngine("InsertionSortCollider")
 	
-	O.run( 500, True); results[usePeriod][0]=testedCollider.dumpBounds()
-	O.run(1000, True); results[usePeriod][1]=testedCollider.dumpBounds()
+	O.run( 500, True); results[usePeriod][0]=dumpRealInteractions()
+	O.run(1000, True); results[usePeriod][1]=dumpRealInteractions()
 	#O.run( 500, True); results[usePeriod][2]=testedCollider.dumpBounds()
 	O.reset()
 
@@ -77,33 +84,28 @@ for usePeriod in [True,False]:
 
 resultFile=None
 # careful, I used this loop to save the reference results in git revision 2bc5ac90b. When doing tests it must be readonly, and loading=True
-loading=True
+loading=False
 if(loading):
-	resultFile=open( checksPath+'/data/checkColider.txt', "r" )
+	resultFile=open( checksPath+'/data/checkColliderCorrect.txt', "r" )
 else:
-	resultFile=open( checksPath+'/data/checkColider.txt', "w" )
+	resultFile=open( checksPath+'/data/checkColliderCorrect.txt', "w" )
 lineCount=0
 for per in sorted(results):
 	for result in results[per]:
 		for record in result:
-			for tupl in record:
+			for number in record:
 				# contents of this tuple is explained in file InsertionSortCollider.cpp line 518, function boost::python::tuple InsertionSortCollider::dumpBounds();
-				for number in tupl:
-					lineCount+=1
-					if(loading):
-						line = resultFile.readline()
-						tmp = float(line)
-						if(abs(tmp - number) > 1e-8):
-							failCollider=True
-							print("InsertionSortCollider check failed in file scripts/checks-and-tests/checks/data/checkColider.txt line: %d"%lineCount)
+				#for number in tupl:
+				lineCount+=1
+				if(loading):
+					line = resultFile.readline()
+					tmp = int(line)
+					if(tmp!=number):
+						raise YadeCheckError("InsertionSortCollider check failed in file scripts/checks-and-tests/checks/data/checkColliderCorrect.txt line: %d"%lineCount)
+				else:
+					if(type(number) is int):
+						resultFile.write(str(number)+'\n')
 					else:
-						if(type(number) is int):
-							resultFile.write(str(number)+'\n')
-						else:
-							resultFile.write("%.8f"%number+'\n')
-
-if failCollider: #put a condition on the result here, is it the expected result? else:
-	print("InsertionSortCollider failed.")
-	resultStatus+=1
+						resultFile.write("%.8f"%number+'\n')
 
 

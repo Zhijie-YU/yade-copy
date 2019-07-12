@@ -52,6 +52,7 @@ par=argparse.ArgumentParser(usage='%s [options] [ simulation.xml[.bz2] | script.
 par.add_argument('-v','--version',help='Print version and exit.',dest='version',action='store_true')
 par.add_argument('-j','--threads',help='Number of OpenMP threads to run; defaults to 1. Equivalent to setting OMP_NUM_THREADS environment variable.',dest='threads',type=int)
 par.add_argument('--cores',help='Set number of OpenMP threads (as \-\-threads) and in addition set affinity of threads to the cores given. Please provide a string with comma-separated core-ids.',dest='cores',type=str)
+par.add_argument('-mit','--mpi-interactive-threads',help='Number of MPI threads (interactive mode, master+spawns). Values <2 disables mit, -mit x sets 1 master and x-1 workers.',dest='mit',default=0,type=int)
 par.add_argument('--update',help='Update deprecated class names in given script(s) using text search & replace. Changed files will be backed up with ~ suffix. Exit when done without running any simulation.',dest='updateScripts',nargs='+')
 par.add_argument('--nice',help='Increase nice level (i.e. decrease priority) by given number.',dest='nice',type=int)
 par.add_argument('-x',help='Exit when the script finishes',dest='exitAfter',action='store_true')
@@ -81,6 +82,12 @@ if opts.version:
 
 if opts.script:
 	args.insert(0,opts.script) # for compatibility with userSession(), could be modified in the future
+
+	
+## Check if this script is exec'd or imported as part of a mpi process
+# If yade is run with mpiexec prefix (on clusters for example), all processes will be in mpi_mode.
+# If yade is run with -mit x(>1), master will disable mpi_mode (for interactivity) and will spawn processes that will be in mpi_mode.
+opts.mpi_mode = os.getenv('OMPI_COMM_WORLD_RANK')!=None
 
 
 ## remove later
@@ -131,7 +138,7 @@ if opts.cores:
 elif opts.threads: os.environ['OMP_NUM_THREADS']=str(opts.threads)
 else: os.environ['OMP_NUM_THREADS']='1'
 
-if __name__ == "__main__": # do not print this while importing yade in other python application
+if __name__ == "__main__" and not opts.mpi_mode: # do not print this while importing yade in other python application
 	sys.stdout.write('Welcome to Yade '+version+debugbuild+'\n')
 
 # initialization and c++ plugins import
@@ -151,6 +158,7 @@ if opts.updateScripts:
 	sys.exit(0)
 
 # modify sys.argv in-place so that it can be handled by userSession
+sys.yade_argv=sys.argv
 sys.argv=yade.runtime.argv=args
 yade.runtime.opts=opts
 
@@ -169,13 +177,21 @@ if opts.performance:
 	checksPath=libDir+'/py/yade/tests/checks/performance'
 	execfile(checksPath+'/checkPerf.py')
 
+def checkVersions():
+	# put here all yade compatibility tests with other libraries
+	import yade.libVersions
+	glutVer = yade.libVersions.getVersion('freeglut')
+	if(glutVer > (2,8,1) or glutVer == (-1,-1,-1)):
+		print("\033[93mWarning: freeglut versions higher than 2.8.1 are known to crash\033[0m, see https://gitlab.com/yade-dev/trunk/merge_requests/160")
+
 def userSession(gui='none',qapp=None):
 	# prepare nice namespace for users
 	import yade.runtime
 	import sys
 	if __name__ != "__main__": # for importing as python module
 		return
-	
+
+	checkVersions()
 	# common ipython configuration
 	# use standard terminal color codes to make F12, F11 bold, and underline the word "help", see https://stackoverflow.com/questions/4842424/list-of-ansi-color-escape-sequences
 	banner='[[ ^L clears screen, ^U kills line. '+', '.join((['\033[1mF12\033[0m controller','\033[1mF11\033[0m 3D view (press \033[4m"h"\033[0m in 3D view for \033[4mhelp\033[0m)','\033[1mF10\033[0m both','\033[1mF9\033[0m generator'] if (gui!='none') else [])+['\033[1mF8\033[0m plot'])+'. ]]'
@@ -297,6 +313,13 @@ def userSession(gui='none',qapp=None):
 				sys.stderr.write("Running script "+arg0+'\n')
 				try:
 					execfile(script,globals())
+					if (opts.mpi_mode):
+						from yade import mpy as mp
+						if(opts.mit>1): # workers only in mit mode
+							
+							mp.spawnedProcessWaitCommand() #after the script execution, don't exit and wait a command from master.
+						else:
+							mp.MPI.Finalize()
 				except SystemExit: raise
 				except: # all other exceptions
 					import traceback
@@ -306,14 +329,15 @@ def userSession(gui='none',qapp=None):
 			runScript(arg0)
 		if yade.runtime.opts.exitAfter: sys.exit(0)
 	## start interpreter
-	ipshell()
+	if not opts.mpi_mode: ipshell()
+	
 
 ## run userSession in a way corresponding to the features we use:
 gui=None
 yade.runtime.hasDisplay=False # this is the default initialized in the module, anyway
 if 'GUI' in features: gui='qt4'
 if 'GUI-Qt5' in features: gui='qt5'
-if opts.nogui: gui=None
+if opts.nogui or opts.mpi_mode: gui=None
 if gui:
 	import Xlib.display
 	# PyQt4's QApplication does exit(1) if it is unable to connect to the display
@@ -330,12 +354,13 @@ if gui:
 		print('Warning: no X rendering available (see https://bbs.archlinux.org/viewtopic.php?id=13189)')
 
 # run remote access things, before actually starting the user session (not while imported by other python application)
-if __name__ == "__main__":
+if __name__ == "__main__" and not opts.mpi_mode:
 	from yade import remote
 	if (gui=='qt4' or gui=='qt5'):
 		yade.remote.useQThread=True
 		yade.remote.gui=gui
 	yade.remote.runServers()
+
 
 if gui==None:
 	userSession()

@@ -6,6 +6,28 @@
 
 namespace py = boost::python;
 
+py::tuple extractNumbers(std::string verStr, std::string what) {
+	std::stringstream ss(verStr);
+	std::vector<int> verNum{};
+	string temp;
+	int found;
+	while (!ss.eof()) {
+		ss >> temp;
+		if (std::stringstream(temp) >> found) { verNum.push_back(found); }
+		temp = "";
+	}
+	if(verNum.size()>3) {
+		LOG_WARN(what << ": more than 3 numbers extracted from " << verStr);
+	}
+	switch(verNum.size()) {
+		case 0 : return py::make_tuple(0,0,0);
+		case 1 : return py::make_tuple(verNum[0],0,0);
+		case 2 : return py::make_tuple(verNum[0],verNum[1],0);
+		default: return py::make_tuple(verNum[0],verNum[1],verNum[2]);
+	}
+}
+
+
 // I used the list in https://yade-dem.org/doc/installation.html#prerequisites
 // If we need a version of some library not listed in doc/sphinx/installation.rst, then it must also be added to that list!
 
@@ -79,14 +101,7 @@ namespace py = boost::python;
 // 4. freeglut
 #ifdef YADE_OPENGL
 	// NOTE: maybe we should someday switch from freeglut3-dev to libglfw3-dev, https://www.glfw.org/
-	#include <GL/freeglut.h> // debian package 2.8.1-3
-	py::list freeglutVer() {
-		py::list ret;
-		// I couldn't find anything that would return the actual debian package version. So this returns 13.4.1, which is weird.
-		ret.append( py::make_tuple(                  GLUT_XLIB_IMPLEMENTATION   ,                                   GLUT_API_VERSION   ,                                   FREEGLUT));
-		ret.append( boost::lexical_cast<std::string>(GLUT_XLIB_IMPLEMENTATION)+"."+boost::lexical_cast<std::string>(GLUT_API_VERSION)+"."+boost::lexical_cast<std::string>(FREEGLUT));
-		return ret;
-	}
+	#include <GL/freeglut.h>
 	#include <GL/glext.h>    // debian package 13.0.6
 	py::list glVer() {
 		py::list ret;
@@ -104,7 +119,6 @@ namespace py = boost::python;
 		return ret;
 	}
 #else
-	py::list freeglutVer() { return {}; }
 	py::list glVer() { return {}; }
 	py::list qglviewerVer() { return {}; }
 #endif
@@ -203,8 +217,20 @@ namespace py = boost::python;
 	#include <metis.h>
 	py::list metisVer() {
 		py::list ret;
+		// https://gcc.gnu.org/onlinedocs/cpp/Elif.html
+		#if defined(METIS_VER_MAJOR) && defined(METIS_VER_MINOR) && defined(METIS_VER_SUBMINOR)
 		ret.append( py::make_tuple(                  METIS_VER_MAJOR   ,                                   METIS_VER_MINOR   ,                                   METIS_VER_SUBMINOR));
 		ret.append( boost::lexical_cast<std::string>(METIS_VER_MAJOR)+"."+boost::lexical_cast<std::string>(METIS_VER_MINOR)+"."+boost::lexical_cast<std::string>(METIS_VER_SUBMINOR));
+		#elif defined(MTMETIS_VER_MAJOR) && defined(MTMETIS_VER_MINOR) && defined(MTMETIS_VER_SUBMINOR)
+		ret.append(       py::make_tuple(                  MTMETIS_VER_MAJOR   ,                                   MTMETIS_VER_MINOR   ,                                   MTMETIS_VER_SUBMINOR));
+		ret.append( "mt:"+boost::lexical_cast<std::string>(MTMETIS_VER_MAJOR)+"."+boost::lexical_cast<std::string>(MTMETIS_VER_MINOR)+"."+boost::lexical_cast<std::string>(MTMETIS_VER_SUBMINOR));
+		#elif defined(PARMETIS_MAJOR_VERSION) && defined(PARMETIS_MINOR_VERSION) && defined(PARMETIS_SUBMINOR_VERSION)
+		ret.append(        py::make_tuple(                  PARMETIS_MAJOR_VERSION,                                      PARMETIS_MINOR_VERSION   ,                                   PARMETIS_SUBMINOR_VERSION));
+		ret.append( "par:"+boost::lexical_cast<std::string>(PARMETIS_MAJOR_VERSION)+"."+boost::lexical_cast<std::string>(PARMETIS_MINOR_VERSION)+"."+boost::lexical_cast<std::string>(PARMETIS_SUBMINOR_VERSION));
+		#else
+		ret.append( py::make_tuple( 0, 0, 0 ));
+		ret.append( "unknown_version" );
+		#endif
 		return ret;
 	}
 #else
@@ -218,16 +244,80 @@ namespace py = boost::python;
 	#include <mpi.h>
 // https://www.open-mpi.org/software/ompi/versions/
 	py::list mpiVer() {
+// FIXME (?): in file https://bitbucket.org/mpi4py/mpi4py/src/master/src/lib-mpi/config.h they are detecting various mpi vendors. Might be useful to use their method instead of this method below.
+//            maybe using their method will fix this yade --test warning while detecting mpi version?
 		py::list ret;
+		#if defined(OMPI_MAJOR_VERSION) && defined(OMPI_MINOR_VERSION) && defined(OMPI_RELEASE_VERSION)
 		ret.append( py::make_tuple                  (OMPI_MAJOR_VERSION   ,                                   OMPI_MINOR_VERSION  ,                                    OMPI_RELEASE_VERSION ));
 // I didn't find a way to obtain a version string for mpi, so I construct my own. But if there is some MPI version string, better put it here.
 //		ret.append( boost::lexical_cast<std::string>(OMPI_VERSION) );
-		ret.append( boost::lexical_cast<std::string>(OMPI_MAJOR_VERSION)+"."+boost::lexical_cast<std::string>(OMPI_MINOR_VERSION)+"."+boost::lexical_cast<std::string>(OMPI_RELEASE_VERSION) );
+		ret.append( "ompi:"+boost::lexical_cast<std::string>(OMPI_MAJOR_VERSION)+"."+boost::lexical_cast<std::string>(OMPI_MINOR_VERSION)+"."+boost::lexical_cast<std::string>(OMPI_RELEASE_VERSION) );
+		#elif defined(I_MPI_NUMVERSION) && defined(I_MPI_VERSION)
+		ret.append( py::make_tuple                           (I_MPI_NUMVERSION, 0, 0 ));
+		ret.append( "intel:"+boost::lexical_cast<std::string>(I_MPI_VERSION) );
+		#elif defined(MPICH_VERSION) && defined(MPICH_NUMVERSION)
+		ret.append( py::make_tuple                           (MPICH_NUMVERSION , 0, 0 ));
+		ret.append( "mpich:"+boost::lexical_cast<std::string>(MPICH_VERSION) );
+		#elif defined(MPI_VERSION) && defined(MPI_SUBVERSION)
+		ret.append(        py::make_tuple(                  MPI_VERSION,                                      MPI_SUBVERSION,                                      0 ));
+		ret.append( "mpi:"+boost::lexical_cast<std::string>(MPI_VERSION)+"."+boost::lexical_cast<std::string>(MPI_SUBVERSION)+"."+boost::lexical_cast<std::string>(0 ));
+		#else
+		ret.append( py::make_tuple( 0, 0, 0 ));
+		ret.append( "unknown_version" );
+		#endif
 		return ret;
 	}
 #else
 	py::list mpiVer() { return {}; }
 #endif
+
+// 18. clp
+#ifdef YADE_POTENTIAL_BLOCKS
+//	#include <config_clp.h>
+	#include <ClpConfig.h>
+	py::list clpVer() {
+		py::list ret;
+		ret.append( py::make_tuple( CLP_VERSION_MAJOR , CLP_VERSION_MINOR , CLP_VERSION_RELEASE ) );
+		ret.append( boost::lexical_cast<std::string>(CLP_VERSION));
+		return ret;
+	}
+#else
+	py::list clpVer() { return {}; }
+#endif
+
+
+// 19. mpi4py
+/*
+ * It turns out that getting PyMPI version in C++ is not possible. Because it's a python library ;)
+ * The PyMPI_Get_version and PyMPI_Get_library_version are only #defines (in file https://bitbucket.org/mpi4py/mpi4py/src/master/src/lib-mpi/fallback.h )
+ * that point to original MPI_Get_version, so using them makes no sense at all.
+ *
+#ifdef YADE_MPI
+	#include <mpi.h>
+	#include <mpi4py/mpi4py.h> // for passing MPI_Comm from python to c++
+	py::list mpi4PyVer() {
+		py::list ret;
+		// the PyMPI uses char array[], which is rather annoying. And this version string can be very long sometimes.
+		char charStr[10000] = "unknown_version";
+		int  rlen=0;
+		// and I don't know if this is the correct way to do this. But I didn't find anything else.
+		PyMPI_Get_library_version(charStr,&rlen);
+		std::string verStr(charStr);
+		// now I will try to parse this string to extract the numbers. I suppose I will end up with MPI_VERSION, MPI_SUBVERSION, but in fact
+		// I don't know which implementation of PyMPI_Get_library_version I am calling here, so I cannot be sure what will be the result.
+
+		// I want to extract numbers using stringstream, to make it simpler I replace '.' with ' '.
+		std::replace( verStr.begin(), verStr.end(), '.' , ' ');
+
+		ret.append( extractNumbers(verStr , "mpi4PyVer()") );
+		ret.append( verStr );
+		return ret;
+	}
+#else
+	py::list mpi4PyVer() { return {}; }
+#endif
+*
+*/
 
 py::dict getAllVersionsCpp(){
 	py::dict ret;
@@ -237,7 +327,6 @@ py::dict getAllVersionsCpp(){
 	ret["clang"        ] = clangVer();
 	ret["boost"        ] = boostVer();
 	ret["qt"           ] = qtVer();
-	ret["freeglut"     ] = freeglutVer();
 	ret["gl"           ] = glVer();
 	ret["qglviewer"    ] = qglviewerVer();
 	ret["python"       ] = pythonVer();
@@ -249,6 +338,8 @@ py::dict getAllVersionsCpp(){
 	ret["openblas"     ] = openblasVer();
 	ret["metis"        ] = metisVer();
 	ret["mpi"          ] = mpiVer();
+//	ret["mpi4py"       ] = mpi4PyVer();
+	ret["clp"          ] = clpVer();
 	return ret;
 }
 

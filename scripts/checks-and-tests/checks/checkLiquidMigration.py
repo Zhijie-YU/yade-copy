@@ -3,7 +3,7 @@
 
 # The model checks liquid migration model if it is enabled during compilation
 from __future__ import print_function
-from yade import utils, plot
+from yade import plot
 
 if ('LIQMIGRATION' in features):
   o = Omega()
@@ -78,18 +78,17 @@ if ('LIQMIGRATION' in features):
     O.bodies[id1].state.vel=-O.bodies[id1].state.vel
     O.bodies[id2].state.vel=-O.bodies[id2].state.vel
   
-  resultStatus = 0
   O.run(3, True)
   if ((abs((O.interactions[id0,id1].phys.Vb - 0.03)/0.03) > tolerance) or 
       (abs((O.interactions[id0,id1].phys.Vb - 0.03)/0.03) > tolerance)):
-    resultStatus += 1
+    raise YadeCheckError("error number 1")
   
   switchVel()
   O.run(5, True)
   if ((abs((O.bodies[id0].state.Vf - 0.03)/0.03) > tolerance) or 
       (abs((O.bodies[id1].state.Vf - 0.04)/0.04) > tolerance) or
       (abs((O.bodies[id2].state.Vf - 0.05)/0.05) > tolerance)):
-    resultStatus += 1
+    raise YadeCheckError("error number 2")
   
   liqcontrol.particleconserve=False
   switchVel()
@@ -99,7 +98,7 @@ if ('LIQMIGRATION' in features):
   if ((abs((O.bodies[id0].state.Vf - 0.0465)/0.0465) > tolerance) or 
       (abs((O.bodies[id1].state.Vf - 0.0325)/0.0325) > tolerance) or
       (abs((O.bodies[id2].state.Vf - 0.041)/0.041) > tolerance)):
-    resultStatus += 1
+    raise YadeCheckError("error number 3")
 else:
   print("This checkLiquidMigration.py cannot be executed because LIQMIGRATION is disabled")
   

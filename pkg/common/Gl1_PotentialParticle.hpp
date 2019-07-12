@@ -122,7 +122,7 @@ class Gl1_PotentialParticle : public GlShapeFunctor {
 		struct scalarF {
 			vector<vector<vector<Real > > > scalarField2;
 			vector<Vector3r> triangles;
-			vector<Vector3r> normals;
+//			vector<Vector3r> normals;
 			int nbTriangles;
 		};
 		Real evaluateF(const PotentialParticle& pp, Real x, Real y, Real z);
@@ -138,6 +138,7 @@ class Gl1_PotentialParticle : public GlShapeFunctor {
 			((bool,store,true,,"store computed triangulation or not"))
 			((bool,initialized,false,,"if triangulation is initialized"))
 			((Real,aabbEnlargeFactor,1.3,,"some factor for displaying algorithm, try different value if you have problems with displaying"))
+			((bool,wire,false,,"Only show wireframe"))
 		);
 		RENDERS(PotentialParticle);
 };

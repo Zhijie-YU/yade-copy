@@ -119,13 +119,16 @@ void NewtonIntegrator::action()
 
 	const bool trackEnergy(scene->trackEnergy);
 	const bool isPeriodic(scene->isPeriodic);
-
+	
 	#ifdef YADE_OPENMP
 		FOREACH(Real& thrMaxVSq, threadMaxVelocitySq) { thrMaxVSq=0; }
 	#endif
 	YADE_PARALLEL_FOREACH_BODY_BEGIN(const shared_ptr<Body>& b, scene->bodies){
 			// clump members are handled inside clumps
 			if(b->isClumpMember()) continue;
+#ifdef YADE_MPI
+			if(scene->subdomain!=b->subdomain or b->getIsSubdomain()) continue;//this thread will not move bodies from other subdomains
+#endif
 			State* state=b->state.get(); const Body::id_t& id=b->getId();
 			Vector3r f=Vector3r::Zero(); 
 			Vector3r m=Vector3r::Zero();

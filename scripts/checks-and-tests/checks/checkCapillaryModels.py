@@ -15,7 +15,7 @@
 # Capillary forces between surfaces with nanoscale roughness (Yakov I. Rabinovich ...)
 # http://diyhpl.us/~bryan/papers2/Capillary%20forces%20between%20surfaces%20with%20nanoscale%20roughness.pdf
 
-from yade import utils, plot
+from yade import plot
 o = Omega()
 fr = 0.5;rho=2000
 tc = 0.001; en = 0.7; et = 0.7; o.dt = 0.001*tc
@@ -80,11 +80,11 @@ f3 = -O.forces.f(id6)[2]
 O.wait()
 
 if ((abs(2.07328148666e-07-f1)/f1)>tolerance):
-  resultStatus += 1
-  
+  raise YadeCheckError("error 1")
+
 if ((abs(6.78192074e-07-f2)/f2)>tolerance):
-  resultStatus += 1
-  
+  raise YadeCheckError("error 2")
+
 if ((abs(1.58617796928e-06-f3)/f3)>tolerance):
-  resultStatus += 1
+  raise YadeCheckError("error 3")
 

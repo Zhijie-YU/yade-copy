@@ -14,6 +14,7 @@ allTests=[
 	, 'engines'
 	, 'utilsModule'
 	, 'libVersions'
+	#, 'testColliderByGiulia' # to investigate later maybe, my impression is that due to issue #7 the results are randomly different in that ill-posed periodic problem
 ]
 
 # add any new yade module (ugly...)
@@ -29,7 +30,7 @@ except ImportError: pass
 allTestsFQ=['yade.tests.'+test for test in allTests]
 
 def testModule(module):
-	"""Run all tests defined in the module specified, return TestResult object 
+	"""Run all tests defined in the module specified, return TestResult object
 	(http://docs.python.org/library/unittest.html#unittest.TextTestResult)
 	for further processing.
 

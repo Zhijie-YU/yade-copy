@@ -29,6 +29,10 @@ void InteractionLoop::action(){
 	geomDispatcher->updateScenePtr();
 	physDispatcher->updateScenePtr();
 	lawDispatcher->updateScenePtr();
+	
+	#ifdef YADE_MPI
+	const Body::id_t& subDIdx = scene->subdomain;
+	#endif
 
 	/*
 		initialize callbacks; they return pointer (used only in this timestep) to the function to be called
@@ -52,31 +56,39 @@ void InteractionLoop::action(){
 	// force removal of interactions that were not encountered by the collider
 	// (only for some kinds of colliders; see comment for InteractionContainer::iterColliderLastRun)
 	const bool removeUnseenIntrs=(scene->interactions->iterColliderLastRun>=0 && scene->interactions->iterColliderLastRun==scene->iter);
-
-	#ifdef YADE_OPENMP
+	
 	const long size=scene->interactions->size();
+	
+	vector<shared_ptr<Interaction>> * interactions; //a pointer to an interaction vector.
+	if(loopOnSortedInteractions){
+		scene->interactions->updateSortedIntrs();			//sort sortedIntrs, this is VERY SLOW !
+		interactions = &(scene->interactions->sortedIntrs);	//set the pointer to the address of the sorted version of the vector
+	}
+	else interactions = &(scene->interactions->linIntrs);	//set the pointer to the address of the unsorted version of the vector (original version, normal behavior)
+	#ifdef YADE_OPENMP
 	#pragma omp parallel for schedule(guided) num_threads(ompThreads>0 ? min(ompThreads,omp_get_max_threads()) : omp_get_max_threads())
-	for(long i=0; i<size; i++){
-		const shared_ptr<Interaction>& I=(*scene->interactions)[i];
-	#else
-	for (const auto & I : *scene->interactions){
 	#endif
+	for(long i=0; i<size; i++){
+		const shared_ptr<Interaction>& I=(*interactions)[i];
 		if(removeUnseenIntrs && !I->isReal() && I->iterLastSeen<scene->iter) {
 			eraseAfterLoop(I->getId1(),I->getId2());
 			continue;
 		}
-
 		const shared_ptr<Body>& b1_=Body::byId(I->getId1(),scene);
 		const shared_ptr<Body>& b2_=Body::byId(I->getId2(),scene);
-
+		
 		if(!b1_ || !b2_){
-			// This code is duplicated in Dispatching.cpp:123 and InteractionLoop.cpp:73
-			// FIXME - interesting! This message appears multiple time for the same         I->getId1()        I->getId2()   !! Almost as if it never gets deleted!
-			//         I saw this when running examples/PotentialBlocks/WedgeYADE.py, after iter 5200 some bodies are deleted. And this loop tries to delete the same interactions over and over again.
-			LOG_DEBUG("Body #"<<(b1_?I->getId2():I->getId1())<<" vanished, erasing intr #"<<I->getId1()<<"+#"<<I->getId2()<<"!");
+// 			LOG_DEBUG("Body #"<<(b1_?I->getId2():I->getId1())<<" vanished, erasing intr #"<<I->getId1()<<"+#"<<I->getId2()<<"!");
 			scene->interactions->requestErase(I);
 			continue;
 		}
+		
+		#ifdef YADE_MPI
+		//FIXME: can be removed if scene splitting takes care of it
+		if (subDIdx!=b1_->subdomain and subDIdx!=b2_->subdomain) {
+			scene->interactions->erase(I->getId1(),I->getId2()); continue;
+		}
+		#endif
     
 		// Skip interaction with clumps
 		if (b1_->isClump() || b2_->isClump()) { continue; }

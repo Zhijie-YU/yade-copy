@@ -11,7 +11,6 @@ compFricDegree = 3 # initial contact friction during the confining phase
 finalFricDegree = 30 # contact friction during the deviatoric loading
 mn,mx=Vector3(0,0,0),Vector3(1,1,0.4) # corners of the initial packing
 graindensity=2600
-errors=0
 toleranceWarning =1.e-11
 toleranceCritical=1.e-6
 
@@ -129,7 +128,7 @@ while (iniok==0):
          celleini0[c0.getInterfaces()[ii][1]]=c0.getInterfaces()[ii][0]
   for ii in range(nvoids):
     if celleini1[ii]!=nvoids+1:
-        flow.clusterOutvadePore(celleini0[ii],ii,celleini1[ii])
+        flow.clusterOutvadePore(celleini0[ii],ii)
   no=0
   for ii in range(nvoids):
      if bar[ii]<initiallevel:
@@ -165,45 +164,48 @@ dd=0.0
 celleok=[0] * (nvoids)  
 deltabubble=0
 col0=[0] * (nvoids)
-col=[0] * (nvoids)
-neighK=[0.0] * (nvoids)
+neighK=[0.0] * (nvoids)  #FIXME: after remeshing the size will be invalid since nvoids can change, initializations will have to go in the function itself
 def pressureImbibition():
    global Qin,total2,dd,deltabubble,bubble
    
    c0.updateCapVolList(O.dt)
        
-   Qin+=flow.getBoundaryVolume(flow.wallIds[flow.ymin],O.dt)
+   Qin+=-1.*(flow.getBoundaryFlux(flow.wallIds[flow.ymin]))*O.dt
    #Qout+=(flow.getBoundaryFlux(flow.wallIds[flow.ymax]))*O.dt   
        
    col1=[0] * (nvoids)
    delta=[0.0] * (nvoids)   
    for ii in range(nvoids):
         if flow.getCellLabel(ii)==0:
-            totalflux[ii]+=flow.getCellInVolumeFromId(ii,O.dt)   
+            totalflux[ii]+=-1.*flow.getCellFluxFromId(ii)*O.dt   
             if (totalflux[ii])>=initialvol[ii]:
-               col1[ii]=1
+                col1[ii]=1
             if (totalflux[ii])>initialvol[ii]:
-              delta[ii]=totalflux[ii]-initialvol[ii]
-              totalflux[ii]+=-1*delta[ii]
-              #dd+=delta[ii]
-                      
+                delta[ii]=totalflux[ii]-initialvol[ii]
+                totalflux[ii]+=-1*delta[ii]
+                #dd+=delta[ii]
+                
+   # advices:
+   # never write 'getInterfaces()' inside a loop, it's expensive, get the list once outside loop
+   # get interfaces again only if you know the list could have change (cluster got/lost pores).
+   # I'm fixing only the first loop below (old version left commented)
+   # 
    for ii in range(len(c0.getInterfaces())):
       ll=c0.getInterfaces()[ii][1]
       if col1[ll]==1:
         if celleok[ll]==0:
-           celleok[ll]=1
-           col0[ll]=c0.getInterfaces()[ii][0]
-           col[ll]=ii
+            celleok[ll]=1
+            col0[ll]=c0.getInterfaces()[ii][0]
            
    for jj in range(nvoids):
       if col1[jj]==1:
-          flow.clusterOutvadePore(col0[jj],jj,col[jj])
+          flow.clusterOutvadePore(col0[jj],jj)
           #totalCellSat+=initialvol[jj]       
    
    for ii in range(len(c0.getInterfaces())):
       ll=c0.getInterfaces()[ii][0]
       if delta[ll]!=0:
-         neighK[ll]+=c0.getConductivity(ii)      
+         neighK[ll]+=c0.getConductivity(ii)
    for ii in range(len(c0.getInterfaces())):
       ll=c0.getInterfaces()[ii][0]
       if delta[ll]!=0:
@@ -231,11 +233,10 @@ def pressureImbibition():
         if col1[ll]==1:
           if celleok[ll]==0:
              celleok[ll]=1
-             col0[ll]=c0.getInterfaces()[ii][0]
-             col[ll]=ii             
+             col0[ll]=c0.getInterfaces()[ii][0]      
      for jj in range(nvoids):
         if col1[jj]==1:
-            flow.clusterOutvadePore(col0[jj],jj,col[jj])
+            flow.clusterOutvadePore(col0[jj],jj)
             #totalCellSat+=initialvol[jj]          
      for ii in range(len(c0.getInterfaces())):
         ll=c0.getInterfaces()[ii][0]
@@ -268,11 +269,10 @@ def pressureImbibition():
          if col1[ll]==1:
            if celleok[ll]==0:
               celleok[ll]=1
-              col0[ll]=c0.getInterfaces()[ii][0]
-              col[ll]=ii           
+              col0[ll]=c0.getInterfaces()[ii][0]         
        for jj in range(nvoids):
           if col1[jj]==1:
-              flow.clusterOutvadePore(col0[jj],jj,col[jj])
+              flow.clusterOutvadePore(col0[jj],jj)
               #totalCellSat+=initialvol[jj]
    
    total2=0.0
@@ -288,7 +288,7 @@ def pressureImbibition():
 file=open('Test.txt',"w")
 checkdifference=0
 def equilibriumtest():
-   global F33,F22,checkdifference,errors
+   global F33,F22,checkdifference
    #unbalanced=utils.unbalancedForce()
    F33=abs(O.forces.f(flow.wallIds[flow.ymax])[1])
    F22=abs(O.forces.f(flow.wallIds[flow.ymin])[1])
@@ -302,14 +302,13 @@ def equilibriumtest():
      if checkdifference==0:
        print('check F done')
        if deltaF>0.01*press:
-         print('Error: too high difference between forces acting at the bottom and upper walls')
-         errors+=1
+         raise YadeCheckError('Error: too high difference between forces acting at the bottom and upper walls')
          #O.pause()
        checkdifference=1
  
 once=0
 def fluxtest():  
-   global once,errors,QinOk
+   global once,QinOk
    no=0
    
    QinOk=Qin-deltabubble
@@ -317,8 +316,7 @@ def fluxtest():
    if error>toleranceWarning:
       print("Warning: difference between total water volume flowing through bottom wall and water loss due to air bubble generations",QinOk," vs. total water volume flowing inside dry or partially saturated cells",total2)
    if error>toleranceCritical:
-      print("The difference is more, than the critical tolerance!")
-      errors+=1         
+      raise YadeCheckError("The difference is more, than the critical tolerance!")
    file.write(str(O.time-timeini)+" "+str(total2)+" "+str(QinOk)+" "+str(error)+"\n") 
    
    for ii in range(nvoids):
@@ -331,14 +329,10 @@ def fluxtest():
          if voidvol-total2>toleranceWarning:
            print("Warning: initial volume of dry voids",voidvol," vs. total water volume flowing inside dry or partially saturated cells",total2)
          if voidvol-total2>toleranceCritical:
-           print("The difference is more, than the critical tolerance!")
-           errors+=1
-         print(errors)
-         file.write(str(imbtime)+" "+str(voidvol)+" "+str(total2)+" "+str(QinOk)+" "+str(errors)+"\n") 
+           raise YadeCheckError("The difference is more, than the critical tolerance!")
+         file.write(str(imbtime)+" "+str(voidvol)+" "+str(total2)+" "+str(QinOk)+"\n") 
          once=1
          timing.stats()
-         if (errors):
-            resultStatus+=1
    
 
 def addPlotData():
@@ -369,3 +363,10 @@ O.timingEnabled=True
 #plot.saveDataTxt('plots.txt',vars=('i1','t','Fupper','Fbottom','Q','T'))
 
 #O.run(1,1)
+
+import tempfile, shutil
+dirpath = tempfile.mkdtemp()
+for fileName in ['./vtk', './Test.txt' ]:
+  if (os.path.exists(fileName)): shutil.move(fileName,dirpath)
+  print("File %s moved into %s/ directory"%(fileName,dirpath))
+

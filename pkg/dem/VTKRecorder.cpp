@@ -1,6 +1,7 @@
 #ifdef YADE_VTK
 
 #include"VTKRecorder.hpp"
+#include<lib/compatibility/VTKCompatibility.hpp> // fix InsertNextTupleValue → InsertNextTuple name change (and others in the future)
 
 #include<vtkCellArray.h>
 #include<vtkPoints.h>
@@ -523,11 +524,7 @@ void VTKRecorder::action(){
 			Real fs[3]={ (Real) std::abs(phys->shearForce[0]), (Real) std::abs(phys->shearForce[1]), (Real) std::abs(phys->shearForce[2])};
 			// add the value once for each interaction object that we created (might be 2 for the periodic boundary)
 			for(int i=0; i<numAddValues; i++){
-			#ifdef YADE_VTK8
-				intrAbsForceT->InsertNextTuple(fs);
-			#else
-				intrAbsForceT->InsertNextTupleValue(fs); 
-			#endif
+				intrAbsForceT->INSERT_NEXT_TUPLE(fs);
 				
 				if(recActive[REC_WPM]) {
 					const WirePhys* wirephys = dynamic_cast<WirePhys*>(I->phys.get());
@@ -598,15 +595,9 @@ void VTKRecorder::action(){
 				  Real dirI[3] { (Real) dirAll(0,2), (Real) dirAll(1,2), (Real) dirAll(2,2) };
 				  Real dirII[3] { (Real) dirAll(0,1), (Real) dirAll(1,1), (Real) dirAll(2,1) };
 				   Real dirIII[3] { (Real) dirAll(0,0), (Real) dirAll(1,0), (Real) dirAll(2,0) };
-			 #ifdef YADE_VTK8
-				spheresDirI->InsertNextTuple(dirI);
-				spheresDirII->InsertNextTuple(dirII);
-				spheresDirIII->InsertNextTuple(dirIII); 
-			#else
-				spheresDirI->InsertNextTupleValue(dirI);
-				spheresDirII->InsertNextTupleValue(dirII);
-				spheresDirIII->InsertNextTupleValue(dirIII); 
-			#endif	 
+				spheresDirI->INSERT_NEXT_TUPLE(dirI);
+				spheresDirII->INSERT_NEXT_TUPLE(dirII);
+				spheresDirIII->INSERT_NEXT_TUPLE(dirIII);
 }
 				
 				if (recActive[REC_ID]) spheresId->InsertNextValue(b->getId()); 
@@ -622,29 +613,17 @@ void VTKRecorder::action(){
 				if (recActive[REC_COLORS]){
 					const Vector3r& color = sphere->color;
 					Real c[3] = { (Real) color[0], (Real) color[1], (Real) color[2]};
-			#ifdef YADE_VTK8
-					spheresColors->InsertNextTuple(c);
-			#else
-					spheresColors->InsertNextTupleValue(c); 
-			#endif
+					spheresColors->INSERT_NEXT_TUPLE(c);
 				}
 				if(recActive[REC_VELOCITY]){
 					const Vector3r& vel = b->state->vel;
 					Real v[3] = { (Real) vel[0], (Real) vel[1], (Real) vel[2] };
-			#ifdef YADE_VTK8
-				spheresLinVelVec->InsertNextTuple(v);
-			#else
-				spheresLinVelVec->InsertNextTupleValue(v); 
-			#endif	
+				spheresLinVelVec->INSERT_NEXT_TUPLE(v);
 					spheresLinVelLen->InsertNextValue(vel.norm());
 					
 					const Vector3r& angVel = b->state->angVel;
 					Real av[3] = { (Real) angVel[0], (Real) angVel[1], (Real) angVel[2] };
-			#ifdef YADE_VTK8
-				spheresAngVelVec->InsertNextTuple(av);
-			#else
-				 spheresAngVelVec->InsertNextTupleValue(av);
-			#endif	
+				 spheresAngVelVec->INSERT_NEXT_TUPLE(av);
 					spheresAngVelLen->InsertNextValue(angVel.norm());
 				}
 				if(recActive[REC_STRESS]){
@@ -652,13 +631,8 @@ void VTKRecorder::action(){
 					const Vector3r& shear = bodyStates[b->getId()].shearStress;
 					Real n[3] = { (Real)  stress[0], (Real) stress[1], (Real) stress[2] };
 					Real s[3] = { (Real)  shear [0], (Real) shear [1], (Real) shear [2] };
-			#ifdef YADE_VTK8
-				spheresNormalStressVec->InsertNextTuple(n);
-				spheresShearStressVec->InsertNextTuple(s);
-			#else
-				spheresNormalStressVec->InsertNextTupleValue(n);
-				spheresShearStressVec->InsertNextTupleValue(s); 
-			#endif	
+				spheresNormalStressVec->INSERT_NEXT_TUPLE(n);
+				spheresShearStressVec->INSERT_NEXT_TUPLE(s);
 					spheresNormalStressNorm->InsertNextValue(stress.norm());
 				}
 				if(recActive[REC_FORCE]){
@@ -671,13 +645,8 @@ void VTKRecorder::action(){
 					Real tn = t.norm();
 					spheresForceLen->InsertNextValue(fn);
 					spheresTorqueLen->InsertNextValue(tn);
-			#ifdef YADE_VTK8
-				spheresForceVec->InsertNextTuple(ff);
-				spheresTorqueVec->InsertNextTuple(tt);
-			#else
-				spheresForceVec->InsertNextTupleValue(ff);
-				spheresTorqueVec->InsertNextTupleValue(tt); 
-			#endif	
+				spheresForceVec->INSERT_NEXT_TUPLE(ff);
+				spheresTorqueVec->INSERT_NEXT_TUPLE(tt);
 
 				}
 				
@@ -686,11 +655,7 @@ void VTKRecorder::action(){
 					const Matrix3r& ss=YADE_PTR_CAST<CpmState>(b->state)->stress;
 					//Real s[3]={ss[0],ss[1],ss[2]};
 					Real s[9]={ (Real) ss(0,0), (Real) ss(0,1), (Real) ss(0,2), (Real) ss(1,0), (Real) ss(1,1), (Real) ss(1,2), (Real) ss(2,0), (Real) ss(2,1), (Real) ss(2,2)};
-			#ifdef YADE_VTK8
-				cpmStress->InsertNextTuple(s);
-			#else
-				cpmStress->InsertNextTupleValue(s); 
-			#endif
+				cpmStress->INSERT_NEXT_TUPLE(s);
 				}
 				
 				if (recActive[REC_JCFPM]){
@@ -740,20 +705,12 @@ void VTKRecorder::action(){
 				if (recActive[REC_COLORS]){
 					const Vector3r& color = facet->color;
 					Real c[3] = { (Real) color[0], (Real) color[1], (Real) color[2]};
-				#ifdef YADE_VTK8
-				facetsColors->InsertNextTuple(c);
-			#else
-				facetsColors->InsertNextTupleValue(c); 
-			#endif	
+				facetsColors->INSERT_NEXT_TUPLE(c);
 				}
 				if(recActive[REC_STRESS]){
 					const Vector3r& stress = bodyStates[b->getId()].normStress+bodyStates[b->getId()].shearStress;
 					Real s[3] = { (Real) stress[0], (Real) stress[1], (Real) stress[2] };
-			#ifdef YADE_VTK8
-				facetsStressVec->InsertNextTuple(s);
-			#else
-				 facetsStressVec->InsertNextTupleValue(s);
-			#endif	
+				 facetsStressVec->INSERT_NEXT_TUPLE(s);
 					facetsStressLen->InsertNextValue(stress.norm());
 				}
 				if(recActive[REC_FORCE]){
@@ -767,13 +724,8 @@ void VTKRecorder::action(){
 	
 				facetsForceLen->InsertNextValue(fn);
 				facetsTorqueLen->InsertNextValue(tn);
-			#ifdef YADE_VTK8
-				facetsForceVec->InsertNextTuple(ff);
-				facetsTorqueVec->InsertNextTuple(tt);
-			#else
-				facetsForceVec->InsertNextTupleValue(ff);
-				facetsTorqueVec->InsertNextTupleValue(tt);
-			#endif	
+				facetsForceVec->INSERT_NEXT_TUPLE(ff);
+				facetsTorqueVec->INSERT_NEXT_TUPLE(tt);
 				}
 				if (recActive[REC_MATERIALID]) facetsMaterialId->InsertNextValue(b->material->id);
 				if (recActive[REC_MASK]) facetsMask->InsertNextValue(GET_MASK(b));
@@ -833,20 +785,12 @@ void VTKRecorder::action(){
 					if (recActive[REC_COLORS]){
 						const Vector3r& color = box->color;
 						Real c[3] = { (Real) color[0], (Real) color[1], (Real) color[2]};
-			#ifdef YADE_VTK8
-				boxesColors->InsertNextTuple(c);
-			#else
-				boxesColors->InsertNextTupleValue(c); 
-			#endif	
+				boxesColors->INSERT_NEXT_TUPLE(c);
 					}
 					if(recActive[REC_STRESS]){
 						const Vector3r& stress = bodyStates[b->getId()].normStress+bodyStates[b->getId()].shearStress;
 						Real s[3] = { (Real) stress[0], (Real) stress[1], (Real) stress[2] };
-			#ifdef YADE_VTK8
-				boxesStressVec->InsertNextTuple(s);
-			#else
-				boxesStressVec->InsertNextTupleValue(s); 
-			#endif	
+				boxesStressVec->INSERT_NEXT_TUPLE(s);
 					boxesStressLen->InsertNextValue(stress.norm());
 					}
 					if(recActive[REC_FORCE]){
@@ -857,14 +801,9 @@ void VTKRecorder::action(){
 						Real tt[3] = { (Real) t[0], (Real) t[1], (Real) t[2] };
 						Real fn = f.norm();
 						Real tn = t.norm();
-			#ifdef YADE_VTK8
-					boxesForceVec->InsertNextTuple(ff);
-					boxesTorqueVec->InsertNextTuple(tt);
-			#else
-					boxesForceVec->InsertNextTupleValue(ff);
-					boxesTorqueVec->InsertNextTupleValue(tt);
+					boxesForceVec->INSERT_NEXT_TUPLE(ff);
+					boxesTorqueVec->INSERT_NEXT_TUPLE(tt);
 				 
-			#endif	
 						boxesForceLen->InsertNextValue(fn);
 						boxesTorqueLen->InsertNextValue(tn);
 					}
@@ -1137,11 +1076,7 @@ void VTKRecorder::action(){
 					crackType->InsertNextValue(type);
 					crackSize->InsertNextValue(size);					
 					Real n[3] = { n0, n1, n2 };
-			#ifdef YADE_VTK8
-				crackNorm->InsertNextTuple(n);
-			#else
-				crackNorm->InsertNextTupleValue(n); 
-			#endif
+				crackNorm->INSERT_NEXT_TUPLE(n);
                                         crackNrg->InsertNextValue(nrg);
                                         crackOnJnt->InsertNextValue(onJnt);
 				}

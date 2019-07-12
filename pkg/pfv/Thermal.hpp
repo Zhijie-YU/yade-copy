@@ -108,6 +108,5 @@ class ThermalEngine : public PartialEngine
 };
 REGISTER_SERIALIZABLE(ThermalEngine);
 
-
 #endif//THERMAL
-	
+

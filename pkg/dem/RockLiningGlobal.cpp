@@ -2,8 +2,9 @@
 /* Please cite: */
 /* CW Boon, GT Houlsby, S Utili (2015).  Designing Tunnel Support in Jointed Rock Masses Via the DEM.  Rock Mechanics and Rock Engineering,  48 (2), 603-632. */
 #ifdef YADE_POTENTIAL_BLOCKS
+#include<lib/compatibility/VTKCompatibility.hpp> // fix InsertNextTupleValue → InsertNextTuple name change (and others in the future)
 #include "RockLiningGlobal.hpp"
-#include<pkg/dem/KnKsLaw.hpp>
+//#include<pkg/dem/KnKsLaw.hpp>
 #include<pkg/dem/ScGeom.hpp>
 #include<core/Omega.hpp>
 #include <ctime>
@@ -312,9 +313,9 @@ void RockLiningGlobal::action(){
 				} 
 
 			}
-			liningNodalMoment->InsertNextTupleValue(m);	
-			liningAxialForce->InsertNextTupleValue(fa);
-			liningShearForce->InsertNextTupleValue(fs);
+			liningNodalMoment->INSERT_NEXT_TUPLE(m);	
+			liningAxialForce->INSERT_NEXT_TUPLE(fa);
+			liningShearForce->INSERT_NEXT_TUPLE(fs);
 			//lineSource->Update();		
   		}
 		//#endif
@@ -397,25 +398,25 @@ void RockLiningGlobal::action(){
 			plotDirection.normalize();
 			Vector3r nodalMoment = moment[i]*plotDirection;
 			float m[3]={(float)nodalMoment[0], (float)nodalMoment[1], (float)nodalMoment[2]};
-			liningNodalMoment->InsertNextTupleValue(m);
+			liningNodalMoment->INSERT_NEXT_TUPLE(m);
 
 			Vector3r axialForce = -axialForces[i]*plotDirection;
 			float fa[3]={(float)axialForce[0], (float)axialForce[1], (float)axialForce[2]};
-			liningAxialForce->InsertNextTupleValue(fa);
+			liningAxialForce->INSERT_NEXT_TUPLE(fa);
 
 			Vector3r shearForce = shearForces[i]*plotDirection;
 			float fs[3]={(float)shearForce[0], (float)shearForce[1], (float)shearForce[2]};
-			liningShearForce->InsertNextTupleValue(fs);
+			liningShearForce->INSERT_NEXT_TUPLE(fs);
 
 			Vector3r normalP = pb->liningNormalPressure;
 			Vector3r totalP = pb->liningTotalPressure;
 			float pN[3] = {(float)normalP[0], (float)normalP[1], (float)normalP[2]};
 			float pT[3] = {(float)totalP[0],  (float)totalP[1],  (float)totalP[2]};
-			liningNormalPressure->InsertNextTupleValue(pN);
-			liningTotalPressure->InsertNextTupleValue(pT);
+			liningNormalPressure->INSERT_NEXT_TUPLE(pN);
+			liningTotalPressure->INSERT_NEXT_TUPLE(pT);
 			Vector3r normalPideal=-1.0*(normalP.norm())*plotDirection;
 			float pNi[3] = {(float)normalPideal[0], (float)normalPideal[1], (float)normalPideal[2]};
-			liningNormalPressureIdeal->InsertNextTupleValue(pNi);
+			liningNormalPressureIdeal->INSERT_NEXT_TUPLE(pNi);
 //#endif
 			
 			

@@ -29,7 +29,7 @@ class BodyContainer: public Serializable{
 	private:
 		using ContainerT = std::vector<shared_ptr<Body> > ;
 		using MemberMap = std::map<Body::id_t,Se3r> ;
-		ContainerT body;
+// 		ContainerT body;
 	public:
 		friend class InteractionContainer;  // accesses the body vector directly
 		
@@ -51,9 +51,11 @@ class BodyContainer: public Serializable{
 		using iterator = smart_iterator ;
 		using const_iterator = const smart_iterator ;
 
-		BodyContainer() {};
+// 		BodyContainer() {};
 		virtual ~BodyContainer() {};
-		Body::id_t insert(shared_ptr<Body>);
+		Body::id_t insert(shared_ptr<Body>); // => body.push_back()
+		Body::id_t insertAtId(shared_ptr<Body> b, Body::id_t candidate);  // => body[candidate]=...
+			
 		void clear();
 		iterator begin() {
 			iterator temp(body.begin());
@@ -74,8 +76,11 @@ class BodyContainer: public Serializable{
 		}
 		bool erase(Body::id_t id, bool eraseClumpMembers);
 		
-		REGISTER_CLASS_AND_BASE(BodyContainer,Serializable);
-		REGISTER_ATTRIBUTES(Serializable,(body));
-		DECLARE_LOGGER;
+		YADE_CLASS_BASE_DOC_ATTRS(BodyContainer,Serializable,"Standard body container for a scene",
+		((ContainerT,body,,,"The underlying vector<shared_ptr<Body> >"))
+		)
+// 		REGISTER_CLASS_AND_BASE(BodyContainer,Serializable);
+// 		REGISTER_ATTRIBUTES(Serializable,(body));
+// 		DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(BodyContainer);

@@ -38,6 +38,8 @@
   #define SELF_CHECK
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 
 /*-------------------------------------------------------------------------*/
 /* Methods exported to python */
@@ -871,3 +873,6 @@ pygts_parent_vertex_class(void)
 
   return klass;
 }
+
+#pragma GCC diagnostic pop
+

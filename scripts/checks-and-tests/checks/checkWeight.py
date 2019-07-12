@@ -4,7 +4,7 @@
 # Their weight is measured and compares with real mass particles
 
 from __future__ import print_function
-from yade import utils,pack,export,geom
+from yade import pack,export,geom
 
 tc=0.001
 en=.003
@@ -50,5 +50,5 @@ print ("Precalculated weight %f" % sphMass)
 print ("Obtained weight %f" % curForce)
 
 if (((sphMass-curForce)/curForce)>tolerance):
-	resultStatus += 1
+	raise YadeCheckError("(((sphMass-curForce)/curForce)>tolerance)")
 

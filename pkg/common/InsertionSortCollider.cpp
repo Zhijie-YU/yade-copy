@@ -6,13 +6,13 @@
 #include<core/Interaction.hpp>
 #include<core/InteractionContainer.hpp>
 #include<pkg/common/Dispatching.hpp>
-#include<pkg/dem/NewtonIntegrator.hpp>
 #include<pkg/common/Sphere.hpp>
 
 #include<boost/static_assert.hpp>
 #ifdef YADE_OPENMP
   #include<omp.h>
 #endif
+
 
 YADE_PLUGIN((InsertionSortCollider))
 CREATE_LOGGER(InsertionSortCollider);
@@ -22,7 +22,11 @@ CREATE_LOGGER(InsertionSortCollider);
 void InsertionSortCollider::handleBoundInversion(Body::id_t id1, Body::id_t id2, InteractionContainer* interactions, Scene*){
 	assert(!periodic);
 	assert(id1!=id2);
+	#ifdef YADE_MPI //Note #0: this #ifdef is painfull, there many others needed hereafter (see #1), compilation without MPI will fail atm
+	if (spatialOverlap(id1,id2) && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get(),scene->subdomain) && !interactions->found(id1,id2))
+	#else	
 	if (spatialOverlap(id1,id2) && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get()) && !interactions->found(id1,id2))
+	#endif
 		interactions->insert(shared_ptr<Interaction>(new Interaction(id1,id2)));
 }
 
@@ -40,7 +44,9 @@ void InsertionSortCollider::insertionSort(VecBounds& v, InteractionContainer* in
 			// see (old site, fixed bug) https://bugs.launchpad.net/yade/+bug/669095
 			// skip bounds with same isMin flags, since inversion doesn't imply anything in that case  
 			if(isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id!=v[j].id)) {
-				/*if (isMin)*/ handleBoundInversion(viInit.id,v[j].id,interactions,scene);
+				if(viInit.id<v[j].id) handleBoundInversion(viInit.id,v[j].id,interactions,scene);
+				else handleBoundInversion(v[j].id,viInit.id,interactions,scene);
+				/*if (isMin)*/ 
 // 				else handleBoundSplit(viInit.id,v[j].id,interactions,scene);
 			}
 			j--;
@@ -91,7 +97,8 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 				v[j+1]=v[j];
 				if(isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id!=v[j].id)) {
 					const Body::id_t& id1 = v[j].id; const Body::id_t& id2 = viInit.id; 
-					if (spatialOverlap(id1,id2) && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get()) && !interactions->found(id1,id2))
+					//(see #0 if compilation fails)
+					if (spatialOverlap(id1,id2) && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get(),scene->subdomain) && !interactions->found(id1,id2))
 						newInteractions[threadNum].push_back(std::pair<Body::id_t,Body::id_t>(v[j].id,viInit.id));
 				}
 				j--;
@@ -119,7 +126,7 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 				if(isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id!=v[j].id)) {
 					const Body::id_t& id1 = v[j].id; const Body::id_t& id2 = viInit.id;
 					//FIXME: do we need the check with found(id1,id2) here? It is checked again below...
-					if (spatialOverlap(id1,id2) && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get()) && !interactions->found(id1,id2))
+					if (spatialOverlap(id1,id2) && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get(),scene->subdomain) && !interactions->found(id1,id2))
 						newInteractions[threadNum].push_back(std::pair<Body::id_t,Body::id_t>(v[j].id,viInit.id));}
 				j--;
 			}
@@ -132,7 +139,8 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 	for (int n=0;n<ompThreads;n++)
 		for (size_t k=0, kend=newInteractions[n].size();k<kend;k++)
 			/*if (!interactions->found(newInteractions[n][k].first,newInteractions[n][k].second))*/ //Not needed, already checked above
-			interactions->insert(shared_ptr<Interaction>(new Interaction(newInteractions[n][k].first,newInteractions[n][k].second)));
+			if(newInteractions[n][k].first<newInteractions[n][k].second) interactions->insert(shared_ptr<Interaction>(new Interaction(newInteractions[n][k].first,newInteractions[n][k].second)));
+			else interactions->insert(shared_ptr<Interaction>(new Interaction(newInteractions[n][k].second,newInteractions[n][k].first)));
 	/// If some bounds traversed more than a half-chunk, we complete colliding with the sequential sort
 	if (parallelFailed) return insertionSort(v,interactions, scene, doCollide);
 #endif
@@ -168,14 +176,13 @@ vector<Body::id_t> InsertionSortCollider::probeBoundingVolume(const Bound& bv){
 	bool InsertionSortCollider::isActivated(){
 		// activated if number of bodies changes (hence need to refresh collision information)
 		// or the time of scheduled run already came, or we were never scheduled yet
-		if(!strideActive) return true;
-		if(!newton) return true;
-		if(fastestBodyMaxDist<0){fastestBodyMaxDist=0; return true;}
+		if(!strideActive) { return true; }
+		if(!newton) { return true; }
 		fastestBodyMaxDist=newton->maxVelocitySq;
-		if(fastestBodyMaxDist>=1 || fastestBodyMaxDist==0) return true;
-		if(BB[0].size() != 2*scene->bodies->size()) return true;
-		if(scene->interactions->dirty) return true;
-		if(scene->doSort) { scene->doSort=false; return true; }
+		if(fastestBodyMaxDist>=1 || fastestBodyMaxDist==0) {  return true; }
+		if(BB[0].size() != 2*scene->bodies->size()) { return true; }
+		if(scene->interactions->dirty) {  return true; }
+		if(scene->doSort) { return true; }
 		return false;
 	}
 
@@ -183,10 +190,11 @@ void InsertionSortCollider::action(){
 	#ifdef ISC_TIMING
 		timingDeltas->start();
 	#endif
-
+	numAction++;
 	const size_t nBodies = scene->bodies->size();
 	InteractionContainer* interactions=scene->interactions.get();
 	scene->interactions->iterColliderLastRun=-1;
+	scene->doSort = false;
 	#ifdef YADE_OPENMP
 	if (ompThreads<=0) ompThreads = omp_get_max_threads();
 	#endif
@@ -271,9 +279,10 @@ void InsertionSortCollider::action(){
 		}
 		// STRIDE
 			// get us ready for strides, if they were deactivated
-			if(!strideActive && verletDist>0 && newton->maxVelocitySq>=0) strideActive=true;
+			if(verletDist>0) strideActive=true;
 			if(strideActive){
 				assert(verletDist>0);
+				assert(YADE_PTR_DYN_CAST<NewtonIntegrator>(newton));
 				assert(strideActive); assert(newton->maxVelocitySq>=0);
 				newton->updatingDispFactor=updatingDispFactor;
 			} else boundDispatcher->sweepDist=0;
@@ -359,13 +368,19 @@ void InsertionSortCollider::action(){
 						const Body::id_t& jid=V[j].id;
 						// take 2 of the same condition (only handle collision [min_i..max_i]+min_j, not [min_i..max_i]+min_i (symmetric)
 						if(!(V[j].flags.isMin && V[j].flags.hasBB)) continue;
-						if (spatialOverlap(iid,jid) && Collider::mayCollide(Body::byId(iid,scene).get(),Body::byId(jid,scene).get()) ){
+						if (spatialOverlap(iid,jid) && Collider::mayCollide(Body::byId(iid,scene).get(),Body::byId(jid,scene).get()
+						#ifdef YADE_MPI
+							,scene->subdomain
+						#endif
+						)){
 						#ifdef YADE_OPENMP
 							unsigned int threadNum = omp_get_thread_num();
 							newInts[threadNum].push_back(std::pair<Body::id_t,Body::id_t>(iid,jid));
 						#else
-							if (!interactions->found(iid,jid))
-							interactions->insert(shared_ptr<Interaction>(new Interaction(iid,jid)));
+							if (!interactions->found(iid,jid)){
+								if(iid<jid) interactions->insert(shared_ptr<Interaction>(new Interaction(iid,jid)));
+								else interactions->insert(shared_ptr<Interaction>(new Interaction(jid,iid)));
+							}
 						#endif
 						}
 					}
@@ -373,8 +388,10 @@ void InsertionSortCollider::action(){
 				//go through newly created candidates sequentially, duplicates coming from different threads may exist so we check existence with found()
 				#ifdef YADE_OPENMP
 				for (int n=0;n<ompThreads;n++) for (size_t k=0, kend=newInts[n].size();k<kend;k++)
-					if (!interactions->found(newInts[n][k].first,newInts[n][k].second))
-						interactions->insert(shared_ptr<Interaction>(new Interaction(newInts[n][k].first,newInts[n][k].second)));
+					if (!interactions->found(newInts[n][k].first,newInts[n][k].second)){
+						if(newInts[n][k].first<newInts[n][k].second) interactions->insert(shared_ptr<Interaction>(new Interaction(newInts[n][k].first,newInts[n][k].second)));
+						else interactions->insert(shared_ptr<Interaction>(new Interaction(newInts[n][k].second,newInts[n][k].first)));
+					}
 				#endif
 			} else { // periodic case: see comments above
 				for(size_t i=0; i<2*nBodies; i++){
@@ -384,7 +401,8 @@ void InsertionSortCollider::action(){
 					for(long j=V.norm(i+1); V[j].id!=iid; j=V.norm(j+1)){
 						const Body::id_t& jid=V[j].id;
 						if(!(V[j].flags.isMin && V[j].flags.hasBB)) continue;
-						handleBoundInversionPeri(iid,jid,interactions,scene);
+						if(iid<jid) handleBoundInversionPeri(iid,jid,interactions,scene);
+						else handleBoundInversionPeri(jid,iid,interactions,scene);
 					}
 				}
 			}
@@ -446,7 +464,10 @@ void InsertionSortCollider::insertionSortPeri(VecBounds& v, InteractionContainer
 			if(j==loIdx && vi.coord<0) { vi.period-=1; vi.coord+=v.cellDim; loIdx=v.norm(loIdx+1); }
 			else if(j1==loIdx) { vNew.period+=1; vNew.coord-=v.cellDim; loIdx=v.norm(loIdx-1); }
 			if(isMin && !v[j].flags.isMin && (doCollide && viHasBB && v[j].flags.hasBB))
-				if((vi.id!=vNew.id)) handleBoundInversionPeri(vi.id,vNew.id,interactions,scene);
+				if(vi.id!=vNew.id){
+					if(vi.id<vNew.id) handleBoundInversionPeri(vi.id,vNew.id,interactions,scene);
+					else handleBoundInversionPeri(vNew.id,vi.id,interactions,scene);
+				}
 			j=v.norm(j-1);
 		}
 		v[v.norm(j+1)]=vi;
@@ -461,7 +482,11 @@ void InsertionSortCollider::handleBoundInversionPeri(Body::id_t id1, Body::id_t 
 	if (interactions->found(id1,id2)) return;// we want to _create_ new ones, we don't care about existing ones
 	Vector3i periods(Vector3i::Zero());
 	bool overlap=spatialOverlapPeri(id1,id2,scene,periods);
-	if (overlap && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get())){
+	if (overlap && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get()
+		#ifdef YADE_MPI
+		,scene->subdomain
+		#endif
+		)){
 		shared_ptr<Interaction> newI=shared_ptr<Interaction>(new Interaction(id1,id2));
 		newI->cellDist=periods;
 		interactions->insert(newI);

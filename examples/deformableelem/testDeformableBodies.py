@@ -7,7 +7,12 @@ O=Omega()
 
 ## Create deformable elements internal materials and interaction element material
 
-mat=LinIsoRayleighDampElastMat(label='aluminiummaterial');
+try:
+	mat=LinIsoRayleighDampElastMat(label='aluminiummaterial');
+except NameError:
+	print("\n[93mDid you compile yade with cmake option -DENABLE_FEMLIKE=1 ?[0m\n")
+	import sys
+	sys.exit()
 
 intermat=LinCohesiveStiffPropDampElastMat(label='intermat')
 

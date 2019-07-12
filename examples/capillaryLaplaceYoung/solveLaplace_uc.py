@@ -8,21 +8,27 @@ from builtins import range
 execfile('solveLiqBridge.py',globals())
 
 def solveLaplace_uc(theta,rRatio,uStar,delta1Cons,deltaZ,save):
-    # Solves Laplace-Young equation for given r=rRatio, uc*=uStar and theta
-    #   Making recursively use of solveLiqBridge function, the present function
-    #   identifies all possible bridges configurations for given r, uc*, and
-    #   theta
+    ''' Solves Laplace-Young equation for given r=rRatio, uc*=uStar and theta.\n
+    Making recursively use of solveLiqBridge function, the present function identifies all possible bridges configurations for given r, uc*, and theta
 
-    # Input attributes (see also solveLiqBridge function):
-    # theta: contact angle (deg)
-    # rRatio: rMax / rMin for the considered particles pair
-    # uStar: dimensionless capillary pressure
-    # delta1Cons: numpy.array of delta1 (see solveLiqBridge) values to consider
-    # deltaZ: see solveLiqBridge
-    # save: 0/1 to save text files including the capillary bridges data (if 1)
+    Input attributes are (see also solveLiqBridge function):
+    :param theta: contact angle (deg)
+    :param rRatio: rMax / rMin for the considered particles pair
+    :param uStar: dimensionless capillary pressure
+    :param delta1Cons: numpy.array of delta1 (see solveLiqBridge) values to consider
+    :param deltaZ: see solveLiqBridge
+    :param save: 0/1 to save text files including the capillary bridges data (if 1)
 
-    # Returns a 2D numpy.array of capillary bridges data (see sol_u below),
-    # possibly (in case save=1) also written in text files.
+    :returns: a 2D numpy.array of capillary bridges data, possibly (in case save=1) also written in text files. Each data is a tuple with:
+    \tinterparticle distance,
+    \tuStar value,
+    \tdimensionless volume (= vol /R2^3),
+    \tdimensionless force = force/(2*pi*gamma*R2),
+    \tdelta1/2 = filling angles on the 2 particles (degrees),
+    \teStar = free energy/(gamma* R2^2),
+    \tnn11 = 11-term of integral(ni nj dS) / R2^2 = 22-term,
+    \tnn33 = 33-term, with 3 axis = the meniscus orientation (NB: surface / R2^2 = 2*nn11 + nn33)
+    '''
 
 
 

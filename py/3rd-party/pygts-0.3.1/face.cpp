@@ -27,6 +27,9 @@
 
 #include "pygts.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+
 
 #if PYGTS_DEBUG
   #define SELF_CHECK if(!pygts_face_check((PyObject*)self)) {         \
@@ -643,3 +646,6 @@ pygts_face_new(GtsFace *f)
   pygts_object_register(face);
   return PYGTS_FACE(face);
 }
+
+#pragma GCC diagnostic pop
+

@@ -1,5 +1,6 @@
 // 2009 © Václav Šmilauer <eudoxos@arcig.cz>
 
+// for some reading about these conversions, see e.g. https://misspent.wordpress.com/2009/09/27/how-to-write-boost-python-converters/ (except the latter advocates using some "borrowed()" in the from-Python construc(), which is not done here)
 
 #include<lib/base/Math.hpp>
 #include<lib/base/openmp-accu.hpp>
@@ -158,12 +159,12 @@ struct custom_mask_from_long{
 		void* storage=((boost::python::converter::rvalue_from_python_storage<mask_t>*)(data))->storage.bytes;
 		new (storage) mask_t; mask_t* mask=(mask_t*)storage;
 #if PY_MAJOR_VERSION >= 3
-		if (PyLong_Check(obj_ptr)) obj_ptr = PyLong_FromLong(PyInt_AsLong(obj_ptr));
+		obj_ptr = _PyLong_Format(obj_ptr,2);
+		std::string s(PyUnicode_AsUTF8(obj_ptr));
 #else
-		if (PyInt_Check(obj_ptr)) obj_ptr = PyLong_FromLong(PyInt_AsLong(obj_ptr));
-#endif
 		obj_ptr = _PyLong_Format(obj_ptr,2,0,0);
 		std::string s(PyString_AsString(obj_ptr));
+#endif
 		//
 		if (s.substr(0,2).compare("0b")==0) s = s.substr(2);
 		if (s[s.length()-1]=='L') s = s.substr(0,s.length()-1);
@@ -224,6 +225,7 @@ BOOST_PYTHON_MODULE(_customConverters){
 		VECTOR_SEQ_CONV(shared_ptr<IPhysFunctor>);
 		VECTOR_SEQ_CONV(shared_ptr<LawFunctor>);
 		VECTOR_SEQ_CONV(shared_ptr<IntrCallback>);
+		VECTOR_SEQ_CONV(shared_ptr<Interaction>);
 		#ifdef YADE_BODY_CALLBACK
 			VECTOR_SEQ_CONV(shared_ptr<BodyCallback>);
 		#endif

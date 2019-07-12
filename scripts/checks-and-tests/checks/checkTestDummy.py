@@ -2,7 +2,7 @@
 # 2011 © Bruno Chareyre <bruno.chareyre@hmg.inpg.fr>
 # A dummy test, just to give an example, and detect possible path problems
 from __future__ import print_function
-from yade import pack,utils,export,plot
+from yade import pack,export,plot
 import math,os,sys
 print('checkTest mechanism')
 
@@ -11,5 +11,4 @@ print('checkTest mechanism')
 #do something and get a result...
 
 if 0: #put a condition on the result here, is it the expected result? else:
-	print("Dummy failed (we know it will not happen here, you get the idea).")
-	resultStatus+=1
+	raise YadeCheckError("Dummy failed (we know it will not happen here, you get the idea).")

@@ -2,19 +2,18 @@
 #ifdef YADE_POTENTIAL_BLOCKS
 #pragma once
 
-#include<vector>
-#include<core/Shape.hpp>
-#include<Eigen/Core>
+#include <vector>
+#include <core/Shape.hpp>
+#include <Eigen/Core>
 #include <Eigen/LU> 
 #include <Eigen/QR>
-#include<lib/base/openmp-accu.hpp>
+#include <lib/base/openmp-accu.hpp>
 namespace yade{
 class PotentialBlock : public Shape
 {
 
 	public:
-		
-		
+
 		struct Planes{
 			vector<int> vertexID;
 		};
@@ -40,59 +39,59 @@ class PotentialBlock : public Shape
 		void postLoad(PotentialBlock&);
 	
 	YADE_CLASS_BASE_DOC_ATTRS_CTOR(PotentialBlock,Shape,"Geometry of PotentialBlock.",
-		((bool, isLining, false,, "false"))
+		((bool, isLining, false,, "boolean whether particle is part of tunnel lining (used in the RockLining.cpp script)"))
 		((double, liningStiffness, pow(10.0,8),, "lining stiffness"))
 		((double, liningFriction, 20.0,, "lining friction"))
 		((double, liningLength, 0.0,, "lining spacing between nodes"))
 		((double, liningTensionGap, 0.0,, "numerical gap between lining and block to allowing tension to be calculated"))
 		((Vector3r, liningNormalPressure, Vector3r(0,0,0),, "normal pressure acting on lining"))
 		((Vector3r, liningTotalPressure, Vector3r(0,0,0),, "total pressure acting on lining"))
-		((bool, isBoundary, false,, "boolean whether a block is part of a boundary block"))
-		((bool, isEastBoundary, false,, "boolean used for a case history"))
-		((bool, isBolt, false,, "boolean whether a block is part of a bolt"))
-		((bool, fixedNormal, false,, "boolean whether to fix the normal contact at a boundary"))
+		((bool, isBoundary, false,, "boolean whether the particle is part of a boundary block"))
+			((bool, isEastBoundary, false,Attr::hidden, "boolean used for a case history"))
+		((bool, isBolt, false,, "boolean whether a block is part of a bolt (used in the Rockbolt.cpp script)"))
+		((bool, fixedNormal, false,, "boolean whether to fix the contact normal at a boundary"))
 		((Vector3r, boundaryNormal, Vector3r::Zero(),,"normal direction of boundary"))
 		((bool, AabbMinMax, false,, "aabb"))
-		((Vector3r, minAabb, Vector3r::Zero(),,"min from box centre"))
-		((Vector3r, maxAabb, Vector3r::Zero(),,"max from box centre"))
+		((Vector3r, minAabb, Vector3r::Zero(),,"min from box centre: Used for visualisation"))
+		((Vector3r, maxAabb, Vector3r::Zero(),,"max from box centre: Used for visualisation"))
 		((Vector3r, minAabbRotated, Vector3r::Zero(),,"updated aabb from box centre"))
 		((Vector3r, maxAabbRotated, Vector3r::Zero(),,"updated aabb from box centre"))
-		((Vector3r, halfSize, Vector3r::Zero(),,"max from box centre"))
-		((vector<Vector3r> , node, ,, "not used "))
-		((Real, gridVol, ,, "not used "))
-		((Quaternionr , oriAabb, Quaternionr::Identity(),, "original aabb "))
-		((Real , r, 0.1,, "r in Potential Particles "))
-		((Real , R, 1.0,, "R in Potential Particles"))
-		((Real , k, 0.01,, "k in Potential Particles"))
-		((Real , volume, 0.1,, "volume"))
+			((Vector3r, halfSize, Vector3r::Zero(),Attr::hidden,"max from box centre"))
+			((vector<Vector3r>, node, ,Attr::hidden, "(not used)"))
+			((Real, gridVol, ,Attr::hidden, "(not used)"))
+		((Quaternionr, oriAabb, Quaternionr::Identity(),, "original aabb "))
+		((Real, r, 0.1,, "r in Potential Particles"))
+		((Real, R, 1.0,, "R in Potential Particles"))
+		((Real, k, ,, "k in Potential Particles (not used)"))
+		((Real, volume, ,, "volume"))
 		((int, id, -1,, " for graphics"))
 		((bool, erase, false,, " for excavation"))
 		((vector<bool>, intactRock, false,, " property for plane"))
 		((vector<bool>, isBoundaryPlane, ,, "property for plane"))
-		((vector<double>, hwater, ,, "property for plane (not used), height of pore water"))
-		((vector<double>, JRC, ,, "property for plane (not used),rock joint"))
-		((vector<double>, JCS, ,, "property for plane (not used),rock joint"))
-		((vector<double>, asperity, ,, "property for plane (not used),rock joint"))
-		((vector<double>, sigmaC, ,,"property for plane (not used),rock joint"))
-		((vector<double>, phi_b, ,, "property for plane ,rock joint"))
-		((vector<double>, phi_r, ,, "property for plane ,rock joint"))
-		((vector<double>, cohesion, ,, "property for plane ,rock joint"))
-		((vector<double>, tension, ,, "property for plane ,rock joint"))
-		((vector<double>, lambda0, ,, "property for plane (not used),heat"))
-		((vector<double>, kn, ,, "property for plane ,rock joint"))
-		((vector<double>, ks, ,, "property for plane ,rock joint"))
-		((vector<double>, heatCapacity, ,, "property for plane ,rock joint"))
-		((vector<double>, rFactor, ,, "not used, individual factor for r"))
+			((vector<double>, hwater, ,Attr::hidden, "property for plane (not used), height of pore water"))
+			((vector<double>, JRC, ,Attr::hidden, "property for plane (not used), rock joint"))
+			((vector<double>, JCS, ,Attr::hidden, "property for plane (not used), rock joint"))
+			((vector<double>, asperity, ,Attr::hidden, "property for plane (not used), rock joint"))
+			((vector<double>, sigmaC, ,Attr::hidden,"property for plane (not used), rock joint"))
+		((vector<double>, phi_b, ,, "property for plane, rock joint"))
+		((vector<double>, phi_r, ,, "property for plane, rock joint"))
+		((vector<double>, cohesion, ,, "property for plane, rock joint"))
+		((vector<double>, tension, ,, "property for plane, rock joint"))
+			((vector<double>, lambda0, ,Attr::hidden, "property for plane (not used), heat"))
+		((vector<double>, kn, ,, "property for plane, rock joint"))
+		((vector<double>, ks, ,, "property for plane, rock joint"))
+			((vector<double>, heatCapacity, ,Attr::hidden, "property for plane, rock joint"))
+			((vector<double>, rFactor, ,Attr::hidden, "(not used), individual factor for r"))
 		((vector<Vector3r>, vertices,,,"vertices"))
 		//((Eigen::MatrixXd , Amatrix, ,, "a "))
 		//((Eigen::MatrixXd , Dmatrix, ,, "b "))
 		((double, waterVolume, ,, "volume of body submerged in water"))
-		((vector<Vector3r> ,verticesCD, ,, "vertices "))
-		((vector<double> , a, ,, "list of a of plane normal"))
-		((vector<double> , b, ,, "list of b of plane normal"))
-		((vector<double> , c, ,, "list of c of plane normal"))
-		((vector<double> , d, ,, "list of d of plane normal"))
-		((vector<int> , jointType, ,, "jointType"))
+		((vector<Vector3r>, verticesCD, ,, "vertices"))
+		((vector<double>, a, ,, "list of a of plane normal"))
+		((vector<double>, b, ,, "list of b of plane normal"))
+		((vector<double>, c, ,, "list of c of plane normal"))
+		((vector<double>, d, ,, "list of d of plane normal"))
+		((vector<int>, jointType, ,, "jointType"))
 		,
 		createIndex(); /*ctor*/
 		#if 0

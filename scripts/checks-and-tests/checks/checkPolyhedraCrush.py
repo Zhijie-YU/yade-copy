@@ -11,22 +11,20 @@ vel=0.01
 tolerance = 0.05
 startPos = sizeB
 
-def printWarning (f_awaited, f_real, n_awaited, n_real):
-   print ("The awaited force is %.4f, but obtained force is %.4f; number of bodies: %d vs %d! Iteration %d"%(f_awaited, f_real, n_awaited, n_real, O.iter))
+def warningString (f_awaited, f_real, n_awaited, n_real):
+   return str("The awaited force is %.4f, but obtained force is %.4f; number of bodies: %d vs %d! Iteration %d"%(f_awaited, f_real, n_awaited, n_real, O.iter))
 
 def printSuccess ():
    print ("Checkpoint: force values and number of bodies are OK! Iteration %d"%(O.iter))
 
 def checkForcesBodies(fR, bodNum):
    if (abs(f[2] - fR)/f[2] >  tolerance or len(O.bodies) != bodNum):
-      printWarning (fR, f[2], 4, len(O.bodies))
-      global resultStatus
-      resultStatus += 1
+      raise YadeCheckError(warningString(fR, f[2], 4, len(O.bodies)))
    else:
       printSuccess()
 
 mat1 = PolyhedraMat(density=densityIn, young=youngIn,poisson=poissonIn, frictionAngle=frictionIn,IsSplitable=True,strength=1)
-O.bodies.append(utils.wall(0,axis=2,sense=1, material = mat1))
+O.bodies.append(wall(0,axis=2,sense=1, material = mat1))
 
 vertices = [[0,0,0],[sizeB,0,0],[sizeB,sizeB,0],[sizeB,sizeB,sizeB],[0,sizeB,0],[0,sizeB,sizeB],[0,0,sizeB],[sizeB,0,sizeB]]
 t = polyhedra_utils.polyhedra(mat1,v=vertices)

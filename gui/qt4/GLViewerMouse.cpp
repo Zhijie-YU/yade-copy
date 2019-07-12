@@ -107,7 +107,7 @@ void GLViewer::wheelEvent(QWheelEvent* event){
 	qglviewer::Vec newPos=manipulatedFrame()->position()+qglviewer::Vec(normal[0],normal[1],normal[2])*dist;
 	manipulatedFrame()->setPosition(newPos);
 	renderer->clipPlaneSe3[manipulatedClipPlane].position=Vector3r(newPos[0],newPos[1],newPos[2]);
-	updateGL();
+	updateGLViewer();
 	/* in draw, bound cutting planes will be moved as well */
 }
 

@@ -61,7 +61,13 @@ class GLViewer : public QGLViewer
 		boost::posix_time::ptime last_user_event;
 
      public:
-		//virtual void updateGL(void);
+		void updateGLViewer() {
+			#if QGLVIEWER_VERSION < 0x020700
+				this->updateGL();
+			#else
+				this->update();
+			#endif
+		};
 
 		const int viewId;
 

@@ -12,7 +12,6 @@
 #include <stdio.h>
 
 #include <vtkPolyData.h>
-#include<vtkXMLUnstructuredGridWriter.h>
 
 // https://codeyarns.com/2014/03/11/how-to-selectively-ignore-a-gcc-warning/
 // https://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Pragmas.html
@@ -23,19 +22,19 @@
 #include<vtkTriangle.h>
 #pragma GCC diagnostic pop
 
-#include<vtkSmartPointer.h>
-#include<vtkFloatArray.h>
-#include<vtkCellArray.h>
-#include<vtkCellData.h>
+#include <vtkSmartPointer.h>
+#include <vtkFloatArray.h>
+#include <vtkCellArray.h>
+#include <vtkCellData.h>
 #include <vtkStructuredPoints.h>
-#include<vtkStructuredPointsWriter.h>
-#include<vtkWriter.h>
-#include<vtkExtractVOI.h>
-#include<vtkXMLImageDataWriter.h>
-#include<vtkXMLStructuredGridWriter.h>
-#include<vtkTransformPolyDataFilter.h>
-#include<vtkTransform.h>
-#include<vtkXMLUnstructuredGridWriter.h>
+#include <vtkStructuredPointsWriter.h>
+#include <vtkWriter.h>
+#include <vtkExtractVOI.h>
+#include <vtkXMLImageDataWriter.h>
+#include <vtkXMLStructuredGridWriter.h>
+#include <vtkTransformPolyDataFilter.h>
+#include <vtkTransform.h>
+#include <vtkXMLUnstructuredGridWriter.h>
 #include <vtkAppendPolyData.h>
 #include <vtkCylinderSource.h>
 #include <ClpSimplex.hpp>
@@ -43,11 +42,6 @@
 #include <CoinTime.hpp>
 #include <CoinBuild.hpp>
 #include <CoinModel.hpp>
-//#include "/home/boon/coin-Clp/Clp/src/ClpSimplex.hpp"
-//#include "/home/boon/coin-Clp/CoinUtils/src/CoinHelperFunctions.hpp"
-//#include "/home/boon/coin-Clp/CoinUtils/src/CoinTime.hpp"
-//#include "/home/boon/coin-Clp/CoinUtils/src/CoinBuild.hpp"
-//#include "/home/boon/coin-Clp/CoinUtils/src/CoinModel.hpp"
 
 class RockBolt: public PeriodicEngine{	
 

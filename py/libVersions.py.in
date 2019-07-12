@@ -13,11 +13,45 @@ To obtain a list of all libraries use the function :yref:`yade.libVersions.print
 All libraries listed in :ref:`prerequisites<prerequisites>` are detected by this module.
 
 .. note:: If we need a version of some library not listed in :ref:`prerequisites<prerequisites>`, then it must also be added to :ysrc:`that list<doc/sphinx/installation.rst>`.
+
+When adding a new version please have a look at these three files: 
+
+1. :ysrc:`py/_libVersions.cpp`: detection of versions from ``#include`` files by C++.
+2. :ysrc:`py/libVersions.py.in`: python module which is constructed by cmake during compilation. All ``*.in`` files are processed by cmake.
+3. :ysrc:`cMake/FindMissingVersions.cmake`: forced detection of library with undetectable version.
 """
 
 # all C++ functions are accessible now:
 from yade._libVersions import *
 import yade.config
+
+def getLinuxVersion():
+	"""
+	:return: string containing linux release and version, preferably the value of ``PRETTY_NAME`` from file ``/etc/os-release``.
+	"""
+	ret=""
+	try:
+		import os
+		listDir = os.listdir("/etc")
+		once = ("os-release" in listDir)
+		for f in listDir:
+			if((once and f=="os-release") or ((not once) and f.endswith("elease"))):
+				with open(os.path.join("/etc", f), 'r') as fin:
+					lines=""
+					for line in fin:
+						if(line.startswith("PRETTY_NAME")):
+							try:
+								ret=(line.split('"')[1])
+							except Exception as e:
+								ret=(line)
+							break
+						lines+=line
+					if(ret==""): ret=("\n"+lines)
+	except Exception as e:
+		print("Error: cannot find file /etc/os-release. Caught exception:",e)
+	if(ret==""): ret="Unknown"
+	return ret
+
 
 def getVersion(libName):
 	"""
@@ -80,7 +114,8 @@ def getAllVersionsCmake():
 	addVer("boost",'${Boost_MAJOR_VERSION}','${Boost_MINOR_VERSION}','${Boost_SUBMINOR_VERSION}','${Boost_VERSION}')
 	# 3. qt
 	addVer("qt"   ,'${Used_QT_VERSION_MAJOR}','${Used_QT_VERSION_MINOR}','${Used_QT_VERSION_PATCH}','${Used_QT_VERSION_MAJOR}.${Used_QT_VERSION_MINOR}.${Used_QT_VERSION_PATCH}')
-	# 4. freeglut   - I don't know how to detect it
+	# 4. freeglut
+	addVer("freeglut" ,'${FREEGLUT_VERSION_MAJOR}','${FREEGLUT_VERSION_MINOR}','${FREEGLUT_VERSION_PATCH}','${FREEGLUT_VERSION_STR}')
 	# 5. qglviewer  - I don't know how to detect it
 	# 6. python
 	addVer("python",'${PYTHON_VERSION_MAJOR}','${PYTHON_VERSION_MINOR}','${PYTHON_VERSION_PATCH}','${PYTHON_VERSION_STRING}')
@@ -100,6 +135,36 @@ def getAllVersionsCmake():
 	# 16. metis     - I don't know how to detect it
 	# 17. mpi       - This one is based on https://cmake.org/cmake/help/v3.10/module/FindMPI.html
 	addVer("mpi"   ,'${MPI_CXX_VERSION_MAJOR}','${MPI_CXX_VERSION_MINOR}','0', '${MPI_CXX_VERSION}')
+	# 18. numpy
+	addVer("numpy" ,'${NUMPY_VERSION_MAJOR}','${NUMPY_VERSION_MINOR}','${NUMPY_VERSION_PATCH}', '${NUMPY_VERSION}')
+	# Note: these below are getting the version currently installed, not the one with which yade was compiled. Maybe this will need to be changed.
+	# 19. ipython
+	try:
+		import IPython
+		ipver=IPython.__version__
+		ipvertab=IPython.__version__.split('.')
+		addVer("ipython", ipvertab[0] , ipvertab[1] , ipvertab[2] , ipver )
+	except:
+		pass
+	# 20. sphinx, https://www.sphinx-doc.org/en/master/extdev/appapi.html#checking-the-sphinx-version
+	try:
+		import sphinx
+		spver=sphinx.version_info
+		addVer("sphinx", spver[0] , spver[1] , spver[2] , '%i.%i.%i-%s-%i'%spver )
+	except:
+		pass
+	# 21. clp
+	# Note: this can be fixed in the same way as forced detection of freeglut, with file cMake/FindMissingVersions.cmake
+	addVer("clp",'${CLP_VERSION_MAJOR}','${CLP_VERSION_MINOR}','${CLP_VERSION_RELEASE}','${CLP_VERSION}')
+	# 22. PyMPI
+	try:
+		import mpi4py
+		mpi4ver=mpi4py.__version__
+		mpi4vertab=mpi4py.__version__.split('.')
+		addVer("mpi4py", mpi4vertab[0] , mpi4vertab[1] , mpi4vertab[2] , mpi4ver )
+	except:
+		pass
+
 	return ret
 
 def printAllVersions(rstFormat=False):
@@ -151,7 +216,7 @@ def printAllVersions(rstFormat=False):
 		lines += sep.replace('-','=')+'\n'
 	else:
 		lines += sep
-	for libName in namesSet:
+	for libName in sorted(namesSet):
 		lines+="| "+(('{:'+str(longest[0])+'}').format(libName))+" |"
 		if (libName in cmakeVer) and (len(cmakeVer[libName])==2):
 			lines+=" "+(('{:'+str(longest[1])+'}').format(cmakeVer[libName][1]))+" |"
@@ -165,6 +230,7 @@ def printAllVersions(rstFormat=False):
 		if(rstFormat):
 			lines+= sep+'\n'
 
+	if(rstFormat==False): print("\n```")
 	#print("Yade revision  : ",yade.config.revision)
 	print("Yade version   : ",yade.config.version)
 	#print("Yade prefix    : ",yade.config.prefix)
@@ -172,9 +238,19 @@ def printAllVersions(rstFormat=False):
 	feats = ""
 	for f in yade.config.features: feats+=" "+f
 	print("Yade features  :",feats)
-	print("Yade config dir:",yade.config.confDir)
+	# print yade config dir relative to ${HOME}
+	confD = yade.config.confDir
+	try:
+		import os
+		confD = "~/"+os.path.relpath(yade.config.confDir,os.environ['HOME'])
+	except Exception as e:
+		pass
+	print("Yade config dir:",confD)
+	if(rstFormat==False): print("```")
 	print("\nLibraries used :\n")
 	print(lines)
+	print("Linux version: "+str(getLinuxVersion()))
+	print("")
 
 
 """

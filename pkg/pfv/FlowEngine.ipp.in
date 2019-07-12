@@ -237,7 +237,7 @@ void TemplateFlowEngine_@TEMPLATE_FLOW_NAME@<_CellInfo,_VertexInfo,_Tesselation,
         flow.kFactor = permeabilityFactor;
         flow.debugOut = debug;
         flow.useSolver = useSolver;
-	#ifdef CHOLMOD_LIBS
+	#ifdef LINSOLV
 	flow.numSolveThreads = numSolveThreads;
 	flow.numFactorizeThreads = numFactorizeThreads;
 	#endif

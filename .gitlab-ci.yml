@@ -1,38 +1,74 @@
-image: registry.gitlab.com/yade-dev/docker-yade
+# The previously used image:
+# image: registry.gitlab.com/yade-dev/docker-yade
+#
+# Five new images:
+# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
+# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
+# image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
+# image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+# image: registry.gitlab.com/yade-dev/docker-yade:suse15
+#
+# Useful link to validator: https://gitlab.com/yade-dev/trunk/-/ci/lint
+
 
 stages:
   - cmake
   - build
   - test
-  - doc
   - pages
 
-# https://docs.gitlab.com/ee/ci/yaml/#onlyexcept-basic
-# I create two "stage: cmake" instructions.
-# 1.1. only: master        will use -DCHUNKSIZE=1, to avoid future compilation errors caused by DCHUNKSIZE other than 1
-cmake_master:
-  stage: cmake
+# If you want to compile everything also on merge_request, change this template.
+# If you want to compile on one platform see [1] note below.
+.plaftorms_template: &platforms_definition
   only:
     - master
-  script:
-    - mkdir build && cd build
-    - cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCHUNKSIZE=1 -DCMAKE_INSTALL_PREFIX=../install -DPYTHON_VERSION=3 -DDISABLE_SAVE_TEMPS=1 ..
-  artifacts:
-    paths:
-      - build
-
-
-# 1.2. only: merge_request will use -DCHUNKSIZE=4, to make compilation faster by 3 minutes
-cmake_MR:
-  stage: cmake
-  only:
     - merge_request
+
+# stage: cmake uses ccache for faster compilation. ccache works only with -DCHUNKSIZE=1
+# Important: to get ccache to work an external volume must be mounted by gitlab-runner (in config file: /etc/gitlab-runner/config.toml)
+#            into docker directory /root/.ccache. By default in /etc/gitlab-runner/config.toml there is already this line:
+#               volumes = ["/cache"]
+#            it must be replaced with:
+#               volumes = ["/cache","/home/docker/ccache:/root/.ccache:rw"]
+#            where /home/docker/ccache is the directory in the host with write access.
+# See also : https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/configuration/advanced-configuration.md#example-2-mount-a-host-directory-as-a-data-volume
+.cmake_template: &cmake_definition
+  <<: *platforms_definition
+  stage: cmake
   script:
     - mkdir build && cd build
-    - cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCHUNKSIZE=4 -DCMAKE_INSTALL_PREFIX=../install -DPYTHON_VERSION=3 -DDISABLE_SAVE_TEMPS=1 ..
+    - export CC="ccache gcc"
+    - export CXX="ccache g++"
+    - cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX=../install -DPYTHON_VERSION=3 -DDISABLE_SAVE_TEMPS=1 ..
+    - ccache -s
   artifacts:
     paths:
       - build
+    expire_in: 2 weeks
+
+cmake_16_04:
+  <<: *cmake_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
+
+cmake_18_04:
+  <<: *cmake_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
+# [1] if you need to compile merge_request on another platform for testing, move these 3 lines to that platform. And do the same in stages: build, test, check.
+  only:
+    - master
+    - merge_request
+
+cmake_stretch:
+  <<: *cmake_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
+
+cmake_buster:
+  <<: *cmake_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+
+cmake_suse15:
+  <<: *cmake_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:suse15
 
 
 # Perhaps two more will added later
@@ -40,68 +76,181 @@ cmake_MR:
 # 1.5. only: schedules  For scheluded pipelines. Perhaps it will be e.g. for https://gitlab.com/yade-dev/trunk/issues/58
 #                       It is possible to send an environment variable to the pipeline from the schedule. So here maybe a selection of
 #                       what .deb package to build could be performed using an env variable.
+# in merge_request use the faster  linker: ld.gold. We save 2 minutes on every build.
+# in master        use the regular linker: ld.bfd.  Very rarely we might encounter linker errors. It's worth the faster build in merge_request.
 
-
-# 2. build stage
-make:
+.make_template: &make_definition
+  <<: *platforms_definition
   stage: build
-  only:
-    - master
-    - merge_request
   script:
-    - export JOBSNUM=$(case $CI_RUNNER_DESCRIPTION in 
-        "y_4pak_64cpu_256RAM_4TB_docker") echo "43" ;; 
-        "c_4pak_64cpu_256RAM_4TB_docker") echo "43" ;; 
-        "y_6pak_48cpu_128RAM_4TB_docker") echo "45" ;; 
-        "c_6pak_48cpu_128RAM_4TB_docker") echo "45" ;; 
-        "y_7pak_48cpu_128RAM_1TB_docker") echo "45" ;; 
-        "c_7pak_48cpu_128RAM_1TB_docker") echo "45" ;; 
-        "yade-runner") echo "12" ;; 
-        "yade-runner-01") echo "1" ;; 
+    - export LINK_GOLD=$(case    $CI_PIPELINE_SOURCE in "merge_request_event") echo "20" ;; *) echo "10";; esac)
+    - export LINK_REGULAR=$(case $CI_PIPELINE_SOURCE in "merge_request_event") echo "10" ;; *) echo "20";; esac)
+    - ld --version
+    - update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.gold" $LINK_GOLD
+    - update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.bfd" $LINK_REGULAR
+    - ld --version
+    - export JOBSNUM=$(case $CI_RUNNER_DESCRIPTION in
+        "y4pak") echo "43" ;;
+        "c4pak") echo "43" ;;
+        "y6pak") echo "46" ;;
+        "c6pak") echo "46" ;;
+        "y7pak") echo "46" ;;
+        "c7pak") echo "46" ;;
+        "yade-runner") echo "12" ;;
+        "yade-runner-01") echo "1" ;;
         *) echo "8";;
         esac)
     - echo $JOBSNUM
     - cd build
+    - echo "max_size = 100.0G" > ~/.ccache/ccache.conf
     - make -j $JOBSNUM
     - make install
     - make clean
+    - ccache -s
   artifacts:
     paths:
       - install
+    expire_in: 2 weeks
   tags:
     - fast
+
+# 2.1 build stage: ubuntu 16.04
+make_16_04:
+  <<: *make_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
   dependencies:
-    - cmake_master
-    - cmake_MR
+    - cmake_16_04
+
+make_18_04:
+  <<: *make_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
+  only:
+    - master
+    - merge_request
+  dependencies:
+    - cmake_18_04
+
+make_stretch:
+  <<: *make_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
+  dependencies:
+    - cmake_stretch
+
+make_buster:
+  <<: *make_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+  dependencies:
+    - cmake_buster
+
+make_suse15:
+  <<: *make_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:suse15
+  dependencies:
+    - cmake_suse15
 
 
 # 3.1. test stage
-test:
+.test_template: &test_definition
+  <<: *platforms_definition
   stage: test
-  only:
-    - master
-    - merge_request
   script:
     - install/bin/yade-ci --test
+    - cat /etc/os-release
+
+
+test_16_04:
+  <<: *test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
   dependencies:
-    - make
+    - make_16_04
 
-
-# 3.2. check stage
-check:
-  stage: test
+test_18_04:
+  <<: *test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
   only:
     - master
     - merge_request
+  dependencies:
+    - make_18_04
+
+test_stretch:
+  <<: *test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
+  dependencies:
+    - make_stretch
+
+test_buster:
+  <<: *test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+  dependencies:
+    - make_buster
+
+test_suse15:
+  <<: *test_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:suse15
+  dependencies:
+    - make_suse15
+
+
+# Four new images:
+# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
+# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
+# image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
+# image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+# 3.2. check stage
+.check_template: &check_definition
+  <<: *platforms_definition
+  stage: test
+#  before_script:
+#    - export OMPI_MCA_rmaps_base_oversubscribe=1
+#    - export OMPI_MCA_btl_vader_single_copy_mechanism=none
+#    - export OMPI_MCA_mpi_yield_when_idle=1 #degraded mode when oversubscribing (https://www.open-mpi.org/faq/?category=running#oversubscribing)
   script:
     - install/bin/yade-ci --checks
+
+check_16_04:
+  <<: *check_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
   dependencies:
-    - make
+    - make_16_04
+
+check_18_04:
+  <<: *check_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
+  only:
+    - master
+    - merge_request
+  dependencies:
+    - make_18_04
+
+check_stretch:
+  <<: *check_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
+  dependencies:
+    - make_stretch
+
+check_buster:
+  <<: *check_definition
+  before_script:
+    - export OMPI_MCA_rmaps_base_oversubscribe=1
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none
+    - export OMPI_MCA_mpi_yield_when_idle=1 #degraded mode when oversubscribing (https://www.open-mpi.org
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+  dependencies:
+    - make_buster
+
+check_suse15:
+  <<: *check_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:suse15
+  dependencies:
+    - make_suse15
 
 
+# currently doc is build only on ubuntu 18.04. Without .doc_template. We may fix this later.
 # 4. doc stage
-doc:
-  stage: doc
+doc_18_04:
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
+  stage: test
   only:
     - master
     - merge_request
@@ -109,9 +258,8 @@ doc:
     - cd build
     - xvfb-run -s "-screen 0 1600x1200x24" make doc
   dependencies:
-    - cmake_master
-    - cmake_MR
-    - make
+    - cmake_18_04
+    - make_18_04
   artifacts:
     paths:
       - install
@@ -119,6 +267,7 @@ doc:
 
 # 5. pages stage; uploads documentation to the website
 pages:
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
   stage: pages
   only:
     - master
@@ -127,7 +276,7 @@ pages:
     - mv install/share/doc/yade-ci/Yade.pdf public
     - mv install/share/doc/yade-ci/Yade.epub public
   dependencies:
-    - doc
+    - doc_18_04
   artifacts:
     paths:
       - public

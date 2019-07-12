@@ -97,7 +97,11 @@ void FlatGridCollider::updateCollisions(){
 			const shared_ptr<Interaction>& I=intrs->find(id1,id2);
 			if(I){ I->iterLastSeen=iter; continue; }
 			// no interaction yet
-			if(!Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get())) continue;
+			if(!Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get()
+				#ifdef YADE_MPI
+				,scene->subdomain
+				#endif
+				)) continue;
 			intrs->insert(shared_ptr<Interaction>(new Interaction(id1,id2)));
 			LOG_TRACE("Created new interaction #"<<id1<<"+#"<<id2);
 		}

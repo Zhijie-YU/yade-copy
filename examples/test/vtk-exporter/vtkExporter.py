@@ -26,8 +26,8 @@ for i,j in ((0,1),(0,2),(0,3),(1,2),(1,3),(2,3)):
 	createInteraction(i+2,j+2)
 
 vtkExporter = export.VTKExporter('/tmp/vtkExporterTesting')
-vtkExporter.exportSpheres(what=[('dist','b.state.pos.norm()')])
-vtkExporter.exportFacets(what=[('pos','b.state.pos')])
-vtkExporter.exportInteractions(what=[('kn','i.phys.kn')])
-vtkExporter.exportContactPoints(what=[('nn','i.geom.normal')])
-vtkExporter.exportPolyhedra(what=[('n','b.id')])
+vtkExporter.exportSpheres(what=dict(dist='b.state.pos.norm()'))
+vtkExporter.exportFacets(what={'pos':'b.state.pos'})
+vtkExporter.exportInteractions(what=dict(kn='i.phys.kn'))
+vtkExporter.exportContactPoints(what={'nn':'i.geom.normal'})
+vtkExporter.exportPolyhedra(what=dict(n='b.id'))

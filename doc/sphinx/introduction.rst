@@ -43,7 +43,7 @@ These initial lines give you some information about
 
 Type ``quit()``, ``exit()`` or simply press ``^D`` (``^`` is a commonly used written shortcut for pressing the ``Ctrl`` key, so here ``^D`` means ``Ctrl D``) to quit Yade.
 
-The command-line is `ipython <http://ipython.scipy.org>`_, python shell with enhanced interactive capabilities; it features persistent history (remembers commands from your last sessions), searching and so on. See ipython's documentation for more details.
+The command-line is `ipython <https://ipython.org/>`_, python shell with enhanced interactive capabilities; it features persistent history (remembers commands from your last sessions), searching and so on. See ipython's documentation for more details.
 
 Typically, you will not type Yade commands by hand, but use *scripts*, python programs describing and running your simulations. Let us take the most simple script that will just print "Hello world!"::
 
@@ -114,7 +114,7 @@ There is more command-line options than just ``-x``, run ``yade -h`` to see all 
 
 Quick inline help
 --------------------
-All of functions callable from `ipython <http://ipython.scipy.org>`_ shell have a quickly accessible help by appending ``?`` to the function name, or calling ``help(…)`` command on them:
+All of functions callable from `ipython <https://ipython.org/>`_ shell have a quickly accessible help by appending ``?`` to the function name, or calling ``help(…)`` command on them:
 
 .. ipython::
 	:okexcept:

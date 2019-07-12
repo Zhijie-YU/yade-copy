@@ -35,6 +35,9 @@
 
 #include "pygts.h"
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
+
 
 /**
  * Original documentation from GTS's vertex.c:
@@ -489,3 +492,6 @@ pygts_face_cleanup(GtsSurface * s)
 
 /*   return 0; /\* success *\/ */
 /* } */
+
+#pragma GCC diagnostic pop
+

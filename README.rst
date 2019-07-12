@@ -43,7 +43,7 @@ postprocessing and debugging.
 - `Tutorial <https://yade-dem.org/doc/tutorial-examples.html>`_
 - `Videos <https://yade-dem.org/doc/tutorial-more-examples-fast.html>`_
 - `Yade page on Open Hub <http://www.openhub.net/p/yade/>`_
-- `Yade on Debian PTS <http://packages.qa.debian.org/y/yade.html>`_
+- `Yade on Debian PTS <https://tracker.debian.org/pkg/yade>`_
 - `Yade on Debian salsa <https://salsa.debian.org/science-team/yade/commits/master>`_
 - `Yade in Ubuntu <https://launchpad.net/ubuntu/+source/yade>`_
 - `Launchpad page <http://www.launchpad.net/yade>`_

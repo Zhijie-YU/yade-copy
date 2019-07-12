@@ -24,7 +24,6 @@ void DomainLimiter::action(){
 		}
 	}
 	FOREACH(Body::id_t id, out){
-		cerr<<"DomainLimiter::erase "<<id<<endl;
 		scene->bodies->erase(id,true /*delete clump members*/);
 	}
 }

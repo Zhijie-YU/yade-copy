@@ -28,7 +28,7 @@ Software design, user's and programmer's manuals are in `(pdf version) <https://
 
 Fundamentals of the DEM as implemented in Yade are explained in `(pdf version) <https://www.yade-dem.org/publi/documentation_2nd_ed/YadeTheory.pdf>`__:
 
-- \ V. Šmilauer et al. (2015), Dem formulation. In Yade Documentation 2nd ed. The Yade Project , DOI 10.5281/zenodo.34044 (http://yade-dem.org/doc/)
+- \ V. Šmilauer and B. Chareyre (2015), Dem formulation. In Yade Documentation 2nd ed. The Yade Project , DOI 10.5281/zenodo.34044 (http://yade-dem.org/doc/)
 
 Plain bibtex items can be `found here <https://gitlab.com/yade-dev/trunk/blob/master/doc/citing_yade.bib>`_.
 

@@ -41,6 +41,7 @@
 // https://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Pragmas.html
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wwrite-strings"
+#pragma GCC diagnostic ignored "-Wmisleading-indentation"
 
 /*-------------------------------------------------------------------------*/
 /* Methods exported to python */

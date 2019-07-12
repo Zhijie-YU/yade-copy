@@ -1,4 +1,5 @@
 #pragma once
+#include<lib/compatibility/VTKCompatibility.hpp> // fix InsertNextTupleValue → InsertNextTuple name change (and others in the future)
 #include<pkg/common/PeriodicEngines.hpp>
 #include<vtkQuad.h>
 #include<vtkSmartPointer.h>

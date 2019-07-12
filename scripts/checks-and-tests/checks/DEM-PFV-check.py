@@ -6,6 +6,7 @@
 from __future__ import print_function
 if ('PFVFLOW' in features):
 	errors=0
+	errMsg=""
 	toleranceWarning =0.01
 	toleranceCritical=0.10
 
@@ -83,7 +84,8 @@ if ('PFVFLOW' in features):
 		print("DEM-PFV: difference in bulk modulus:", modulus, "vs. target ",target)
 		if (abs((modulus-target)/target)>toleranceCritical):
 			errors+=1
-			print("The difference is more, than the critical tolerance!")
+			errMsg+="The difference is more, than the critical tolerance!"
+			print(errMsg)
 
 	#B. Activate flow engine and set boundary conditions in order to get permeability
 	flow.dead=0
@@ -103,15 +105,17 @@ if ('PFVFLOW' in features):
 	permeability = abs(Qin)/1.e-4 #size is one, we compute K=V/∇H
 
 	if abs(Qin+Qout)>1e-10 :
-		print("DEM-PFV: unbalanced Qin vs. Qout (",Qin," vs. ",Qout,")")
+		errMsg+=str("DEM-PFV: unbalanced Qin vs. Qout ("+str(Qin)+" vs. "+str(Qout)+")")
+		print(errMsg)
 		errors+=1
 
 	target=0.040399916554
 	if abs((permeability-target)/target)>toleranceWarning:
 		print("DEM-PFV: difference in permeability:",permeability," vs. target ",target)
 		if (abs((permeability-target)/target)>toleranceCritical):
+			errMsg+="The difference is more, than the critical tolerance!"
+			print(errMsg)
 			errors+=1
-			print("The difference is more, than the critical tolerance!")
 
 	#C. now the oedometer test, drained at the top, impermeable at the bottom plate
 	flow.bndCondIsPressure=[0,0,0,1,0,0]
@@ -130,15 +134,17 @@ if ('PFVFLOW' in features):
 	if abs((flow.getPorePressure((0.5,0.1,0.5))-target)/target)>toleranceWarning:
 		print("DEM-PFV: difference in final pressure:",flow.getPorePressure((0.5,0.1,0.5))," vs. target ",target)
 		if (abs((flow.getPorePressure((0.5,0.1,0.5))-target)/target)>toleranceCritical):
+			errMsg+="The difference is more, than the critical tolerance!"
+			print(errMsg)
 			errors+=1
-			print("The difference is more, than the critical tolerance!")
 
 	target=-0.00258113045083
 	if abs((triax.strain[1]-zeroe22-target)/target)>toleranceWarning:
 		print("DEM-PFV: difference in final deformation",triax.strain[1]-zeroe22," vs. target ",target)
 		if (abs((triax.strain[1]-zeroe22-target)/target)>toleranceCritical):
+			errMsg+=("The difference is more, than the critical tolerance!")
+			print(errMsg)
 			errors+=1
-			print("The difference is more, than the critical tolerance!")
 
 
 	if (float(flow.execTime)/float(sum([e.execTime for e in O.engines])))>0.6 :
@@ -151,6 +157,6 @@ if ('PFVFLOW' in features):
 		#errors+=1
 
 	if (errors):
-		resultStatus +=1	#Test is failed
+		raise YadeCheckError(errMsg)
 else:
 	print("skip DEM-PFV check, FlowEngine not available")

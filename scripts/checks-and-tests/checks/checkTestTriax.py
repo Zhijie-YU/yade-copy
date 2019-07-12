@@ -5,12 +5,11 @@
 # internal compaction without friction, so that it is initially at equilibrium without shear forces. 
 # Positions and reference results are in data folder.
 from __future__ import print_function
-from yade import pack,utils,export,plot
+from yade import pack,export,plot
 import math,os,sys,shutil,tempfile
 
 tolerance=0.01
 interactive=False
-errors=0
 tt=TriaxialTest(internalCompaction=True,numberOfGrains=100,compactionFrictionDeg=0,sphereFrictionDeg=30,importFilename=checksPath+'/data/checkTestTriax.spheres')
 tt.generate("checkTest.yade")
 O.load("checkTest.yade")
@@ -20,18 +19,10 @@ if interactive:
 	os.system('gnuplot -e "plot \'./WallStresses\' using 1:3; replot'+checksPath+'\'/data/WallStressesCheckTest\' using 1:3; replot '+checksPath+'\'/data/WallStresses\' using 1:4; replot '+checksPath+'\'/data/WallStressesCheckTest\' using 1:4; pause -1"')
 
 if abs((O.engines[4].stress(3)[1]+107157.2)/107157.2)>tolerance :
-	print("Triaxial checkTest: difference on peak stress")
-	errors+=1
+	raise YadeCheckError("Triaxial checkTest: difference on peak stress")       #Test is failed
 if abs((O.engines[4].stress(1)[0]+50058.7)/50058.7)>tolerance :
-	print("Triaxial checkTest: difference on confining stress")
-	errors+=1
+	raise YadeCheckError("Triaxial checkTest: difference on confining stress")  #Test is failed
 	
-if (errors):
-	resultStatus +=1	#Test is failed
-
-if (errors):
-	resultStatus +=1	#Test is failed
-
 dirpath = tempfile.mkdtemp()
 
 for fileName in ['./checkTest.yade', './_Unloaded_380_3.spheres', './_Unloaded_380_3.xml', './WallStresses', ]:

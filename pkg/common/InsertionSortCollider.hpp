@@ -3,6 +3,7 @@
 #pragma once
 #include<pkg/common/Collider.hpp>
 #include<core/Scene.hpp>
+#include<pkg/dem/NewtonIntegrator.hpp>
 class InteractionContainer;
 
 
@@ -71,10 +72,6 @@ Possible performance improvements & bugs
 	#define ISC_CHECKPOINT(cpt)
 #endif
 
-class NewtonIntegrator;
-
-class Integrator;
-
 class GeneralIntegratorInsertionSortCollider;// Forward decleration of child to decleare it as friend
 
 class InsertionSortCollider: public Collider{
@@ -100,8 +97,7 @@ class InsertionSortCollider: public Collider{
 			return coord>b.coord;
 		}
 	};
-		// we need this to find out about current maxVelocitySq
-		shared_ptr<NewtonIntegrator> newton;
+		
 		// if False, no type of striding is used
 		// if True, then either verletDist XOR nBins is set
 		bool strideActive;
@@ -215,10 +211,12 @@ class InsertionSortCollider: public Collider{
 		((Real,updatingDispFactor,-1,,"(experimental) Displacement factor used to trigger bound update: the bound is updated only if updatingDispFactor*disp>sweepDist when >0, else all bounds are updated."))
 		((Real,verletDist,((void)"Automatically initialized",-.5),,"Length by which to enlarge particle bounds, to avoid running collider at every step. Stride disabled if zero. Negative value will trigger automatic computation, so that the real value will be *verletDist* × minimum spherical particle radius; if there are no spherical particles, it will be disabled. The actual length added to one bound can be only a fraction of verletDist when :yref:`InsertionSortCollider::targetInterv` is > 0."))
 		((Real,minSweepDistFactor,0.1,,"Minimal distance by which enlarge all bounding boxes; superseeds computed value of verletDist when lower that (minSweepDistFactor x verletDist)."))
-		((Real,fastestBodyMaxDist,-1,,"Normalized maximum displacement of the fastest body since last run; if >= 1, we could get out of bboxes and will trigger full run. |yupdate|"))
+		((Real,fastestBodyMaxDist,0,,"Normalized maximum displacement of the fastest body since last run; if >= 1, we could get out of bboxes and will trigger full run. |yupdate|"))
 		((int,numReinit,0,Attr::readonly,"Cummulative number of bound array re-initialization."))
+		((int,numAction,0,,"Cummulative number of collision detection."))
 		((Real,useless,,,"for compatibility of scripts defining the old collider's attributes - see deprecated attributes")) 
 		((bool,doSort,false,,"Do forced resorting of interactions."))
+		((shared_ptr<NewtonIntegrator>, newton,,,"reference to active :yref:`Newton integrator<NewtonIntegrator>`. |yupdate|"))
 		, /* ctor */
 			#ifdef ISC_TIMING
 				timingDeltas=shared_ptr<TimingDeltas>(new TimingDeltas);
@@ -231,6 +229,7 @@ class InsertionSortCollider: public Collider{
 		.def_readonly("strideActive",&InsertionSortCollider::strideActive,"Whether striding is active (read-only; for debugging). |yupdate|")
 		.def_readonly("periodic",&InsertionSortCollider::periodic,"Whether the collider is in periodic mode (read-only; for debugging) |yupdate|")
 		.def("dumpBounds",&InsertionSortCollider::dumpBounds,"Return representation of the internal sort data. The format is ``([...],[...],[...])`` for 3 axes, where each ``...`` is a list of entries (bounds). The entry is a tuple with the fllowing items:\n\n* coordinate (float)\n* body id (int), but negated for negative bounds\n* period numer (int), if the collider is in the periodic regime.")
+		.def("isActivated",&InsertionSortCollider::isActivated,"Return true if collider needs execution at next iteration.")
 	);
 	DECLARE_LOGGER;
 };

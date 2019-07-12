@@ -74,6 +74,11 @@ class pyBodyContainer{
 	const shared_ptr<BodyContainer> proxee;
 	pyBodyIterator pyIter(){return pyBodyIterator(proxee);}
 	pyBodyContainer(const shared_ptr<BodyContainer>& _proxee): proxee(_proxee){}
+	// raw access to the underlying 
+	const shared_ptr<BodyContainer> raw_bodies_get(void) {return proxee;}
+	void raw_bodies_set(const shared_ptr<BodyContainer>& source) {proxee->body = source->body;}
+	
+	
 	shared_ptr<Body> pyGetitem(Body::id_t _id){
 		int id=(_id>=0 ? _id : proxee->size()+_id);
 		if(id<0 || (size_t)id>=proxee->size()){ PyErr_SetString(PyExc_IndexError, "Body id out of range."); py::throw_error_already_set(); /* make compiler happy; never reached */ return shared_ptr<Body>(); }
@@ -83,6 +88,9 @@ class pyBodyContainer{
 		// shoud be >=0, but Body is by default created with id 0... :-|
 		if(b->getId()>=0){ PyErr_SetString(PyExc_IndexError,("Body already has id "+boost::lexical_cast<string>(b->getId())+" set; appending such body (for the second time) is not allowed.").c_str()); py::throw_error_already_set(); }
 		return proxee->insert(b);
+	}
+	Body::id_t insertAtId(shared_ptr<Body> b, Body::id_t pos){
+		return proxee->insertAtId(b,pos);
 	}
 	vector<Body::id_t> appendList(vector<shared_ptr<Body> > bb){
 		boost::mutex::scoped_lock lock(Omega::instance().renderMutex);
@@ -447,7 +455,8 @@ class pyInteractionIterator{
 class pyInteractionContainer{
 	public:
 		const shared_ptr<InteractionContainer> proxee;
-		pyInteractionContainer(const shared_ptr<InteractionContainer>& _proxee): proxee(_proxee){}
+		const shared_ptr<Scene> scene;
+		pyInteractionContainer(const shared_ptr<InteractionContainer>& _proxee): proxee(_proxee), scene(Omega::instance().getScene()) {}
 		pyInteractionIterator pyIter(){return pyInteractionIterator(proxee);}
 		bool has(Body::id_t id1, Body::id_t id2){return proxee->found(id1,id2);}
 		shared_ptr<Interaction> pyGetitem(vector<Body::id_t> id12){
@@ -469,8 +478,8 @@ class pyInteractionContainer{
 		}
 		long len(){return proxee->size();}
 		void clear(){proxee->clear();}
-		py::list withBody(long id){ py::list ret; FOREACH(const shared_ptr<Interaction>& I, *proxee){ if(I->isReal() && (I->getId1()==id || I->getId2()==id)) ret.append(I);} return ret;}
-		py::list withBodyAll(long id){ py::list ret; FOREACH(const shared_ptr<Interaction>& I, *proxee){ if(I->getId1()==id || I->getId2()==id) ret.append(I);} return ret; }
+		py::list withBody(long id){ py::list ret; FOREACH(const Body::MapId2IntrT::value_type& I, Body::byId(id,scene)->intrs){ if(I.second->isReal()) ret.append(I.second);} return ret;}
+		py::list withBodyAll(long id){ py::list ret; FOREACH(const Body::MapId2IntrT::value_type& I, Body::byId(id,scene)->intrs) ret.append(I.second); return ret; }
 		py::list getAll(bool onlyReal){ py::list ret; FOREACH(const shared_ptr<Interaction>& I, *proxee){
 			if(onlyReal && !I->isReal()) continue; ret.append(I);}
 			return ret;}
@@ -617,7 +626,7 @@ class pyOmega{
 	long stopAtIter_get(){return OMEGA.getScene()->stopAtIter; }
 	void stopAtIter_set(long s){OMEGA.getScene()->stopAtIter=s; }
 	Real stopAtTime_get(){return OMEGA.getScene()->stopAtTime; }
-	void stopAtTime_set(long s){OMEGA.getScene()->stopAtTime=s; }
+	void stopAtTime_set(Real s){OMEGA.getScene()->stopAtTime=s; }
 
 
 	bool timingEnabled_get(){return TimingInfo::enabled;}
@@ -675,15 +684,29 @@ class pyOmega{
 	void resetTime(){ OMEGA.getScene()->iter=0; OMEGA.getScene()->time=0; OMEGA.timeInit(); }
 	void switchScene(){ std::swap(OMEGA.scenes[OMEGA.currentSceneNb],OMEGA.sceneAnother); }
 	void resetAllScenes(){Py_BEGIN_ALLOW_THREADS; OMEGA.stop(); Py_END_ALLOW_THREADS; OMEGA.resetAllScenes(); OMEGA.createSimulationLoop();}
-	shared_ptr<Scene> scene_get(){ return OMEGA.getScene(); }
-	int addScene(){return OMEGA.addScene();}
 	void switchToScene(int i){OMEGA.switchToScene(i);}
+	int addScene(){return OMEGA.addScene();}
+	
+	// Scene manipulation in multithread situations as python object or as a string (e.g. FEMxDEM, MPI, ...)
+	shared_ptr<Scene> scene_get(){ return OMEGA.getScene(); }
+	void scene_set(const shared_ptr<Scene>& source){ Py_BEGIN_ALLOW_THREADS; reset(); Py_END_ALLOW_THREADS; assertScene(); OMEGA.setScene(source); }
+	
+	#if PY_MAJOR_VERSION < 3
 	string sceneToString(){
+	#else
+	PyObject* sceneToString(){
+	#endif
 		ostringstream oss;
 		yade::ObjectIO::save<decltype(OMEGA.getScene()),boost::archive::binary_oarchive>(oss,"scene",OMEGA.getScene());
 		oss.flush();
+		#if PY_MAJOR_VERSION < 3
 		return oss.str();
+		#else
+		const string s=oss.str();
+		return PyBytes_FromStringAndSize(s.c_str(), s.length());
+		#endif
 	}
+	
 	void stringToScene(const string &sstring, string mark=""){
 		Py_BEGIN_ALLOW_THREADS; OMEGA.stop(); Py_END_ALLOW_THREADS;
 		assertScene();
@@ -691,6 +714,7 @@ class pyOmega{
 		OMEGA.sceneFile=":memory:"+mark;
 		load(OMEGA.sceneFile,true);
 	}
+	
 	int thisScene(){return OMEGA.currentSceneNb;}
 
 	void save(std::string fileName,bool quiet=false){
@@ -854,7 +878,8 @@ BOOST_PYTHON_MODULE(wrapper)
 		.def("labeledEngine",&pyOmega::labeled_engine_get,"Return instance of engine/functor with the given label. This function shouldn't be called by the user directly; every ehange in O.engines will assign respective global python variables according to labels.\n\nFor example:\n\n\t *O.engines=[InsertionSortCollider(label='collider')]*\n\n\t *collider.nBins=5 # collider has become a variable after assignment to O.engines automatically*")
 		.def("resetTime",&pyOmega::resetTime,"Reset simulation time: step number, virtual and real time. (Doesn't touch anything else, including timings).")
 		.def("plugins",&pyOmega::plugins_get,"Return list of all plugins registered in the class factory.")
-		.def("_sceneObj",&pyOmega::scene_get,"Return the :yref:`scene <Scene>` object. Debugging only, all (or most) :yref:`Scene` functionality is proxies through :yref:`Omega`.")
+// 		.def("_sceneObj",&pyOmega::scene_get,"Return the :yref:`scene <Scene>` object. Debugging only, all (or most) :yref:`Scene` functionality is proxies through :yref:`Omega`.")
+		.add_property("_sceneObj",&pyOmega::scene_get,&pyOmega::scene_set,"Return the :yref:`scene <Scene>` object. Debugging only, all (or most) :yref:`Scene` functionality is proxies through :yref:`Omega`.")
 		.add_property("engines",&pyOmega::engines_get,&pyOmega::engines_set,"List of engines in the simulation (corresponds to Scene::engines in C++ source code).")
 		.add_property("_currEngines",&pyOmega::currEngines_get,"Currently running engines; debugging only!")
 		.add_property("_nextEngines",&pyOmega::nextEngines_get,"Engines for the next step, if different from the current ones, otherwise empty; debugging only!")
@@ -900,7 +925,9 @@ BOOST_PYTHON_MODULE(wrapper)
 		.def("getRoundness",&pyBodyContainer::getRoundness,(py::arg("excludeList")=py::list()),"Returns roundness coefficient RC = R2/R1. R1 is the equivalent sphere radius of a clump. R2 is the minimum radius of a sphere, that imbeds the clump. If just spheres are present RC = 1. If clumps are present 0 < RC < 1. Bodies can be excluded from the calculation by giving a list of ids: *O.bodies.getRoundness([ids])*.\n\nSee :ysrc:`examples/clumps/replaceByClumps-example.py` for an example script.")
 		.def("clear", &pyBodyContainer::clear,"Remove all bodies (interactions not checked)")
 		.def("erase", &pyBodyContainer::erase,(py::arg("eraseClumpMembers")=0),"Erase body with the given id; all interaction will be deleted by InteractionLoop in the next step. If a clump is erased use *O.bodies.erase(clumpId,True)* to erase the clump AND its members.")
-		.def("replace",&pyBodyContainer::replace);
+		.def("replace",&pyBodyContainer::replace) 
+		.def("insertAtId",&pyBodyContainer::insertAtId,(py::arg("insertatid")),"Insert a body at theid, (no body should exist in this id)")
+		.add_property("rawBodies",&pyBodyContainer::raw_bodies_get,&pyBodyContainer::raw_bodies_set,"Bodies in the current simulation in the form of pickle-friendly raw container. In typical situations it is better to access bodies as 'O.bodies', which offers better python support. This one may be used for debugging or advanced manipulations.");
 	py::class_<pyBodyIterator>("BodyIterator",py::init<pyBodyIterator&>())
 		.def("__iter__",&pyBodyIterator::pyIter)
 		.def("__next__",&pyBodyIterator::pyNext);

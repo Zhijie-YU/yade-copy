@@ -195,7 +195,7 @@ class HttpStatsServer(BaseHTTPRequestHandler):
 			rest=jobMatch.group(2)
 			if rest=='plots':
 				job.updatePlots() # internally checks for last update time
-				self.sendFile(job.plotsFile,contentType=yade.remote.plotImgMimetype,refresh=(0 if job.status=='DONE' else opts.refresh))
+				self.sendRawFile(job.plotsFile,contentType=yade.remote.plotImgMimetype,refresh=(0 if job.status=='DONE' else opts.refresh))
 			elif rest=='log':
 				if not os.path.exists(job.log):
 					self.send_error(404,self.path); return
@@ -247,6 +247,20 @@ class HttpStatsServer(BaseHTTPRequestHandler):
 		self.wfile.write(data.encode('utf-8'))
 		global httpLastServe
 		httpLastServe=time.time()
+	def sendRawFile(self, fileName, contentType,**headers):
+			if not os.path.exists(fileName): self.send_error(404); return
+			f=open(fileName, 'rb');
+			self.sendRawHttp(f.read(),contentType=contentType,**headers)
+	def sendRawHttp(self,data,contentType,**headers):
+			"Send raw file (like images) over http, using appropriate content-type. Headers are converted to strings. The *refresh* header is handled specially: if the value is 0, it is not sent at all."
+			self.send_response(200)
+			self.send_header('Content-type',contentType)
+			if 'refresh' in headers and headers['refresh']==0: del headers['refresh']
+			for h in headers: self.send_header(h,str(headers[h]))
+			self.end_headers()
+			self.wfile.write(data);
+			global httpLastServe
+			httpLastServe=time.time()
 	def sendPygmentizedFile(self,f,**kw):
 		if not os.path.exists(f):
 			self.send_error(404); return
@@ -256,7 +270,7 @@ class HttpStatsServer(BaseHTTPRequestHandler):
 			from pygments.lexers import PythonLexer
 			from pygments.formatters import HtmlFormatter
 			data=highlight(codecs.open(f,encoding='utf-8').read(),PythonLexer(),HtmlFormatter(linenos=True,full=True,encoding='utf-8',title=os.path.abspath(f),**kw))
-			self.sendHttp(data,contentType='text/html;charset=utf-8;')
+			self.sendRawHttp(data,contentType='text/html;charset=utf-8;'); #Already encoded, send Raw
 		except ImportError:
 			self.sendTextFile(f)
 def runHttpStatsServer():

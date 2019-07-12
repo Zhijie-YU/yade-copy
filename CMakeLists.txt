@@ -21,8 +21,10 @@
 #  ENABLE_LIQMIGRATION: enable LIQMIGRATION-option, see [Mani2013] for details (OFF by default)
 #  ENABLE_MASK_ARBITRARY: enable MASK_ARBITRARY option (OFF by default)
 #  ENABLE_PROFILING: enable profiling, e.g. shows some more metrics, which can define bottlenecks of the code (OFF by default)
+#  ENABLE_POTENTIAL_BLOCKS: enable potential blocks option (OFF by default)
 #  ENABLE_POTENTIAL_PARTICLES: enable potential particles option (OFF by default)
 #  ENABLE_DEFORM: enable constant volume deformation engine (OFF by default)
+#  ENABLE_FEMLIKE: enable meshed solids (FEM-like)
 #  ENABLE_OAR: generate a script for oar-based task scheduler (OFF by default)
 #  runtimePREFIX: used for packaging, when install directory is not the same is runtime directory (/usr/local by default)
 #  CHUNKSIZE: set >1, if you want several sources to be compiled at once. Increases compilation speed and RAM-consumption during it (1 by default)
@@ -62,6 +64,7 @@ OPTION(ENABLE_OAR "Generate script for oar-based task scheduler" OFF)
 OPTION(USE_QT5 "USE Qt5 for GUI" ON)
 OPTION(ENABLE_POTENTIAL_BLOCKS "Enable PotentialBlocks" ON)
 OPTION(ENABLE_DEFORM "Enable Deformation Engine" OFF)
+OPTION(ENABLE_FEMLIKE "Enable deformable solids" OFF)
 OPTION(CHOLMOD_GPU "Enable GPU acceleration flow engine direct solver" OFF)
 OPTION(ENABLE_THERMAL "Enable thermal engine (experimental)" OFF)
 #Set -DPYTHON_VERSION numeric option below:
@@ -71,27 +74,9 @@ set(PYTHON_VERSION -1 CACHE STRING "Force python version to the given one. Defau
 
 
 set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cMake")
-message(***PYTHON_VERSION*** ${PYTHON_VERSION})
-IF(${PYTHON_VERSION} EQUAL -1)
-	set(Python_ADDITIONAL_VERSIONS 3 2)
-ELSE()
-	set(Python_ADDITIONAL_VERSIONS ${PYTHON_VERSION})
-ENDIF()
 
-INCLUDE(FindPythonInterp)
-INCLUDE(FindOpenMP)
-INCLUDE(FindQt4)
-INCLUDE(FindPkgConfig)
 INCLUDE(GetVersion)
-INCLUDE(FindOpenGL)
-INCLUDE(FindGTS)
-INCLUDE(FindGL2PS)
-INCLUDE(FindCGAL)
-INCLUDE(FindNumPy)
-INCLUDE(FindLoki)
-INCLUDE(FindPythonModule)
 INCLUDE(GNUInstallDirs)
-
 
 INCLUDE_DIRECTORIES (${CMAKE_SOURCE_DIR})
 
@@ -102,16 +87,36 @@ INCLUDE_DIRECTORIES (${CMAKE_SOURCE_DIR})
 # Can be removed later, if gcc fixes its regression
 # Taken from http://stackoverflow.com/questions/4058565/check-gcc-minor-in-cmake
 
-EXECUTE_PROCESS(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
-IF (GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8)
+# this line was trying to get the g++ version. But it does not work with ccache.
+# But we already have CMAKE_CXX_COMPILER_VERSION, so we don't need this line!
+#EXECUTE_PROCESS(COMMAND ${CMAKE_C_COMPILER} -dumpversion OUTPUT_VARIABLE GCC_VERSION)
+IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.8 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.8)
   MESSAGE(STATUS "GCC Version >= 4.8. Adding -ftrack-macro-expansion=0")
   ADD_DEFINITIONS("-ftrack-macro-expansion=0")
+ELSE()
+  MESSAGE(STATUS "GCC Version < 4.8. will not use -ftrack-macro-expansion=0")
 ENDIF()
 
 # -save-temps is not supported with ccache
-IF ((GCC_VERSION VERSION_GREATER 4.8 OR GCC_VERSION VERSION_EQUAL 4.8) AND ( NOT "${CMAKE_CXX_COMPILER_LAUNCHER}" MATCHES ".*ccache" AND NOT DISABLE_SAVE_TEMPS))
+IF ((CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.8 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.8) AND ( NOT "${CMAKE_CXX_COMPILER_LAUNCHER}" MATCHES ".*ccache" AND NOT "${CMAKE_CXX_COMPILER}" MATCHES ".*ccache.*" AND NOT DISABLE_SAVE_TEMPS))
   MESSAGE(STATUS "GCC Version >= 4.8. Adding -save-temps")
   ADD_DEFINITIONS("-save-temps")
+ELSE()
+  IF ( "${CMAKE_CXX_COMPILER_LAUNCHER}" MATCHES ".*ccache" OR "${CMAKE_CXX_COMPILER}" MATCHES ".*ccache.*" )
+    MESSAGE(STATUS "ccache detected, will not use -save-temps")
+# on ubuntu 18.04 and 18.10 when ccache is used we need to fix some bug, see https://gitlab.kitware.com/cmake/cmake/issues/17275
+# but we can't do this on ubuntu 16.04 with cmake version 3.5.1, because that produces error: "list does not recognize sub-command FILTER".
+# So we must be above version 3.6, because https://cmake.org/cmake/help/v3.6/release/3.6.html?highlight=filter
+# Later maybe on some higher cmake version this will become unnecessary.
+    IF(CMAKE_VERSION VERSION_GREATER 3.6 OR CMAKE_VERSION VERSION_EQUAL 3.6)
+        string (STRIP "${CMAKE_CXX_COMPILER_ARG1}" __CXX_COMPILER_ARG1)
+        set(CMAKE_CXX_COMPILER_PREDEFINES_COMMAND "${CMAKE_CXX_COMPILER}" "${__CXX_COMPILER_ARG1}" "-dM" "-E" "-c" "${CMAKE_ROOT}/Modules/CMakeCXXCompilerABI.cpp")
+        list(FILTER CMAKE_CXX_COMPILER_PREDEFINES_COMMAND EXCLUDE REGEX "^$")
+        unset(__CXX_COMPILER_ARG1)
+    ENDIF()
+  ELSE()
+    MESSAGE(STATUS "GCC Version < 4.8 or DISABLE_SAVE_TEMPS. will not use -save-temps")
+  ENDIF()
 ENDIF()
 
 #===========================================================
@@ -119,7 +124,7 @@ ENDIF()
 IF ("${CMAKE_CXX_COMPILER} ${CMAKE_CXX_COMPILER_ARG1}" MATCHES ".*clang")
   ADD_DEFINITIONS("-ftemplate-depth-512 -fstack-protector ")
 ELSE()
-  IF (GCC_VERSION VERSION_GREATER 4.9 OR GCC_VERSION VERSION_EQUAL 4.9)
+  IF (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9 OR CMAKE_CXX_COMPILER_VERSION VERSION_EQUAL 4.9)
     MESSAGE(STATUS "GCC Version >= 4.9. Adding -fstack-protector-strong")
     ADD_DEFINITIONS("-fstack-protector-strong")
   ELSE()
@@ -137,47 +142,65 @@ ELSE (DEBUG)
   ADD_DEFINITIONS("-DNDEBUG")
 ENDIF (DEBUG)
 
-#===========================================================
-# Add possibility to use local boost installation (e.g. -DLocalBoost=1.46.1)
 
-IF ( NOT LocalBoost )
-  SET(LocalBoost "1.47.0") # Minimal required Boost version
-ENDIF ( NOT LocalBoost )
+#==================================
+#====== *** PYTHON/BOOST *** ======
+#==================================
+INCLUDE(YadePythonHelpers)
 
-IF ( ${PYTHON_VERSION_MAJOR} EQUAL 2 )
-  FIND_PACKAGE(Boost ${LocalBoost} COMPONENTS python thread filesystem iostreams regex serialization system date_time REQUIRED)
-ELSE() #python3
-  FIND_PACKAGE(Boost ${LocalBoost} COMPONENTS python-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR} thread filesystem iostreams regex serialization system date_time)
-  IF(NOT Boost_FOUND)
-    FIND_PACKAGE(Boost ${LocalBoost} COMPONENTS python3-py${PYTHON_VERSION_MAJOR}${PYTHON_VERSION_MINOR} thread filesystem iostreams regex serialization system date_time)
-      IF(NOT Boost_FOUND)
-        message( FATAL_ERROR "Can't find suitable libboost_python version." )
-      ENDIF()
-  ENDIF()
+SET(PY3_VERSIONS 3.8 3.7 3.6 3.5 3.4 3.3 3.2 3.1 3.0) #append newer python versions at the beginning here.
+SET(PY2_VERSIONS 2.7 2.6)
+IF(${PYTHON_VERSION} EQUAL -1)
+	SET(PY_VERSIONS_CHECK "${PY3_VERSIONS};${PY2_VERSIONS}")
+ELSEIF(${PYTHON_VERSION} EQUAL 2)
+	SET(PY_VERSIONS_CHECK "${PY2_VERSIONS}")
+ELSEIF(${PYTHON_VERSION} EQUAL 3)
+	SET(PY_VERSIONS_CHECK "${PY3_VERSIONS}")
+ELSE()
+	SET(PY_VERSIONS_CHECK "${PYTHON_VERSION}")
 ENDIF()
 
+MESSAGE("Loop on the following python versions and check available dependencies:${PY_VERSIONS_CHECK}" )
+FOREACH(py_version ${PY_VERSIONS_CHECK})
+	#Reset variables to be able to use finpythoninterp multiple times
+	unset(PYTHONINTERP_FOUND CACHE)
+	unset(PYTHON_EXECUTABLE CACHE)
+	#Set desired python version
+	set(Python_ADDITIONAL_VERSIONS ${py_version})
+	#Find python
+	FIND_PACKAGE(PythonInterp)
+	IF(NOT PythonInterp_FOUND)
+		MESSAGE(FATAL_ERROR "No python version could be found in your system.")
+	ENDIF()
+	#FindPythonInterp will try to fallback in older Python version, we have to check manually if it found the version we wish
+	PYTHON_VERSION_MATCHES(${py_version})
+	IF(NOT ${PYTHON_VERSION_MATCH})
+		CONTINUE()
+	ENDIF()
+	MESSAGE("Python version ${PYTHON_VERSION_STRING} found, try to import dependencies...")
+	FIND_PYTHON_PACKAGES()
+	IF(ALL_PYTHON_DEPENDENCIES_FOUND)
+		MESSAGE("Found all python dependencies with version ${PYTHON_VERSION_STRING}, will compile yade with that.")
+		BREAK()
+	ENDIF()
+ENDFOREACH()
 
-INCLUDE_DIRECTORIES (${Boost_INCLUDE_DIRS})
-# for checking purpose
-MESSAGE("--   Boost_VERSION: " ${Boost_VERSION})
-MESSAGE("--   Boost_LIB_VERSION: " ${Boost_LIB_VERSION})
-MESSAGE("--   Boost_INCLUDE_DIRS: " ${Boost_INCLUDE_DIRS})
-MESSAGE("--   Boost_LIBRARIES: " ${Boost_LIBRARIES})
-ADD_DEFINITIONS(-DBOOST_MATH_DISABLE_FLOAT128=1)
+#After the loop on all python versions, having ALL_PYTHON_DEPENDENCIES_FOUND==FALSE must trigger an error:
+IF(NOT ALL_PYTHON_DEPENDENCIES_FOUND)
+	MESSAGE(FATAL_ERROR "No python version with all dependencies was found.")
+ENDIF()
+
+#======================================
+#====== *** END PYTHON/BOOST *** ======
+#======================================
 
 #===========================================================
-FIND_PACKAGE(NumPy REQUIRED)
-INCLUDE_DIRECTORIES(${NUMPY_INCLUDE_DIRS})
-
 FIND_PACKAGE(Loki REQUIRED)
 INCLUDE_DIRECTORIES(${LOKI_INCLUDE_DIR})
 
 FIND_PACKAGE(Eigen3 REQUIRED)
 FIND_PACKAGE(BZip2 REQUIRED)
 FIND_PACKAGE(ZLIB REQUIRED)
-
-FIND_PACKAGE(PythonLibs REQUIRED)
-INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_PATH})
 #===========================================================
 
 # Use Eigen3 by default
@@ -274,7 +297,6 @@ IF(ENABLE_GUI)
     MESSAGE(STATUS "USE QT5")
     FIND_PACKAGE(QGLVIEWER-qt5 REQUIRED)
     FIND_PACKAGE(Qt5 CONFIG REQUIRED Widgets Xml OpenGL)
-    SET(CMAKE_AUTOMOC ON)
     FIND_PACKAGE(Qt5Widgets)
     IF(Qt5Widgets_FOUND AND OPENGL_FOUND AND GLUT_FOUND AND GLIB2_FOUND AND QGLVIEWER_FOUND)
       SET(GUI_LIBS ${GLUT_LIBRARY} ${QGLVIEWER_LIBRARIES})
@@ -316,13 +338,10 @@ ELSE(ENABLE_GUI)
   SET(DISABLED_FEATS "${DISABLED_FEATS} GUI")
 ENDIF(ENABLE_GUI)
 #===========================================================
-# This one will automatically enable CGAL
-IF(ENABLE_PFVFLOW OR ENABLE_TWOPHASEFLOW)
-  IF (NOT ENABLE_CGAL)
-    MESSAGE(STATUS "PFVFLOW and TWOPHASEFLOW depends on CGAL, attempting to turn ENABLE_CGAL ON")
-    SET(ENABLE_CGAL ON)
-  ENDIF (NOT ENABLE_CGAL)
-ENDIF(ENABLE_PFVFLOW OR ENABLE_TWOPHASEFLOW)
+# This one will cry on attempts to build CGAL-based packages without cgal
+IF(NOT ENABLE_CGAL AND (ENABLE_PFVFLOW OR ENABLE_TWOPHASEFLOW))
+  MESSAGE(STATUS "PFVFLOW and TWOPHASEFLOW depends on CGAL, and ENABLE_CGAL is disabled (not found or turned OFF)")
+ENDIF(NOT ENABLE_CGAL AND (ENABLE_PFVFLOW OR ENABLE_TWOPHASEFLOW))
 #===========================================================
 IF(ENABLE_CGAL)
   INCLUDE(FindGMP)
@@ -365,7 +384,7 @@ IF(ENABLE_LINSOLV)
   FIND_PACKAGE(Metis)
 
   IF(CHOLMOD_FOUND AND OPENBLAS_FOUND AND METIS_FOUND AND CGAL_FOUND)
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CGAL_DEFINITIONS} -DLINSOLV -DFLOW_ENGINE")
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CGAL_DEFINITIONS} -DLINSOLV")
 
     SET(LINKLIBS  "${LINKLIBS};${CHOLMOD_LIBRARIES};${AMD_LIBRARY};${CAMD_LIBRARY};${COLAMD_LIBRARY};${CCOLAMD_LIBRARY};${OPENBLAS_LIBRARY};${METIS_LIBRARY};${SUITESPARSE_LIBRARY}")
     INCLUDE_DIRECTORIES(${METIS_INCLUDE_DIR} ${CHOLMOD_INCLUDE_DIR} ${BLAS_INCLUDE_DIR})
@@ -408,11 +427,27 @@ ENDIF(ENABLE_LINSOLV)
 IF(ENABLE_MPI)
   FIND_PACKAGE(MPI)
   IF (MPI_FOUND)
-    INCLUDE_DIRECTORIES(${MPI_INCLUDE_PATH})
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DYADE_MPI")
-    SET (LINKLIBS "${LINKLIBS};${MPI_CXX_LIBRARIES};")
+    INCLUDE_DIRECTORIES(${MPI_CXX_INCLUDE_PATH})
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${MPI_CXX_COMPILE_FLAGS} -DYADE_MPI")
+    string (STRIP "${MPI_CXX_LIBRARIES}" MPI_LIBRARIES)
+    string (STRIP "${MPI_CXX_LINK_FLAGS}" MPI_LINK_FLAGS)
+    SET (LINKLIBS "${LINKLIBS};${MPI_LIBRARIES};${MPI_LINK_FLAGS}")
     MESSAGE(STATUS "MPI found")
     SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} MPI")
+    # sometimes mpi.h is not found. cmake should find it, but didn't. I'm not sure why. Here I put all directotries where it can be found.
+    # it is an OR operation from ubuntu, debian and opensuse of this: https://packages.debian.org/search?suite=sid&arch=any&mode=path&searchon=contents&keywords=include%2Fmpi.h
+#     find_path(MPI_H_INCLUDE_DIR mpi.h /usr/include/openmpi /usr/lib/openmpi /usr/lib/openmpi/include /usr/lib/x86_64-linux-gnu /usr/lib64/mpi/gcc/openmpi 
+#     /usr/include/aarch64-linux-gnu /usr/include/arm-linux-gnueabihf /usr/include/i386-kfreebsd-gnu /usr/include/i386-linux-gnu
+#     /usr/include/mips64el-linux-gnuabi64 /usr/include/openblas /usr/include/powerpc64-linux-gnu /usr/include/powerpc64le-linux-gnu
+#     /usr/include/s390x-linux-gnu /usr/include/sparc64-linux-gnu /usr/include/x86_64-kfreebsd-gnu /usr/include/x86_64-linux-gnu
+#     /usr/lib/aarch64-linux-gnu /usr/lib/alpha-linux-gnu /usr/lib/arm-linux-gnueabi /usr/lib/arm-linux-gnueabihf
+#     /usr/lib/hppa-linux-gnu /usr/lib/i386-gnu /usr/lib/i386-kfreebsd-gnu /usr/lib/i386-linux-gnu
+#     /usr/lib/m68k-linux-gnu /usr/lib/mips-linux-gnu /usr/lib/mips64el-linux-gnuabi64 /usr/lib/mipsel-linux-gnu
+#     /usr/lib/powerpc-linux-gnu /usr/lib/powerpc-linux-gnuspe /usr/lib/powerpc64-linux-gnu /usr/lib/powerpc64le-linux-gnu
+#     /usr/lib/riscv64-linux-gnu /usr/lib/s390x-linux-gnu /usr/lib/sh4-linux-gnu /usr/lib/sparc64-linux-gnu
+#     /usr/lib/x86_64-kfreebsd-gnu /usr/lib/x86_64-linux-gnux32
+#     )
+#     INCLUDE_DIRECTORIES(${MPI_H_INCLUDE_DIR})
   ELSE(MPI_FOUND)
     MESSAGE(STATUS "MPI NOT FOUND, YADE-OpenFOAM coupling disabled")
     SET (DISABLED_FEATS "${DISABLED_FEATS} MPI")
@@ -422,8 +457,13 @@ ELSE(ENABLE_MPI)
 ENDIF(ENABLE_MPI)
 #===============================================
 IF(ENABLE_TWOPHASEFLOW)
-	SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTWOPHASEFLOW")
-	SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} TWOPHASEFLOW")
+	IF(ENABLE_PFVFLOW)
+		SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DTWOPHASEFLOW")
+		SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} TWOPHASEFLOW")
+	ELSE(ENABLE_PFVFLOW)
+		SET(DISABLED_FEATS "${DISABLED_FEATS} TWOPHASEFLOW")
+		MESSAGE(STATUS "PFVFLOW disabled, TWOPHASEFLOW will not be compiled")
+	ENDIF(ENABLE_PFVFLOW)
 ELSE(ENABLE_TWOPHASEFLOW)
 	SET(DISABLED_FEATS "${DISABLED_FEATS} TWOPHASEFLOW")
 ENDIF(ENABLE_TWOPHASEFLOW)
@@ -441,6 +481,13 @@ IF(ENABLE_DEFORM)
 ELSE(ENABLE_DEFORM)
   SET(DISABLED_FEATS "${DISABLED_FEATS} DEFORM")
 ENDIF(ENABLE_DEFORM)
+#===============================================
+IF(ENABLE_FEMLIKE)
+  ADD_DEFINITIONS("-DYADE_FEM")
+  SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} FEMLIKE")
+ELSE(ENABLE_FEMLIKE)
+  SET(DISABLED_FEATS "${DISABLED_FEATS} FEMLIKE")
+ENDIF(ENABLE_FEMLIKE)
 #===============================================
 IF(ENABLE_LIQMIGRATION)
   ADD_DEFINITIONS("-DYADE_LIQMIGRATION")
@@ -466,7 +513,6 @@ ELSE(ENABLE_GL2PS)
   SET(DISABLED_FEATS "${DISABLED_FEATS} GL2PS")
 ENDIF(ENABLE_GL2PS)
 
-INCLUDE_DIRECTORIES(${PYTHON_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${CMAKE_BINARY_DIR})
 
 #===========================================================
@@ -551,6 +597,13 @@ ENDIF(ENABLE_POTENTIAL_BLOCKS)
 #===========================================================
 
 
+#===========================================================
+#= Forced detection of library versions for libVersions ====
+#===========================================================
+INCLUDE(FindMissingVersions)
+#===========================================================
+
+
 
 IF (INSTALL_PREFIX)
   SET(CMAKE_INSTALL_PREFIX ${INSTALL_PREFIX})
@@ -609,9 +662,9 @@ FILE(GLOB SRC_LIB  "lib/*.cpp")
 
 SET(SRC_LIB "${SRC_LIB};lib/base/Math.cpp;lib/factory/ClassFactory.cpp;lib/factory/DynLibManager.cpp")
 SET(SRC_LIB "${SRC_LIB};lib/serialization/Serializable.cpp;lib/pyutil/gil.cpp;core/main/pyboot.cpp;${GUI_SRC_LIB};${CGAL_SRC_LIB}")
-IF(ENABLE_POTENTIAL_PARTICLES)
+IF(ENABLE_POTENTIAL_PARTICLES OR ENABLE_POTENTIAL_BLOCKS)
   SET(SRC_LIB "${SRC_LIB};lib/computational-geometry/MarchingCube.cpp")
-ENDIF(ENABLE_POTENTIAL_PARTICLES)
+ENDIF(ENABLE_POTENTIAL_PARTICLES OR ENABLE_POTENTIAL_BLOCKS)
 
 #===========================================================
 
@@ -627,16 +680,7 @@ IF (CHUNKSIZE)
 ELSE (CHUNKSIZE)
   ADD_LIBRARY(yade SHARED ${SRC_CORE} ${SRC_PKG} ${SRC_LIB})
 ENDIF (CHUNKSIZE)
-#===========================================================
 
-FOREACH(PYTHON_MODULE IPython matplotlib numpy pygraphviz Xlib minieigen future past)
-	find_python_module(${PYTHON_MODULE} REQUIRED)
-ENDFOREACH()
-IF(${PYTHON_VERSION_MAJOR} EQUAL 2)
-	find_python_module(Tkinter REQUIRED)
-ELSE()
-	find_python_module(tkinter REQUIRED)
-ENDIF()
 #===========================================================
 
 ADD_LIBRARY(boot SHARED ${CMAKE_CURRENT_SOURCE_DIR}/core/main/pyboot.cpp)

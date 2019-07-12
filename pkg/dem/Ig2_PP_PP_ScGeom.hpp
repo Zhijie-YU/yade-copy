@@ -1,6 +1,6 @@
 /*CWBoon 2015 */
 /* C.W. Boon, G.T. Houlsby, S. Utili (2013).  A new contact detection algorithm for three-dimensional non-spherical particles.  Powder Technology, 248, pp 94-102. */
-/* code for calling MOSEK was for ver 6.  Please uncomment if you have the licence */
+/* A code for calling MOSEK (ver 6) exists in a previous version of this script. MOSEK can be used to solve the second order cone programme of equations (SOCP), alternativelly to the code used here.*/
 
 #pragma once
 #ifdef YADE_POTENTIAL_PARTICLES
@@ -12,60 +12,27 @@
 #include <Eigen/Core>
 #include <stdio.h>
 
-# ifdef YADE_MOSEK
-#include <mosek.h>
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
-#endif
-
-
 class Ig2_PP_PP_ScGeom: public IGeomFunctor {
-
-#ifdef YADE_MOSEK
-	protected:
-		std::string myfile;
-		std::string Key;
-		MSKrescodee mosekTaskEnv;
-		MSKenv_t    mosekEnv;
-#endif
-
 
 	public :
 		virtual bool go(const shared_ptr<Shape>& cm1, const shared_ptr<Shape>& cm2, const State& state1, const State& se32, const Vector3r& shift2, const bool& force, const shared_ptr<Interaction>& c);
 
-
-
 		Real evaluatePP(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r newTrial);
 		void getPtOnParticle2(const shared_ptr<Shape>& cm1, const State& state1, Vector3r previousPt, Vector3r normal, Vector3r& newlocalPoint);
 
-		bool contactPtMosekF2(const shared_ptr<Shape>& cm1, const State& state1, const shared_ptr<Shape>& cm2, const State& state2, Vector3r &contactPt);
-
 		bool customSolve(const shared_ptr<Shape>& cm1, const State& state1, const shared_ptr<Shape>& cm2, const State& state2, Vector3r &contactPt, bool warmstart);
-
 
 		Vector3r getNormal(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r newTrial);
 
 		void BrentZeroSurf(const shared_ptr<Shape>& cm1, const State& state1, const Vector3r bracketA, const Vector3r bracketB, Vector3r& zero);
 
-
-
-
-
 		/////////////////////////////////////////////////////////////////////////////////////////////////////
-
 
 
 		YADE_CLASS_BASE_DOC_ATTRS_CTOR(Ig2_PP_PP_ScGeom,IGeomFunctor,"EXPERIMENTAL. IGeom functor for PotentialParticle - PotentialParticle pair",
 			((Real, accuracyTol, pow(10,-7),, "accuracy desired, tolerance criteria for SOCP"))
 			((Real,interactionDetectionFactor,1.0,,"")),
-			//((std::string,myfile,"./PotentialParticles"+"","string")),
-			//timingDeltas=shared_ptr<TimingDeltas>(new TimingDeltas);
-			//mosekTaskEnv = MSK_makeenv(&mosekEnv,NULL,NULL,NULL,NULL);
-			//mosekTaskEnv = MSK_initenv(mosekEnv);
 		);
-
-
 
 
 		FUNCTOR2D(PotentialParticle,PotentialParticle);

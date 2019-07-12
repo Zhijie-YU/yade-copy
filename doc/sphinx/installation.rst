@@ -11,11 +11,33 @@ Installation
 Packages
 ----------
 
-Pre-built packages are provided for all currently supported Debian and Ubuntu
+**Stable packages**
+
+
+Since 2011, all Ubuntu (starting from 11.10, Oneiric) and Debian (starting from Wheezy) versions
+have Yade in their main repositories. There are only stable releases in place.
+To install Yade, run the following::
+
+	sudo apt-get install yade
+
+After that you can normally start Yade using the command ``yade`` or ``yade-batch``.
+
+To check which version of Yade is included in your specific distribution, visit
+`Ubuntu <https://launchpad.net/ubuntu/+source/yade>`_ or
+`Debian <http://packages.qa.debian.org/y/yade.html>`_.
+The `Debian-Backports <http://backports.debian.org/Instructions>`_
+repository is updated regularly to bring the newest Yade version to the users of stable
+Debians.
+
+**Daily packages**
+
+Pre-built packages updated more frequently than the stable versions are provided for all currently supported Debian and Ubuntu
 versions and available on `yade-dem.org/packages <http://yade-dem.org/packages/>`_ .
 
 These are "daily" versions of the packages which are being updated regularly and, hence, include
 all the newly added features.
+
+.. warning:: yade-daily packages are currently out of date, this `issue <https://gitlab.com/yade-dev/trunk/issues/58>`_ is being worked on. Yade can be installed from :ref:`source code <install-from-source-code>`.
 
 To install the daily-version you need to add the repository to your
 /etc/apt/sources.list, add the PGP-key AA915EEB as trusted and install ``yadedaily``::
@@ -47,23 +69,10 @@ To remove our key from keyring, execute the following command::
 
 	sudo apt-key remove AA915EEB
 
-Since 2011, all Ubuntu (starting from 11.10, Oneiric) and Debian (starting from Wheezy) versions
-have Yade in their main repositories. There are only stable releases in place.
-To install Yade, run the following::
-
-	sudo apt-get install yade
-
-After that you can normally start Yade using the command ``yade`` or ``yade-batch``.
-
-To check, what version of Yade is included in your specific distribution, visit
-`Ubuntu <https://launchpad.net/ubuntu/+source/yade>`_ or
-`Debian <http://packages.qa.debian.org/y/yade.html>`_.
-The `Debian-Backports <http://backports.debian.org/Instructions>`_
-repository is updated regularly to bring the newest Yade version to the users of stable
-Debians.
-
 Daily and stable Yade versions can coexist without any conflicts, i.e., you can use ``yade`` and ``yadedaily``
 at the same time.
+
+.. _install-from-source-code:
 
 Source code
 ------------
@@ -112,12 +121,12 @@ Yade relies on a number of external software to run; they are checked before the
 Some of them are only optional. The last ones are only relevant for using the fluid coupling module (:yref:`FlowEngine`).
 
 * `cmake <http://www.cmake.org/>`_ build system
-* `gcc <http://www.gcc.gnu.org>`_ compiler (g++); other compilers will not work; you need g++>=4.2 for openMP support
+* `gcc <https://gcc.gnu.org/>`_ compiler (g++); other compilers will not work; you need g++>=4.2 for openMP support
 * `boost <http://www.boost.org/>`_ 1.47 or later
 * `Qt <http://www.qt.io/>`_ library
 * `freeglut3 <http://freeglut.sourceforge.net>`_
 * `libQGLViewer <http://www.libqglviewer.com>`_
-* `python <http://www.python.org>`_, `numpy <http://numpy.scipy.org>`_, `ipython <http://ipython.scipy.org>`_
+* `python <http://www.python.org>`_, `numpy <https://www.numpy.org/>`_, `ipython <https://ipython.org/>`_, `sphinx <https://www.sphinx-doc.org/en/master/>`_, `mpi4py <https://mpi4py.readthedocs.io/en/stable/>`_
 * `matplotlib <http://matplotlib.sf.net>`_
 * `eigen <http://eigen.tuxfamily.org>`_ algebra library (minimal required version 3.2.1)
 * `gdb <http://www.gnu.org/software/gdb>`_ debugger
@@ -125,10 +134,11 @@ Some of them are only optional. The last ones are only relevant for using the fl
 * `Loki <http://loki-lib.sf.net>`_ library
 * `VTK <http://www.vtk.org/>`_ library (optional but recommended)
 * `CGAL <http://www.cgal.org/>`_ library (optional)
-* `SuiteSparse <http://www.cise.ufl.edu/research/sparse/SuiteSparse/>`_ sparse algebra library (fluid coupling, optional, requires eigen>=3.1)
+* `SuiteSparse <http://www.suitesparse.com>`_ sparse algebra library (fluid coupling, optional, requires eigen>=3.1)
 * `OpenBLAS <http://www.openblas.net/>`_ optimized and parallelized alternative to the standard blas+lapack (fluid coupling, optional)
 * `Metis <http://glaros.dtc.umn.edu/gkhome/metis/metis/overview/>`_ matrix preconditioning (fluid coupling, optional)
 * `OpenMPI <https://www.open-mpi.org/software/>`_ library for parallel distributed computing (For MPI and OpenFOAM coupling, optional)
+* `python3-mpi4py <https://bitbucket.org/mpi4py/>`_ MPI for Python (For MPI, optional)
 
 Most of the list above is very likely already packaged for your distribution. In case you are confronted
 with some errors concerning not available packages (e.g., package libmetis-dev is not available) it may be necessary
@@ -146,11 +156,11 @@ need root privileges.
 		sudo apt install cmake git freeglut3-dev libloki-dev libboost-all-dev fakeroot \
 		dpkg-dev build-essential g++ python3-dev python3-ipython python3-matplotlib \
 		libsqlite3-dev python3-numpy python3-tk gnuplot libgts-dev python3-pygraphviz \
-		libvtk6-dev libeigen3-dev python3-xlib python3-pyqt5 pyqt5-dev-tools \
+		libvtk6-dev libeigen3-dev python3-xlib python3-pyqt5 pyqt5-dev-tools python3-mpi4py \
 		python3-pyqt5.qtwebkit gtk2-engines-pixbuf python3-pyqt5.qtsvg libqglviewer-dev-qt5 \
 		python3-pil libjs-jquery python3-sphinx python3-git libxmu-dev libxi-dev libcgal-dev \
 		help2man libbz2-dev zlib1g-dev python3-minieigen libopenblas-dev libsuitesparse-dev \
-		libmetis-dev python3-bibtexparser python3-future
+		libmetis-dev python3-bibtexparser python3-future coinor-clp coinor-libclp-dev
 		
 * For **Ubuntu 16.04** ``libqglviewer-dev-qt5`` is to be replaced by ``libqglviewer-dev`` and ``python3-ipython`` by ``ipython3``.
 
@@ -229,7 +239,7 @@ As of Yade version git-2315bd8 (or 2018.02b release), the following options are 
 	* ENABLE_CGAL: enable CGAL option (ON by default)
 	* ENABLE_VTK: enable VTK-export option (ON by default)
 	* ENABLE_OPENMP: enable OpenMP-parallelizing option (ON by default)
-	* ENABLE_MPI: Enable MPI enviroment and communication, required for Yade-OpenFOAM coupling (OFF by default)
+	* ENABLE_MPI: Enable MPI enviroment and communication, required distributed memory and for Yade-OpenFOAM coupling (ON by default)
 	* ENABLE_GTS: enable GTS-option (ON by default)
 	* ENABLE_GL2PS: enable GL2PS-option (ON by default)
 	* ENABLE_LINSOLV: enable LINSOLV-option (ON by default)
@@ -240,6 +250,7 @@ As of Yade version git-2315bd8 (or 2018.02b release), the following options are 
 	* ENABLE_LIQMIGRATION: enable LIQMIGRATION-option, see [Mani2013]_ for details (OFF by default)
 	* ENABLE_MASK_ARBITRARY: enable MASK_ARBITRARY option (OFF by default)
 	* ENABLE_PROFILING: enable profiling, e.g., shows some more metrics, which can define bottlenecks of the code (OFF by default)
+	* ENABLE_POTENTIAL_BLOCKS: enable potential blocks option (OFF by default)
 	* ENABLE_POTENTIAL_PARTICLES: enable potential particles option (OFF by default)
 	* ENABLE_DEFORM: enable constant volume deformation engine (OFF by default)
 	* ENABLE_OAR: generate a script for oar-based task scheduler (OFF by default)
@@ -310,6 +321,38 @@ upon detecting the C and C++ compiler to use::
 Clang does not support OpenMP-parallelizing for the moment, that is why the
 feature will be disabled.
 
+Supported linux releases
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+`Currently supported <https://gitlab.com/yade-dev/trunk/pipelines?scope=branches>`_ [#buildLog]_ linux releases and their respective `docker <https://docs.docker.com/>`_ `files <https://docs.docker.com/engine/reference/builder/>`_ are:
+
+* `Ubuntu 16.04 xenial <https://gitlab.com/yade-dev/docker-yade/blob/ubuntu16-py3/Dockerfile>`_
+* `Ubuntu 18.04 bionic <https://gitlab.com/yade-dev/docker-yade/blob/ubuntu18.04/Dockerfile>`_
+* `Debian 9 stretch <https://gitlab.com/yade-dev/docker-yade/blob/debian-stretch/Dockerfile>`_
+* `Debian 10 buster <https://gitlab.com/yade-dev/docker-yade/blob/debian-buster/Dockerfile>`_
+* `openSUSE 15 <https://gitlab.com/yade-dev/docker-yade/blob/suse15/Dockerfile>`_
+
+These are the bash commands used to prepare the linux distribution and environment for installing and testing yade.
+These instructions are automatically performed using the `gitlab continuous integration <https://docs.gitlab.com/ee/ci/quick_start/>`_ service after
+each merge to master. This makes sure that yade always works correctly on these linux distributions.
+In fact yade can be installed manually by following step by step these instructions in following order:
+
+1. Bash commands in the respective Dockerfile to install necessary packages,
+
+2. do ``git clone https://gitlab.com/yade-dev/trunk.git``,
+
+3. then the ``cmake_*`` commands in the `.gitlab-ci.yml file <https://gitlab.com/yade-dev/trunk/blob/master/.gitlab-ci.yml>`_ for respective distribution,
+
+4. then the ``make_*`` commands to compile yade,
+
+5. and finally the ``--check`` and ``--test`` commands.
+
+6. Optionally documentation can be built with ``make doc`` command, however currently it is not guaranteed to work on all linux distributions due to frequent interface changes in `sphinx <http://www.sphinx-doc.org/en/master/>`_.
+
+These instructions use ``ccache`` and ``ld.gold`` to :ref:`speed-up compilation <speed-up>` as described below.
+
+.. [#buildLog] To see details of the latest build log click on the *master* branch.
+
 Python 2 backward compatibility
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -325,7 +368,8 @@ Python 2 support ends at the beginning of 2020. However, Yade can be compiled an
 		libqglviewer-dev-qt5 python-pil libjs-jquery python-sphinx python-git python-bibtex \
 		libxmu-dev libxi-dev libcgal-dev help2man libbz2-dev zlib1g-dev python-minieigen \
 		libopenblas-dev libsuitesparse-dev libmetis-dev libopenmpi-dev openmpi-bin \
-		openmpi-common python-bibtexparser python3-future python-future python-gts
+		openmpi-common python-bibtexparser python3-future python-future python-gts \
+		coinor-clp coinor-libclp-dev
 
 * For **Ubuntu 16.04** ``libqglviewer-dev-qt5`` is to be replaced by ``libqglviewer-dev``, ``python-pil`` is to be replaced by ``python-imaging``.
 
@@ -335,7 +379,12 @@ Note that the cmake ``PYTHON_VERSION`` option can be set to force any python ver
 
 Also see notes about :ref:`converting python 2 scripts into python 3<convert-python2-to3>`.
 
+.. _speed-up:
+
 Speed-up compilation
+---------------------
+
+Compile time
 ^^^^^^^^^^^^^^^^^^^^^
 
 When spliting the compilation on many cores (``make -jN``), ``N`` is limited by the available cores and memory. It is possible to use more cores if remote computers are available, distributing the compilation with `distcc <https://wiki.archlinux.org/index.php/Distcc>`_  (see distcc documentation for configuring slaves and master)::
@@ -354,6 +403,20 @@ In addition, and independently of distcc, caching previous compilations with `cc
 The two tools can be combined very simply, adding to the above exports::
 
 	export CCACHE_PREFIX="distcc"
+
+Link time
+^^^^^^^^^^^^^^^^^^^^^
+
+The link time can be reduced roughly 2 minutes by changing the default linker from ``ld`` to ``ld.gold``. They are both in the same package ``binutils`` (on opensuse15 it is package ``binutils-gold``). To perform the switch execute these commands as root::
+
+	ld --version
+	update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.gold" 20
+	update-alternatives --install "/usr/bin/ld" "ld" "/usr/bin/ld.bfd" 10
+	ld --version
+
+To switch back run the commands above with reversed priorities ``10`` ↔ ``20``. Alternatively a manual selection can be performed by command: ``update-alternatives --config ld``.
+
+Note: ``ld.gold`` is incompatible with the compiler wrapper ``mpicxx`` in some distributions, which is manifested as an error in the ``cmake`` stage. We do not use ``mpicxx`` for our builds currently, if you want to use it then disable ``ld.gold``.
 
 Cloud Computing
 ----------------

@@ -33,7 +33,7 @@
 
 // #define PARDISO //comment this if pardiso lib is not available
 
-#ifdef CHOLMOD_LIBS
+#ifdef LINSOLV
 extern "C" { void openblas_set_num_threads(int num_threads); }
 #endif
 
@@ -95,7 +95,7 @@ FlowBoundingSphereLinSolv<_Tesselation,FlowType>::FlowBoundingSphereLinSolv(): F
 	pardisoInitialized=false;
 	pTimeInt=0;pTime1N=0;pTime2N=0;
 	pTime1=0;pTime2=0;
-	#ifdef CHOLMOD_LIBS
+	#ifdef LINSOLV
 	factorizedEigenSolver=false;
 	numFactorizeThreads=1;
 	numSolveThreads=1;
@@ -151,7 +151,7 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::resetLinearSystem() {
 	if (F) taucs_supernodal_factor_free(F); F=NULL;
 	if (Fccs) taucs_ccs_free(Fccs); Fccs=NULL;
 #endif
-#ifdef CHOLMOD_LIBS
+#ifdef LINSOLV
 	factorizedEigenSolver=false;
 #endif
 #ifdef PARDISO
@@ -322,7 +322,7 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setLinearSystem(Real dt)
 	// 			cerr<<"i="<< i <<" j="<< j<<" v="<<vs[k]<<" clen[j]="<<clen[j]-1<<endl;
 			}
 		#endif //TAUCS_LIB
-		#ifdef CHOLMOD_LIBS
+		#ifdef LINSOLV
 		} else if (useSolver==3){
 			tripletList.clear(); tripletList.resize(T_nnz);
 			for(int k=0;k<T_nnz;k++) tripletList[k]=ETriplet(is[k]-1,js[k]-1,vs[k]);
@@ -583,7 +583,7 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::sortV(int k1, int k2, int
 template<class _Tesselation, class FlowType>
 int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::eigenSolve(Real dt)
 {
-#ifdef CHOLMOD_LIBS
+#ifdef LINSOLV
 	if (!isLinearSystemSet || (isLinearSystemSet && reApplyBoundaryConditions()) || !updatedRHS) ncols = setLinearSystem(dt);
 	copyCellsToLin(dt);
 	//FIXME: we introduce new Eigen vectors, then we have to copy from/to c-arrays, can be optimized later
@@ -704,14 +704,14 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::augmentConductivityMatrix
 template<class _Tesselation, class FlowType>
 void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setNewCellTemps()
 {
-    RTriangulation& Tri = T[currentTes].Triangulation();
-    FiniteCellsIterator cellEnd = Tri.finite_cells_end();
-    for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != cellEnd; cell++){
+	RTriangulation& Tri = T[currentTes].Triangulation();
+	FiniteCellsIterator cellEnd = Tri.finite_cells_end();
+	for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != cellEnd; cell++) {
 		if (!cell->info().Tcondition && !cell->info().isGhost) {
-            Real oldTemp = cell->info().temp();
-            cell->info().temp()=cell->info().internalEnergy/((1./cell->info().invVoidVolume())*fluidCp*fluidRho); //FIXME: invVoidVolume depends on volumeSolidPore() which uses CGAL points only updated each remesh. We need our own volumeSolidPore(). 
-            cell->info().dtemp() = cell->info().temp() - oldTemp;
-        }
+			Real oldTemp = cell->info().temp();
+			cell->info().temp()=cell->info().internalEnergy/((1./cell->info().invVoidVolume())*fluidCp*fluidRho); //FIXME: invVoidVolume depends on volumeSolidPore() which uses CGAL points only updated each remesh. We need our own volumeSolidPore(). 
+			cell->info().dtemp() = cell->info().temp() - oldTemp;
+		}
 	}
 }
 

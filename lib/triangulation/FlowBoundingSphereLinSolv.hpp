@@ -8,10 +8,10 @@
 #ifdef FLOW_ENGINE
 #pragma once
 
-#define CHOLMOD_LIBS //comment this if CHOLMOD is not available
+//#define LINSOLV // should be defined at cmake step
 // #define TAUCS_LIB //comment this if TAUCS lib is not available, it will disable PARDISO lib as well
 
-#ifdef CHOLMOD_LIBS
+#ifdef LINSOLV
 	#include <Eigen/Sparse>
 	#include <Eigen/SparseCore>
 	#include <Eigen/CholmodSupport>
@@ -75,7 +75,7 @@ public:
 	bool updatedRHS;
 	struct timeval start, end;
 	
-	#ifdef CHOLMOD_LIBS
+	#ifdef LINSOLV
 	//Eigen's sparse matrix and solver
 	Eigen::SparseMatrix<double> A;
 	//Eigen::SparseMatrix<std::complex<double>,RowMajor> Ga; for row major stuff?

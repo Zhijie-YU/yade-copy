@@ -68,12 +68,10 @@ def addBodies():
 
 def state():
 	global numSphereGen
-	global resultStatus
-	print("Iter %d: Total number of generated spheres %d, removed particles %d, current particles %d, kinEnergy %g"%(O.iter, numSphereGen, domLim.nDeleted, numSphereGen-domLim.nDeleted, utils.kineticEnergy()))
-	if (utils.kineticEnergy() > kinEnergyMax):
-		print("Kinetic energy is over a threshold value! Error!")
-		resultStatus += 1
+	print("Iter %d: Total number of generated spheres %d, removed particles %d, current particles %d, kinEnergy %g"%(O.iter, numSphereGen, domLim.nDeleted, numSphereGen-domLim.nDeleted, kineticEnergy()))
+	if (kineticEnergy() > kinEnergyMax):
 		O.pause()
+		raise YadeCheckError("Kinetic energy is over a threshold value! Error!")
 
 addBodies()
 O.run(10, True)

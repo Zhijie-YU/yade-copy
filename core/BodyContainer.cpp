@@ -8,7 +8,8 @@
 	#include<omp.h>
 #endif
 
-CREATE_LOGGER(BodyContainer);
+// CREATE_LOGGER(BodyContainer);
+YADE_PLUGIN((BodyContainer))
 
 void BodyContainer::clear(){
 	body.clear();
@@ -23,6 +24,18 @@ Body::id_t BodyContainer::insert(shared_ptr<Body> b){
 	body.push_back(b);
 	// Notify ForceContainer about new id
 	scene->forces.addMaxId(b->id);
+	return b->id;
+}
+
+Body::id_t BodyContainer::insertAtId(shared_ptr<Body> b, Body::id_t candidate){
+	assert(candidate>=0);
+	if(body[candidate] or unsigned(candidate)>=size()) {LOG_ERROR("invalid candidate id"); return -1;}
+	const shared_ptr<Scene>& scene=Omega::instance().getScene(); 
+	b->iterBorn=scene->iter;
+	b->timeBorn=scene->time;
+	b->id=candidate; 
+	body[b->id] = b; 
+	scene->doSort = true;
 	return b->id;
 }
 
@@ -54,8 +67,9 @@ bool BodyContainer::erase(Body::id_t id, bool eraseClumpMembers){//default is fa
 		return true;
 	}
 	const shared_ptr<Scene>& scene=Omega::instance().getScene();
-	for(auto it=b->intrs.begin(), end=b->intrs.end(); it!=end; ++it) {  //Iterate over all body's interactions
-		scene->interactions->requestErase((*it).second);
+	for(auto it=b->intrs.begin(), end=b->intrs.end(); it!=end;) {  //Iterate over all body's interactions
+		Body::MapId2IntrT::iterator willBeInvalid = it; ++it;
+		scene->interactions->erase(willBeInvalid->second->getId1(),willBeInvalid->second->getId2(),willBeInvalid->second->linIx);
 	}
 	b->id=-1;//else it sits in the python scope without a chance to be inserted again
 	body[id].reset();

@@ -351,6 +351,7 @@ def facetCylinderConeGenerator(center,radiusTop,height,orientation=Quaternion((0
 	"""
 	Please, do not use this function directly! Use geom.facetCylinder and geom.facetCone instead.
 	This is the base function for generating cylinders and cones from facets.
+
 	:param float radiusTop:  top radius
 	:param float radiusBottom:  bottom radius
 	:param \*\*kw: (unused keyword arguments) passed to utils.facet;

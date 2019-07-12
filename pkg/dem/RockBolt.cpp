@@ -3,9 +3,10 @@
 /* CW Boon, GT Houlsby, S Utili (2015).  Designing Tunnel Support in Jointed Rock Masses Via the DEM.  Rock Mechanics and Rock Engineering,  48 (2), 603-632. */
 
 #ifdef YADE_POTENTIAL_BLOCKS
+#include<lib/compatibility/VTKCompatibility.hpp> // fix InsertNextTupleValue → InsertNextTuple name change (and others in the future)
 
 #include "RockBolt.hpp"
-#include<pkg/dem/KnKsLaw.hpp>
+//#include<pkg/dem/KnKsLaw.hpp>
 #include<pkg/dem/ScGeom.hpp>
 #include<core/Omega.hpp>
 #include <ctime>
@@ -293,15 +294,15 @@ void RockBolt::action(){
 				plotDirection.normalize();
 				Vector3r nodalForce = forces[i]*plotDirection;
 				float f[3]={(float)nodalForce[0], (float)nodalForce[1], (float)nodalForce[2]};
-				boltNodalForce->InsertNextTupleValue(f);
+				boltNodalForce->INSERT_NEXT_TUPLE(f);
 
 				Vector3r axialForce = axialForces[i]*plotDirection;
 				float fa[3]={(float)axialForce[0], (float)axialForce[1], (float)axialForce[2]};
-				boltAxialForce->InsertNextTupleValue(fa);
+				boltAxialForce->INSERT_NEXT_TUPLE(fa);
 
 				Vector3r shearForce = shearForces[i]*plotDirection;
 				float fs[3]={(float)shearForce[0], (float)shearForce[1], (float)shearForce[2]};
-				boltShearForce->InsertNextTupleValue(fs);
+				boltShearForce->INSERT_NEXT_TUPLE(fs);
 
 			}
 			

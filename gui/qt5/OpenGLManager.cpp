@@ -19,9 +19,9 @@ void OpenGLManager::timerEvent(QTimerEvent* event){
 	//cerr<<".";
 	boost::mutex::scoped_lock lock(viewsMutex);
 	// when sharing the 0th view widget, it should be enough to update the primary view only
-	//if(views.size()>0) views[0]->updateGL();
+	//if(views.size()>0) views[0]->updateGLViewer();
 	#if 1
-		FOREACH(const shared_ptr<GLViewer>& view, views){ if(view) view->updateGL(); }
+		FOREACH(const shared_ptr<GLViewer>& view, views){ if(view) view->updateGLViewer(); }
 	#endif
 }
 
