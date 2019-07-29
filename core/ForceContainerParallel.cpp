@@ -1,5 +1,7 @@
 #include <core/ForceContainer.hpp>
 
+CREATE_LOGGER(ForceContainer);
+
 void ForceContainer::ensureSynced() {
   if(!synced) throw runtime_error("ForceContainer not thread-synchronized; call sync() first!");
 }
@@ -194,6 +196,11 @@ void ForceContainer::sync(){
   synced=true; syncCount++;
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+// this is to remove warning about manipulating raw memory
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
+
 void ForceContainer::reset(long iter, bool resetAll) {
   syncSizesOfContainers();
   for(int thread=0; thread<nThreads; thread++){
@@ -219,6 +226,7 @@ void ForceContainer::reset(long iter, bool resetAll) {
   moveRotUsed=false;
   lastReset=iter;
 }
+#pragma GCC diagnostic pop
 
 void ForceContainer::resize(size_t newSize, int threadN) {
   LOG_DEBUG("Resize ForceContainer from the size "<<size<<" to the size "<<newSize);

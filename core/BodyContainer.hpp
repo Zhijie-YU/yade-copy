@@ -79,8 +79,7 @@ class BodyContainer: public Serializable{
 		YADE_CLASS_BASE_DOC_ATTRS(BodyContainer,Serializable,"Standard body container for a scene",
 		((ContainerT,body,,,"The underlying vector<shared_ptr<Body> >"))
 		)
-// 		REGISTER_CLASS_AND_BASE(BodyContainer,Serializable);
-// 		REGISTER_ATTRIBUTES(Serializable,(body));
-// 		DECLARE_LOGGER;
+
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(BodyContainer);

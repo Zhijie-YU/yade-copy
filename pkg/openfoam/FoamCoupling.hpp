@@ -32,6 +32,7 @@ class FoamCoupling : public GlobalEngine {
     void updateProcList();
     void castParticle();
     void castNumParticle(int); 
+    void castTerminate();  
     void resetProcList(); 
     void recvHydroForce(); 
     void setHydroForce();
@@ -65,7 +66,7 @@ class FoamCoupling : public GlobalEngine {
     ,
     .def("setIdList", &FoamCoupling::setIdList,boost::python::arg("bodyIdlist"), "list of body ids in hydroForce coupling. (links to :yref: `FoamCoupling::bodyList` vector, used to build particle data :yref:`FoamCoupling::particleData`. :yref:`FoamCoupling::particleData` contains the particle pos, vel, angvel, radius and this is sent to foam. )")
     .def("getRank", &FoamCoupling::getRank, "Initiallize MPI communicator for coupling. Should be called at the beginning of the script. :yref: `initMPI <FoamCoupling::initMPI>` Initializes  the MPI environment. " )
-    .def("killMPI", &FoamCoupling::killMPI, "Destroy MPI, to be called at the end of the simulation, from :yref:`killMPI<FoamCoupling::killMPI>`")
+    .def("killMPI", &FoamCoupling::killMPI, "Destroy MPI, to be called at the end of the simulation, from :yref:`killMPI<FoamCoupling::killMPI>`") 
     .def("setNumParticles",&FoamCoupling::setNumParticles,boost::python::arg("numparticles"),"number of particles in coupling")
     .def_readonly("foamDeltaT", &FoamCoupling::foamDeltaT, "timestep in openfoam solver from  :yref:`exchangeDeltaT <FoamCoupling::exchangeDeltaT>` ") 
     .def_readonly("dataExchangeInterval", &FoamCoupling::dataExchangeInterval, "Number of iterations/substepping : for stability and to be in sync with fluid solver calculated in :yref:`exchangeDeltaT <FoamCoupling::exchangeDeltaT>`")

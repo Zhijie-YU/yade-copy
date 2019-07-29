@@ -67,7 +67,7 @@ Yade will run the script and then drop to the command-line again. [#f2]_ If you 
 There is more command-line options than just ``-x``, run ``yade -h`` to see all of them.
 
 	Options:
-	  --version             show program's version number and exit
+	  -v, --version         show program's version number and exit
 	  -h, --help            show this help message and exit
 	  -j THREADS, --threads=THREADS
 	                        Number of OpenMP threads to run; defaults to 1.
@@ -82,6 +82,8 @@ There is more command-line options than just ``-x``, run ``yade -h`` to see all 
 	  --nice=NICE           Increase nice level (i.e. decrease priority) by given
 	                        number.
 	  -x                    Exit when the script finishes
+	  -f                    Set :ref:`logging verbosity <logging>`, default
+	                        is -f3 (yade.log.WARN) for all classes
 	  -n                    Run without graphical interface (equivalent to
 	                        unsetting the DISPLAY environment variable)
 	  --test                Run regression test suite and exit; the exists status
@@ -109,7 +111,7 @@ There is more command-line options than just ``-x``, run ``yade -h`` to see all 
 
 .. [#f2] Plain Python interpreter exits once it finishes running the script. The reason why Yade does the contrary is that most of the time script only sets up simulation and lets it run; since computation typically runs in background thread, the script is technically finished, but the computation is running.
 
-.. [#fdbg] On some linux systems stack trace will not be shown and a message ``ptrace: Operation not permitted`` will appear instead. To enable stack trace issue command: ``sudo echo 0 > /proc/sys/kernel/yama/ptrace_scope``. To disable stack trace issue command ``sudo echo 1 > /proc/sys/kernel/yama/ptrace_scope``.
+.. [#fdbg] On some linux systems stack trace will produce ``Operation not permitted`` error. See :ref:`debugging section <debugging>` for solution.
 
 
 Quick inline help

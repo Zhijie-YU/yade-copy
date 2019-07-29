@@ -1,4 +1,9 @@
-/* lucScholtes2010 */
+/* Luc Scholtes 2010, jointed cohesive frictional model:
+Scholtès, L., and Donzé F., "Modelling progressive failure in fractured rock masses using a 3D discrete element method." International Journal of Rock Mechanics and Mining Sciences 52 (2012): 18-30. */
+
+/* Robert Caulk 2018, acoustic emissions and heterogeneity models:
+Caulk, R. (2018) Stochastic Augmentation of the Discrete Element Method for the Investigation of Tensile Rupture in Heterogeneous Rock.
+Yade Technical Archive. DOI: 10.5281/zenodo.1202039 */
 
 #pragma once
 

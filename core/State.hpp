@@ -82,6 +82,7 @@ class State: public Serializable, public Indexable{
 		((int,boundaryId,-1,,"identifies if a particle is associated with constant temperature thrermal boundary condition"))
         	((Real,stabilityCoefficient,0,,"sum of solid and fluid thermal resistivities for use in automatic timestep estimation"))
         	((Real,delRadius,0,,"radius change due to thermal expansion"))
+		((bool,isCavity,true,,"flag used for unbounding cavity bodies"))
 #endif
 		,
 		/* additional initializers */

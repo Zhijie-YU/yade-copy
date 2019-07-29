@@ -27,6 +27,5 @@ class StepDisplacer: public PartialEngine {
 		((Quaternionr,rot,Quaternionr::Identity(),,"Rotation step to be applied per iteration (via rotation composition with :yref:`State.ori`)."))
 		((bool,setVelocities,false,,"If false, positions and orientations are directly updated, without changing the speeds of concerned bodies. If true, only velocity and angularVelocity are modified. In this second case :yref:`integrator<NewtonIntegrator>` is supposed to be used, so that, thanks to this Engine, the bodies will have the prescribed jump over one iteration (dt)."))
 	);
-	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(StepDisplacer);

@@ -20,6 +20,7 @@ DeformableElement::~DeformableElement(){
 
 }
 YADE_PLUGIN((DeformableElement));
+CREATE_LOGGER(DeformableElement);
 
 boost::python::dict DeformableElement::localmap_get(){
 	boost::python::dict ret;

@@ -461,7 +461,7 @@ def _getMemoizedPacking(memoizeDb,radius,rRelFuzz,x1,y1,z1,fullDim,wantPeri,fill
 
 
 
-def randomDensePack(predicate,radius,material=-1,dim=None,cropLayers=0,rRelFuzz=0.,spheresInCell=0,memoizeDb=None,useOBB=False,memoDbg=False,color=None,returnSpherePack=None):
+def randomDensePack(predicate,radius,material=-1,dim=None,cropLayers=0,rRelFuzz=0.,spheresInCell=0,memoizeDb=None,useOBB=False,memoDbg=False,color=None,returnSpherePack=None,seed=0):
 	"""Generator of random dense packing with given geometry properties, using TriaxialTest (aperiodic)
 	or PeriIsoCompressor (periodic). The periodicity depens on whether	the spheresInCell parameter is given.
 
@@ -549,6 +549,7 @@ def randomDensePack(predicate,radius,material=-1,dim=None,cropLayers=0,rRelFuzz=
 			numberOfGrains=int(N),radiusMean=radius,radiusStdDev=rRelFuzz,
 			# upperCorner is just size ratio, if radiusMean is specified
 			upperCorner=fullDim,
+			seed=seed,
 			## no need to touch any the following
 			noFiles=True,lowerCorner=[0,0,0],sigmaIsoCompaction=-4e4,sigmaLateralConfinement=-5e2,compactionFrictionDeg=1,StabilityCriterion=.02,strainRate=.2,thickness=0,maxWallVelocity=.1,wallOversizeFactor=1.5,autoUnload=True,autoCompressionActivation=False, internalCompaction=True).load()
 		while ( numpy.isnan(utils.unbalancedForce()) or utils.unbalancedForce()>0.005 ) :

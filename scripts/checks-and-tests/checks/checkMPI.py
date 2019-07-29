@@ -6,24 +6,10 @@ NSTEPS=100 #turn it >0 to see time iterations, else only initilization TODO!HACK
 #NSTEPS=50 #turn it >0 to see time iterations, else only initilization
 N=50; M=50; #(columns, rows) per thread
 
-if("-ms" in sys.argv):
-	sys.argv.remove("-ms")
-	mergeSplit=True
-else: mergeSplit=False
-
-if("-bc" in sys.argv):
-	sys.argv.remove("-bc")
-	bodyCopy=True
-else: bodyCopy=False
-
-
 import os
 from yade import mpy as mp
 numThreads = 4
 
-# sequential grain colors
-import colorsys
-colorScale = (Vector3(colorsys.hsv_to_rgb(value*1.0/numThreads, 1, 1)) for value in range(0, numThreads))
 
 O.engines=[ #this reproduces the yade default, not present during checkList.py execution
 		ForceResetter(),
@@ -40,11 +26,10 @@ O.engines=[ #this reproduces the yade default, not present during checkList.py e
 
 #add spheres
 for sd in range(0,numThreads-1):
-	col = next(colorScale)
 	ids=[]
 	for i in range(N):#(numThreads-1) x N x M spheres, one thread is for master and will keep only the wall, others handle spheres
 		for j in range(M):
-			id = O.bodies.append(sphere((sd*N+i+j/30.,j,0),0.500,color=col)) #a small shift in x-positions of the rows to break symmetry
+			id = O.bodies.append(sphere((sd*N+i+j/30.,j,0),0.500)) #a small shift in x-positions of the rows to break symmetry
 			ids.append(id)
 	for id in ids: O.bodies[id].subdomain = sd+1
 
@@ -65,8 +50,7 @@ mp.ERASE_REMOTE=False #erase bodies not interacting wit a given subdomain?
 mp.OPTIMIZE_COM=True #L1-optimization: pass a list of double instead of a list of states
 mp.USE_CPP_MPI=True and mp.OPTIMIZE_COM #L2-optimization: workaround python by passing a vector<double> at the c++ level
 mp.MERGE_W_INTERACTIONS=False
-mp.MERGE_SPLIT=mergeSplit
-mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = bodyCopy and not mergeSplit
+mp.COPY_MIRROR_BODIES_WHEN_COLLIDE = False
 mp.VERBOSE_OUTPUT=False
 mp.YADE_TIMING=False
 mp.NO_OUTPUT=True

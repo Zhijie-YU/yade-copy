@@ -116,5 +116,6 @@ class Peri3dController: public BoundaryController{
 		,
 		/*py*/
 	);
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Peri3dController);

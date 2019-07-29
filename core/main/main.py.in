@@ -56,6 +56,8 @@ par.add_argument('-mit','--mpi-interactive-threads',help='Number of MPI threads 
 par.add_argument('--update',help='Update deprecated class names in given script(s) using text search & replace. Changed files will be backed up with ~ suffix. Exit when done without running any simulation.',dest='updateScripts',nargs='+')
 par.add_argument('--nice',help='Increase nice level (i.e. decrease priority) by given number.',dest='nice',type=int)
 par.add_argument('-x',help='Exit when the script finishes',dest='exitAfter',action='store_true')
+par.add_argument('-f',help=('Set "Default" filter for logging https://yade-dem.org/doc/prog.html#logging, default is -f3 for all classes.'+
+                ('' if 'BoostLog' in features else " (Since this build doesn't use boost::log this option is unavailable, use cmake option -DENABLE_LOGGER=ON to enable)")),dest='verbosity',type=int)
 par.add_argument('-n',help="Run without graphical interface (equivalent to unsetting the DISPLAY environment variable)",dest='nogui',action='store_true')
 par.add_argument('--test',help="Run regression test suite and exit; the exists status is 0 if all tests pass, 1 if a test fails and 2 for an unspecified exception.",dest="test",action='store_true')
 par.add_argument('--checks',help='Run a series of user-defined check tests as described in /yade/scripts/checks-and-tests/checks/README and https://yade-dem.org/doc/prog.html#regression-tests',dest='checks',action='store_true')
@@ -83,12 +85,10 @@ if opts.version:
 if opts.script:
 	args.insert(0,opts.script) # for compatibility with userSession(), could be modified in the future
 
-	
 ## Check if this script is exec'd or imported as part of a mpi process
 # If yade is run with mpiexec prefix (on clusters for example), all processes will be in mpi_mode.
 # If yade is run with -mit x(>1), master will disable mpi_mode (for interactivity) and will spawn processes that will be in mpi_mode.
 opts.mpi_mode = os.getenv('OMPI_COMM_WORLD_RANK')!=None
-
 
 ## remove later
 ## python2.5 relative module imports workaround
@@ -146,6 +146,7 @@ import yade
 # other parts we will need soon
 import yade.config
 import yade.wrapper
+import yade.log
 import yade.system
 import yade.runtime
 # import to have quick access to function printAllVersions()
@@ -156,6 +157,21 @@ from yade.libVersions import printAllVersions
 if opts.updateScripts:
 	yade.system.updateScripts(args)
 	sys.exit(0)
+
+if 'BoostLog' in yade.config.features:
+	# by default use colors, but reading config file will override that
+	yade.log.setUseColors(True)
+	# set default filter level. This level is mentioned in documentation as the starting default level.
+	yade.log.setLevel("Default",yade.log.WARN)
+	# make sure verbosity filter is set correctly during loading the config file
+	if opts.verbosity: yade.log.setLevel("Default",opts.verbosity)
+	# read config file if it exists
+	import os
+	if(os.path.isfile( yade.log.defaultConfigFileName() )):
+		yade.log.readConfigFile( yade.log.defaultConfigFileName() )
+	# setting filter level from command line will override config file
+	if opts.verbosity: yade.log.setLevel("Default",opts.verbosity)
+
 
 # modify sys.argv in-place so that it can be handled by userSession
 sys.yade_argv=sys.argv
@@ -210,7 +226,7 @@ def userSession(gui='none',qapp=None):
 				'"\e[A": history-search-backward', '"\e[B": history-search-forward', # incremental history forward/backward
 		]
 	)
-
+	
 	# show python console
 	# handle ipython version (version 10 nost tested after some changes here)
 	if yade.runtime.ipython_version==10:
@@ -246,7 +262,12 @@ def userSession(gui='none',qapp=None):
 		for k in ipconfig['readline_parse_and_bind']: readline.parse_and_bind(k)
 		InteractiveShellEmbed.config=cfg
 		InteractiveShellEmbed.banner1=banner+'\n'
-		ipshell=InteractiveShellEmbed()
+		while True:
+			try:	#simultaneous calls to InteractiveShellEmbed() sometimes lead to race condition for /root/.ipython/* in mpi spawn (https://gitlab.com/yade-dev/trunk/issues/94)
+				ipshell=InteractiveShellEmbed()
+				break
+			except:
+				continue
 
 		# ipython since version 5.0 stopped using libreadline, now we must make the bindings in another way
 		# see: https://python-prompt-toolkit.readthedocs.io/en/1.0.14/pages/full_screen_apps.html?highlight=add_binding

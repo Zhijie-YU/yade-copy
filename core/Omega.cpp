@@ -72,6 +72,7 @@ void Omega::initTemps(){
 }
 
 void Omega::cleanupTemps(){
+	stop();
 	boost::filesystem::path tmpPath(tmpFileDir);
 	boost::filesystem::remove_all(tmpPath);
 }

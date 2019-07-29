@@ -40,7 +40,7 @@ void Ip2_FrictMat_FrictMat_ElectrostaticPhys::go(const shared_ptr<Material>& mat
 	phys->DebyeLength = DebyeLength;
 	phys->Z = Z;
 }
-CREATE_LOGGER(Ip2_ElectrostaticMat_ElectrostaticMat_ElectrostaticPhys);
+CREATE_LOGGER(Ip2_FrictMat_FrictMat_ElectrostaticPhys);
 
 
 /********************** Law2_ScGeom_ElectrostaticPhys ****************************/

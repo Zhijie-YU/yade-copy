@@ -18,9 +18,8 @@ allTests=[
 ]
 
 # add any new yade module (ugly...)
-import yade.export,yade.linterpolation,yade.pack,yade.plot,yade.post2d,yade.timing,yade.utils,yade.ymport,yade.geom,yade.gridpfacet,yade.libVersions
-allModules=(yade.export,yade.linterpolation,yade.pack,yade.plot,yade.post2d,yade.timing,yade.utils,yade.ymport,yade.geom,yade.gridpfacet,yade.libVersions)
-
+import yade.export,yade.linterpolation,yade.log,yade.pack,yade.plot,yade.post2d,yade.timing,yade.utils,yade.ymport,yade.geom,yade.gridpfacet,yade.libVersions
+allModules=(yade.export,yade.linterpolation,yade.log,yade.pack,yade.plot,yade.post2d,yade.timing,yade.utils,yade.ymport,yade.geom,yade.gridpfacet,yade.libVersions)
 try:
 	import yade.qt
 	allModules+=(yade.qt,)

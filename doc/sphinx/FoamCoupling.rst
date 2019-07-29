@@ -238,7 +238,7 @@ Execution
 
 The simulation is executed via the following command::
 
-  mpiexec -n 1 python scriptYade.py : -n NUMPROCS icoFoamYade -parallel
+  mpiexec -n 1 python3 scriptYade.py : -n NUMPROCS icoFoamYade -parallel
 
 The `video`__ below shows the steps involved in compiling and executing the coupled CFD-DEM simulation
 

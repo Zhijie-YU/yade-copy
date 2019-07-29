@@ -68,6 +68,7 @@ using boost::shared_ptr;
 	#define FOREACH BOOST_FOREACH
 #endif
 
+// TODO: they no longer expand to dynamic/static pointer casts depending on DEBUG=ON/OFF build. They are in wrong file. Think about either fixing this or removing them, https://gitlab.com/yade-dev/trunk/issues/97
 #ifndef YADE_PTR_CAST
 	#define YADE_PTR_CAST boost::static_pointer_cast
 #endif

@@ -33,6 +33,8 @@ class If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat : public InternalForc
 		FUNCTOR2D(Lin4NodeTetra_Lin4NodeTetra_InteractionElement,LinCohesiveStiffPropDampElastMat);
 
 		YADE_CLASS_BASE_DOC(If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat,InternalForceFunctor,"Apply internal forces of the tetrahedral element using lumped mass theory")
+
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat);
 

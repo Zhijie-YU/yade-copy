@@ -232,6 +232,7 @@ void PeriTriaxController::action()
 }
 
 CREATE_LOGGER(Peri3dController);
+
 void Peri3dController::action(){
 	if(!scene->isPeriodic){ LOG_FATAL("Being used on non-periodic simulation!"); throw; }
 	const Real& dt=scene->dt;

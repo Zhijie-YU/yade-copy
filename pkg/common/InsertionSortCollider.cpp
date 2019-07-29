@@ -98,7 +98,12 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 				if(isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id!=v[j].id)) {
 					const Body::id_t& id1 = v[j].id; const Body::id_t& id2 = viInit.id; 
 					//(see #0 if compilation fails)
+					#ifdef YADE_MPI
 					if (spatialOverlap(id1,id2) && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get(),scene->subdomain) && !interactions->found(id1,id2))
+					#else
+					if (spatialOverlap(id1,id2) && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get()) && !interactions->found(id1,id2))
+					#endif 
+					
 						newInteractions[threadNum].push_back(std::pair<Body::id_t,Body::id_t>(v[j].id,viInit.id));
 				}
 				j--;
@@ -126,7 +131,11 @@ void InsertionSortCollider::insertionSortParallel(VecBounds& v, InteractionConta
 				if(isMin && !v[j].flags.isMin && doCollide && viInitBB && v[j].flags.hasBB && (viInit.id!=v[j].id)) {
 					const Body::id_t& id1 = v[j].id; const Body::id_t& id2 = viInit.id;
 					//FIXME: do we need the check with found(id1,id2) here? It is checked again below...
+					#ifdef YADE_MPI
 					if (spatialOverlap(id1,id2) && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get(),scene->subdomain) && !interactions->found(id1,id2))
+					#else
+					if (spatialOverlap(id1,id2) && Collider::mayCollide(Body::byId(id1,scene).get(),Body::byId(id2,scene).get()) && !interactions->found(id1,id2))
+					#endif 
 						newInteractions[threadNum].push_back(std::pair<Body::id_t,Body::id_t>(v[j].id,viInit.id));}
 				j--;
 			}

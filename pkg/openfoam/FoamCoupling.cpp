@@ -73,6 +73,15 @@ void FoamCoupling::castNumParticle(int value) {
 }
 
 
+
+void FoamCoupling::castTerminate() {
+  int value = 10; 
+  MPI_Bcast(&value, 1, MPI_INT, rank, MPI_COMM_WORLD);
+
+}
+
+
+
 void FoamCoupling::updateProcList()
 {
   for (unsigned int i=0; i != bodyList.capacity(); ++i)
@@ -174,7 +183,8 @@ void FoamCoupling::runCoupling() {
   }
 }
 
-void FoamCoupling::killMPI() {
+void FoamCoupling::killMPI() { 
+  castTerminate(); 
   MPI_Finalize();
 }
 

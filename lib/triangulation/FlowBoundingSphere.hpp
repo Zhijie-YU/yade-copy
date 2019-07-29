@@ -48,17 +48,24 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		bool factorizeOnly;
 		bool getCHOLMODPerfTimings;
 		bool reuseOrdering;
+		bool controlCavityPressure;
+		bool controlCavityVolumeChange;
+		bool averageCavityPressure;
+		double cavityDV;
 
 		bool thermalEngine;
 		double fluidRho;
 		double fluidCp;
 		bool sphericalVertexAreaCalculated = 0;
+		double thermalPorosity;
 
 		//Handling imposed pressures/fluxes on elements in the form of {point,value} pairs, IPCells contains the cell handles corresponding to point
 		vector<pair<Point,Real> > imposedP;
 		vector<CellHandle> IPCells;
 		vector<pair<Point,Real> > imposedF;
 		vector<CellHandle> IFCells;
+		vector<Point> imposedCavity;
+		vector<CellHandle> cavityCells;
 		//Blocked cells, where pressure may be computed in undrained condition
 		vector<CellHandle> blockedCells;
 		//Pointers to vectors used for user defined boundary pressure
@@ -110,6 +117,8 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		virtual void resetRHS() {};////reset only B in the linear system A*P=B, done typically after changing values of imposed pressures 
 
 		double kFactor; //permeability moltiplicator
+		double cavityFactor; // permeability factor for cavity cell neighbors
+		bool tempDependentViscosity; 
 		std::string key; //to give to consolidation files a name with iteration number
 // 		std::vector<double> pressures; //for automatic write maximum pressures during consolidation
 		bool tessBasedForce; //allow the force computation method to be chosen from FlowEngine
@@ -117,6 +126,11 @@ class FlowBoundingSphere : public Network<_Tesselation>
 
 		double viscosity;
 		double fluidBulkModulus;
+		double equivalentCompressibility;
+		double netCavityFlux;
+		double phiZero;
+		double cavityFlux;
+		double cavityFluidDensity;
 		bool multithread;
 		
 		void displayStatistics();
@@ -177,8 +191,13 @@ class FlowBoundingSphere : public Network<_Tesselation>
 		double averagePressure();
 		int getCell (double X,double Y,double Z);
 		double boundaryFlux(unsigned int boundaryId);
+		double boundaryArea(unsigned int boundaryId);
+		std::vector<std::vector<double>> boundaryVel(unsigned int booundaryId);
 		void setBlocked(CellHandle& cell);
-		
+		void adjustCavityPressure(double dt, int stepsSinceLastMesh, double pZero);
+		void adjustCavityVolumeChange(double dt, int stepsSinceLastMesh, double pZero);
+		void adjustCavityCompressibility(double pZero);
+		double getCavityFlux();
 		vector<Real> averageFluidVelocityOnSphere(unsigned int Id_sph);
 		//Solver?
 		int useSolver;//(0 : GaussSeidel, 1:CHOLMOD)

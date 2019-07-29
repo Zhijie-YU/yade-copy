@@ -301,6 +301,7 @@ class Bo1_Subdomain_Aabb : public BoundFunctor{
 		void go(const shared_ptr<Shape>& cm, shared_ptr<Bound>& bv, const Se3r& se3, const Body*);
 	FUNCTOR1D(Subdomain);
 	YADE_CLASS_BASE_DOC(Bo1_Subdomain_Aabb,BoundFunctor,"Creates/updates an :yref:`Aabb` of a :yref:`Facet`.");
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(Bo1_Subdomain_Aabb);
 

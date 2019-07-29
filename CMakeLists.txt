@@ -2,6 +2,8 @@
 #  CMAKE_INSTALL_PREFIX: path, where Yade will be installed (/usr/local by default)
 #  LIBRARY_OUTPUT_PATH: path to install libraries (lib by default)
 #  DEBUG: compile in debug-mode (OFF by default)
+#  ENABLE_LOGGER: use boost::log library for logging (ON by default)
+#  MAX_LOG_LEVEL: set maximum level for LOG_* macros compiled with ENABLE_LOGGER. For production build use MAX_LOG_LEVEL<=4, to avoid filter integer comparison on each call to LOG_DEBUG(…), LOG_TRACE(…)
 #  CMAKE_VERBOSE_MAKEFILE: output additional information during compiling (OFF by default)
 #  SUFFIX: suffix, added after binary-names (version number by default)
 #  NOSUFFIX: do not add a suffix after binary-name (OFF by default)
@@ -37,6 +39,13 @@
 project(Yade C CXX)
 cmake_minimum_required(VERSION 2.8.11)
 
+# https://misc.flogisoft.com/bash/tip_colors_and_formatting
+# https://stackoverflow.com/questions/18968979/how-to-get-colorized-output-with-cmake , use ${Esc} for printing colors
+string(ASCII 27 Esc)
+# To have a cmake option with multiple values I used https://cmake.org/pipermail/cmake/2016-October/064342.html
+set(MAX_LOG_LEVEL "5" CACHE STRING "set maximum level for LOG_* macros compiled with ENABLE_LOGGER. For production build use MAX_LOG_LEVEL<=4, to avoid filter integer comparison on each call to LOG_DEBUG(…), LOG_TRACE(…)")
+set_property(CACHE MAX_LOG_LEVEL PROPERTY STRINGS "0" "1" "2" "3" "4" "5" "6")  # define list of values GUI will offer for the variable
+
 
 #===========================================================
 SET(DEFAULT ON CACHE INTERNAL "Default value for enabled by default options")
@@ -44,6 +53,7 @@ SET(LINKLIBS "")
 SET(CONFIGURED_FEATS "")
 SET(DISABLED_FEATS "")
 
+OPTION(ENABLE_LOGGER "use boost::log library for logging (ON by default)" ON)
 OPTION(ENABLE_VTK "Enable VTK" ${DEFAULT})
 OPTION(ENABLE_OPENMP "Enable OpenMP" ${DEFAULT})
 OPTION(ENABLE_MPI "Enable MPI environement and communications, required for coupling Yade with OpenFOAM  " ON)
@@ -64,9 +74,9 @@ OPTION(ENABLE_OAR "Generate script for oar-based task scheduler" OFF)
 OPTION(USE_QT5 "USE Qt5 for GUI" ON)
 OPTION(ENABLE_POTENTIAL_BLOCKS "Enable PotentialBlocks" ON)
 OPTION(ENABLE_DEFORM "Enable Deformation Engine" OFF)
-OPTION(ENABLE_FEMLIKE "Enable deformable solids" OFF)
+OPTION(ENABLE_FEMLIKE "Enable deformable solids" ON)
 OPTION(CHOLMOD_GPU "Enable GPU acceleration flow engine direct solver" OFF)
-OPTION(ENABLE_THERMAL "Enable thermal engine (experimental)" OFF)
+OPTION(ENABLE_THERMAL "Enable thermal engine (experimental)" ON)
 #Set -DPYTHON_VERSION numeric option below:
 set(PYTHON_VERSION -1 CACHE STRING "Force python version to the given one. Defaults to -DPYTHON_VERSION=-1 which automatically uses the newest available python version on the system.")
 #===========================================================
@@ -142,6 +152,29 @@ ELSE (DEBUG)
   ADD_DEFINITIONS("-DNDEBUG")
 ENDIF (DEBUG)
 
+IF(ENABLE_LOGGER)
+  MESSAGE(STATUS "${Esc}[36mLog filtering: enabled${Esc}[0m")
+  SET(CONFIGURED_FEATS "${CONFIGURED_FEATS} BoostLog")
+  ADD_DEFINITIONS("-D YADE_BOOST_LOG")
+  ADD_DEFINITIONS("-D BOOST_LOG_DYN_LINK")
+  IF (DEBUG)
+    MESSAGE(STATUS "Enabling boost::log library and DEBUG=ON. Files will be very large with full debug info inside.")
+    IF(${MAX_LOG_LEVEL} LESS 6)
+      MESSAGE(STATUS "${Esc}[33mWarning: using DEBUG=ON with MAX_LOG_LEVEL=${MAX_LOG_LEVEL} (less than 6, the maximum log level) rarely makes sense, use cmake option MAX_LOG_LEVEL=6 to fix this.${Esc}[0m")
+    ENDIF()
+  ELSE (DEBUG)
+    MESSAGE(STATUS "Enabling boost::log library and DEBUG=OFF. Logging will work nicely, backtraces will not have debug info, files will be small.")
+  ENDIF (DEBUG)
+ELSE(ENABLE_LOGGER)
+  MESSAGE(STATUS "${Esc}[36mLog filtering: disabled${Esc}[0m")
+  IF (DEBUG)
+    MESSAGE(STATUS "Disabling boost::log library (only rudimentary LOG_* macros will work) and DEBUG=ON. Files will be very large with full debug info inside.")
+  ELSE (DEBUG)
+    MESSAGE(STATUS "Disabling boost::log library (only rudimentary LOG_* macros will work, and only up to LOG_WARN) and DEBUG=OFF. Backtraces will not have debug info, files will be small.")
+  ENDIF (DEBUG)
+ENDIF(ENABLE_LOGGER)
+
+ADD_DEFINITIONS("-DMAX_LOG_LEVEL=${MAX_LOG_LEVEL}")
 
 #==================================
 #====== *** PYTHON/BOOST *** ======
@@ -660,7 +693,7 @@ FILE(GLOB SRC_CORE "core/*.cpp")
 FILE(GLOB_RECURSE SRC_PKG  "pkg/*.cpp")
 FILE(GLOB SRC_LIB  "lib/*.cpp")
 
-SET(SRC_LIB "${SRC_LIB};lib/base/Math.cpp;lib/factory/ClassFactory.cpp;lib/factory/DynLibManager.cpp")
+SET(SRC_LIB "${SRC_LIB};lib/base/Math.cpp;lib/factory/ClassFactory.cpp;lib/factory/DynLibManager.cpp;lib/base/Logging.cpp")
 SET(SRC_LIB "${SRC_LIB};lib/serialization/Serializable.cpp;lib/pyutil/gil.cpp;core/main/pyboot.cpp;${GUI_SRC_LIB};${CGAL_SRC_LIB}")
 IF(ENABLE_POTENTIAL_PARTICLES OR ENABLE_POTENTIAL_BLOCKS)
   SET(SRC_LIB "${SRC_LIB};lib/computational-geometry/MarchingCube.cpp")
@@ -760,6 +793,11 @@ INSTALL(TARGETS yade DESTINATION ${YADE_LIB_PATH})
 MESSAGE(STATUS "===========================================================")
 MESSAGE(STATUS "Yade configured with following features:${CONFIGURED_FEATS}")
 MESSAGE(STATUS "Disabled features:${DISABLED_FEATS}")
+IF(ENABLE_LOGGER)
+  MESSAGE(STATUS "${Esc}[36mUsing MAX_LOG_LEVEL=${MAX_LOG_LEVEL}, ENABLE_LOGGER=ON${Esc}[0m")
+ELSE(ENABLE_LOGGER)
+  MESSAGE(STATUS "${Esc}[36mUsing MAX_LOG_LEVEL=${MAX_LOG_LEVEL}, ENABLE_LOGGER=OFF${Esc}[0m")
+ENDIF(ENABLE_LOGGER)
 IF (DEBUG)
   MESSAGE(STATUS "Debug build")
   SET (debugbuild " (debug build)")

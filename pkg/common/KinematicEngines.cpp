@@ -7,6 +7,7 @@
 YADE_PLUGIN((KinematicEngine)(CombinedKinematicEngine)(TranslationEngine)(HarmonicMotionEngine)(RotationEngine)(HelixEngine)(InterpolatingHelixEngine)(HarmonicRotationEngine)(ServoPIDController)(BicyclePedalEngine));
 
 CREATE_LOGGER(KinematicEngine);
+CREATE_LOGGER(ServoPIDController);
 
 void KinematicEngine::action(){
 	if (ids.size()>0) {

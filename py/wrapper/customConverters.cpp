@@ -193,6 +193,7 @@ BOOST_PYTHON_MODULE(_customConverters){
 	boost::python::to_python_converter<std::vector<std::vector<std::string> >,custom_vvector_to_list<std::string> >();
 	boost::python::to_python_converter<std::vector<std::vector<Matrix3r> >,custom_vvector_to_list<Matrix3r> >();
 	boost::python::to_python_converter<std::vector<std::vector<int> >,custom_vvector_to_list<int> >();
+	boost::python::to_python_converter<std::vector<std::vector<double> >,custom_vvector_to_list<double> >();
 	//boost::python::to_python_converter<std::list<shared_ptr<Functor> >, custom_list_to_list<shared_ptr<Functor> > >();
 	//boost::python::to_python_converter<std::list<shared_ptr<Functor> >, custom_list_to_list<shared_ptr<Functor> > >();
 

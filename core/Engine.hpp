@@ -18,8 +18,6 @@
 class Body;
 class Scene;
 
-CREATE_LOGGER(Engine);
-
 class Engine: public Serializable{
 	public:
 		// pointer to the simulation, set at every step by Scene::moveToNextTimeStep
@@ -61,7 +59,6 @@ class Engine: public Serializable{
 		.def("__call__",&Engine::explicitAction)
 	);
 };
+
 REGISTER_SERIALIZABLE(Engine);
-
-
 

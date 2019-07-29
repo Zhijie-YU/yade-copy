@@ -1,11 +1,13 @@
+// 2005 Olivier Galizzi, Janek Kozicki
 // 2009 © Václav Šmilauer <eudoxos@arcig.cz>
 #pragma once
 
 #include <boost/thread/mutex.hpp>
 
-#define FRIEND_SINGLETON(Class) friend class Singleton<Class>;					
+#define FRIEND_SINGLETON(Class) friend class Singleton<Class>;
 // use to instantiate the self static member.
 #define SINGLETON_SELF(Class) template<> Class* Singleton<Class>::self=NULL;
+// one singleton cannot access another in its constructor.
 namespace { boost::mutex singleton_constructor_mutex; }
 template <class T>
 class Singleton{
@@ -20,5 +22,4 @@ class Singleton{
 			return *self;
 		}
 };
-
 

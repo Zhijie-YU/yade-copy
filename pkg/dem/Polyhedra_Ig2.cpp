@@ -12,6 +12,13 @@ YADE_PLUGIN(/* self-contained in hpp: */ (Ig2_Polyhedra_Polyhedra_PolyhedraGeom)
 	(Ig2_Polyhedra_Polyhedra_ScGeom) (Ig2_Polyhedra_Polyhedra_PolyhedraGeomOrScGeom)
 );
 
+CREATE_LOGGER(Ig2_Polyhedra_Polyhedra_PolyhedraGeom);
+CREATE_LOGGER(Ig2_Wall_Polyhedra_PolyhedraGeom);
+CREATE_LOGGER(Ig2_Facet_Polyhedra_PolyhedraGeom);
+CREATE_LOGGER(Ig2_Sphere_Polyhedra_ScGeom);
+CREATE_LOGGER(Ig2_Polyhedra_Polyhedra_ScGeom);
+CREATE_LOGGER(Ig2_Polyhedra_Polyhedra_PolyhedraGeomOrScGeom);
+
 //**********************************************************************************
 /*! Create Polyhedra (collision geometry) from colliding Polyhedras. */
 

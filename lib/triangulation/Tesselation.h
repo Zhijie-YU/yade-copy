@@ -97,6 +97,7 @@ public:
 	
 	typedef std::vector<VertexHandle>							VectorVertex;
 	typedef std::vector<CellHandle>								VectorCell;
+	typedef std::vector<std::pair<CellHandle,int>>								VectorFacetPair;
 	typedef std::list<Point>								ListPoint;
 	typedef typename VectorCell::iterator							VCellIterator;
 	int maxId;
@@ -112,6 +113,7 @@ public:
 	Real TotalInternalVoronoiPorosity;
 	VectorVertex vertexHandles;//This is a redirection vector to get vertex pointers by spheres id
 	VectorCell cellHandles;//for speedup of global loops, iterating on this vector is faster than cellIterator++
+	VectorFacetPair facetCells; //for speedup on global loops (can be parallelized)
 	bool redirected;//is vertexHandles filled with current vertex pointers? 
 	bool computed;
 

@@ -30,7 +30,6 @@ class LubricationPhys: public ViscElPhys {
                 ((Real,kno,0.0,,"Coefficient for normal stiffness (Hertzian-like contact) [N/m^(3/2)]"))
                 ((Real,nun,0.0,,"Coefficient for normal lubrication [N.s]"))
                 ((Real,mum,0.3,,"Friction coefficient [-]"))
-				
 				// Output
                 ((Real,ue,0.,Attr::readonly,"Surface deflection (ue) at t-dt [m]"))
                 ((Real,u,-1,Attr::readonly,"Interfacial distance (u) at t-dt [m]"))
@@ -115,6 +114,7 @@ class Law2_ScGeom_ImplicitLubricationPhys: public LawFunctor{
 			((int,resolution,3,,"Change normal component resolution method, 0: Iterative exact resolution with substepping (theta method, linear contact), 1: Newton-Rafson dimentionless resolution (theta method, linear contact), 2: (default) Dichotomy dimentionless resolution (theta method, linear contact), 3: Exact dimentionless solution with contact prediction (theta method, linear contact). Method 3 is better if the volumic fraction is not too high. Use 2 otherwise."))
 			((Real, SolutionTol, 1.e-8,,"Tolerance for numerical resolution (Dichotomy and Newton-Rafson)"))
 			((int, MaxIter, 30,,"Maximum iterations for numerical resolution (Dichotomy and Newton-Rafson)"))
+			((Real, MaxDist, 2.,,"Maximum distance (d/a) for the interaction"))
 			,// CTOR
 			,// PY
 			.def("getStressForEachBody",&Law2_ScGeom_ImplicitLubricationPhys::PyGetStressForEachBody,"Get stresses tensors for each bodies: normal contact stress, shear contact stress, normal lubrication stress, shear lubrication stress.")

@@ -83,6 +83,7 @@ class TriaxialTest : public FileGenerator
 		((Real,maxMultiplier,1.01,,"max multiplier of diameters during internal compaction (initial fast increase)"))
 		((Real,finalMaxMultiplier,1.001,,"max multiplier of diameters during internal compaction (secondary precise adjustment)"))
 		((Real,radiusStdDev,0.3,,"Normalized standard deviation of generated sizes."))
+		((int, seed, 0,,"Seed used for the call to makeCloud"))
 		((Real,radiusMean,-1,,"Mean radius. If negative (default), autocomputed to as a function of box size and :yref:`TriaxialTest::numberOfGrains`"))
 		((Real,sphereYoungModulus,15000000.0,,"Stiffness of spheres."))
 		((Real,sphereKsDivKn,0.5,,"Ratio of shear vs. normal contact stiffness for spheres."))

@@ -8,8 +8,7 @@
 	#include<omp.h>
 #endif
 
-// CREATE_LOGGER(BodyContainer);
-YADE_PLUGIN((BodyContainer))
+CREATE_LOGGER(BodyContainer);
 
 void BodyContainer::clear(){
 	body.clear();

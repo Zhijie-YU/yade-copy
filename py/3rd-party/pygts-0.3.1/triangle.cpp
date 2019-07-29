@@ -41,6 +41,7 @@
 // https://codeyarns.com/2014/03/11/how-to-selectively-ignore-a-gcc-warning/
 // https://gcc.gnu.org/onlinedocs/gcc/Diagnostic-Pragmas.html
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wwrite-strings"
 #pragma GCC diagnostic ignored "-Wmisleading-indentation"
 

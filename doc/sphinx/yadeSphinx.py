@@ -48,8 +48,10 @@ yade.%s module
 # put all yade modules here, as {module:[submodules]}
 #
 # NOTE: in file doc/sphinx/conf.py there is a moduleMap={……} variable which must reflect what is written below.
+# hint: follow changes in d067b0696a8 to add new modules.
 mods={
           'libVersions'     : ['_libVersions']
+        , 'log'             : ['_log']
         , 'export'          : []
         , 'post2d'          : []
         , 'pack'            : ['_packSpheres','_packPredicates','_packObb']

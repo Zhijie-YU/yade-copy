@@ -150,6 +150,16 @@ def cxxCtorsDict(proxyNamespace=__builtins__):
 	return proxyNamespace
 
 
+## ENABLE_LOGGER ## def setExitHandlers():
+## ENABLE_LOGGER ## 	"""Set exit handler to avoid gdb run if log4cxx crashes at exit."""
+## ENABLE_LOGGER ## 	# avoid backtrace at regular exit, even if we crash
+## ENABLE_LOGGER ## 	if 'log4cxx' in config.features:
+## ENABLE_LOGGER ## 		__builtins__['quit']=wrapper.Omega().exitNoBacktrace
+## ENABLE_LOGGER ## 		sys.exit=wrapper.Omega().exitNoBacktrace
+## ENABLE_LOGGER ## 	# this seems to be not needed anymore:
+## ENABLE_LOGGER ## 	#sys.excepthook=sys.__excepthook__ # apport on ubuntu overrides this, we don't need it
+
+
 # consistency check
 # if there are no serializables, then plugins were not loaded yet, probably
 if(len(_allSerializables)==0):

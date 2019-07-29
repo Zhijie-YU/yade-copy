@@ -95,7 +95,7 @@ Depending on the remote repository you want to push to, follow one of the method
    The first two lines are optional, if ignored the commits will go the to the default branch, called "master".
    In the last command ``localBranch`` is the local branch name on which you were working (possibly ``master``) and ``newlyCreatedBranch`` will be the name of that branch on the remote. Please choose a descriptive name as much as you can (e.g. "fixBug457895").
 
-.. note:: If you run into any problems with command ``git pull --rebase upstream master``, you :ref:`always can revert<yade-rebasing>` or even better `fix the conflicts <https://hackernoon.com/fix-conflicts-only-once-with-git-rerere-7d116b2cec67>`_.
+.. note:: If you run into any problems with command ``git pull --rebase upstream master``, you :ref:`always can revert<yade-rebasing>` or even better `fix the conflicts <https://medium.com/@porteneuve/fix-conflicts-only-once-with-git-rerere-7d116b2cec67>`_.
 
 
 2. Push to personnal repository
@@ -191,7 +191,7 @@ If you forgot to make that backup-copy and want to go back, then make a copy any
 
 The ``ORIG_HEAD`` backs up the position of HEAD before a potentially dangerous operation (merge, rebase, etc.).
 
-A tutorial on `fixing the conflicts <https://hackernoon.com/fix-conflicts-only-once-with-git-rerere-7d116b2cec67>`_ is a recommended read.
+A tutorial on `fixing the conflicts <https://medium.com/@porteneuve/fix-conflicts-only-once-with-git-rerere-7d116b2cec67>`_ is a recommended read.
 
 ********************************************
 General guidelines for pushing to yade/trunk

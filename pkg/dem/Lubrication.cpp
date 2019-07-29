@@ -58,7 +58,7 @@ void Ip2_FrictMat_FrictMat_LubricationPhys::go(const shared_ptr<Material> &mater
 	
 	/* Fluid (lubrication) */
     Real a = (Da+Db)/2.;
-    phys->nun = M_PI*eta*3./2.*a*a;
+    phys->nun = M_PI*eta*a*a;
     phys->eta = eta;
     phys->eps = eps;
 	phys->ladh = Fadh/Kn/a; // Compute adhesion length from force
@@ -89,9 +89,9 @@ Real Law2_ScGeom_ImplicitLubricationPhys::normalForce_AdimExp(LubricationPhys *p
 	
 	Real d;
 	if(dichotomie)
-		d = DichoAdimExp_integrate_u(-geom->penetrationDepth/a, 2.*phys->eps, 1., phys->prevDotU, scene->dt*a*phys->kn/phys->nun, phys->delta, phys->nun/phys->kn/std::pow(a,2)*undot, phys->contact ? phys->ladh : 0.);
+		d = DichoAdimExp_integrate_u(-geom->penetrationDepth/a, 2.*phys->eps, 1., phys->prevDotU, scene->dt*a*phys->kn/phys->nun*3./2., phys->delta, phys->nun/phys->kn/std::pow(a,2)*undot, phys->contact ? phys->ladh : 0.);
 	else
-		d = NRAdimExp_integrate_u(-geom->penetrationDepth/a, 2.*phys->eps, 1., phys->prevDotU, scene->dt*a*phys->kn/phys->nun, phys->delta, phys->nun/phys->kn/std::pow(a,2)*undot); // Newton-Rafson
+		d = NRAdimExp_integrate_u(-geom->penetrationDepth/a, 2.*phys->eps, 1., phys->prevDotU, scene->dt*a*phys->kn/phys->nun*3./2., phys->delta, phys->nun/phys->kn/std::pow(a,2)*undot); // Newton-Rafson
 		
 	if(phys->contact) { // We where in contact. Contact is maintained while u'-2*eps < ladh
 		phys->contact = std::exp(d)-2.*phys->eps < phys->ladh;
@@ -231,7 +231,7 @@ Real Law2_ScGeom_ImplicitLubricationPhys::normalForce_trpz_adim(LubricationPhys 
 	Real a((geom->radius1+geom->radius2)/2.);
 	if(isNew) { phys->u = -geom->penetrationDepth; }
 	
-	Real uprim = trapz_integrate_u_adim(-geom->penetrationDepth/a, 2.*phys->eps, scene->dt*a*phys->kn/phys->nun, phys->u/a, phys->ladh , phys->contact, phys->prevDotU);
+	Real uprim = trapz_integrate_u_adim(-geom->penetrationDepth/a, 2.*phys->eps, scene->dt*a*phys->kn/phys->nun*3./2., phys->u/a, phys->ladh , phys->contact, phys->prevDotU);
 	
 	phys->u = a*uprim;
 	
@@ -280,10 +280,10 @@ Real Law2_ScGeom_ImplicitLubricationPhys::normalForce_trapezoidal(LubricationPhy
 {
 	Real a((geom->radius1+geom->radius2)/2.);
 	
-	if(isNew) { phys->prev_un= -geom->penetrationDepth-undot*scene->dt; phys->prevDotU=undot*phys->nun ; phys->u = phys->prev_un; }
+	if(isNew) { phys->prev_un= -geom->penetrationDepth-undot*scene->dt; phys->prevDotU=undot*phys->nun*3./2. ; phys->u = phys->prev_un; }
 	
 	phys->normalForce = geom->normal*trapz_integrate_u(	phys->prevDotU, phys->prev_un  /*prev. un*/,
-					phys->u, -geom->penetrationDepth, phys->nun, phys->kn, phys->kn /*should be keps, currently both are equal*/, 
+					phys->u, -geom->penetrationDepth, phys->nun*3./2., phys->kn, phys->kn /*should be keps, currently both are equal*/, 
 					2.*phys->eps*a, scene->dt, phys->u<(2*phys->eps*a),
 					isNew?(maxSubSteps+1):0/* depth = maxSubSteps+1 will trigger backward Euler for initialization*/);
 	
@@ -466,7 +466,7 @@ bool Law2_ScGeom_ImplicitLubricationPhys::go(shared_ptr<IGeom> &iGeom, shared_pt
 	//    Vector3r relVT = relV - relVN; // Tangeancial velocity
 	Real undot = relV.dot(geom->normal); // Normal velocity norm
     
-    if(-geom->penetrationDepth > a)
+    if(-geom->penetrationDepth > MaxDist*a)
     {
            //FIXME: it needs to go to potential always based on distance, the "undot < 0" here is dangerous (let the collider do its job), ex: if true is returned here the interaction is still alive and it will be included in the stress
 //         return undot < 0; // Only go to potential if distance is increasing 
@@ -532,9 +532,10 @@ void Law2_ScGeom_ImplicitLubricationPhys::computeShearForceAndTorques(Lubricatio
 		Vector3r relTwistVelocity = relAngularVelocity.dot(geom->normal)*geom->normal;
 		Vector3r relRollVelocity = relAngularVelocity - relTwistVelocity;
 
-		if(activateRollLubrication && phys->eta > 0.) Cr = M_PI*phys->eta*a*a*a*(3./2.*std::log(a/phys->u)+63./500.*phys->u/a*std::log(a/phys->u))*relRollVelocity;
-		if (activateTwistLubrication && phys->eta > 0.) Ct = M_PI*phys->eta*a*a*phys->u*std::log(a/phys->u)*relTwistVelocity;
-		
+		if(a > phys->u) {
+			if(activateRollLubrication && phys->eta > 0.) Cr = phys->nun*(3./2.*a+63./500.*phys->u)*std::log(a/phys->u)*relRollVelocity;
+			if (activateTwistLubrication && phys->eta > 0.) Ct = phys->nun*phys->u*std::log(a/phys->u)*relTwistVelocity;
+		}
 	    // total torque
 		C1 = -(geom->radius1-geom->penetrationDepth/2.)*phys->shearForce.cross(geom->normal)+Cr+Ct;
 		C2 = -(geom->radius2-geom->penetrationDepth/2.)*phys->shearForce.cross(geom->normal)-Cr-Ct;
@@ -562,9 +563,10 @@ void Law2_ScGeom_ImplicitLubricationPhys::computeShearForceAndTorques_log(Lubric
 	Vector3r relTwistVelocity = relAngularVelocity.dot(geom->normal)*geom->normal;
 	Vector3r relRollVelocity = relAngularVelocity - relTwistVelocity;
 
-	if(activateRollLubrication && phys->eta > 0.) Cr = -M_PI*phys->eta*a*a*a*(3./2.+63./500.*std::exp(phys->delta))*phys->delta*relRollVelocity;
-	if (activateTwistLubrication && phys->eta > 0.) Ct = -M_PI*phys->eta*a*a*a*std::exp(phys->delta)*phys->delta*relTwistVelocity;
-	
+	if(phys->delta > 0.) {
+		if(activateRollLubrication && phys->eta > 0.) Cr = -phys->nun*a*3./2.*(21./250.*std::exp(phys->delta)+1.)*phys->delta*relRollVelocity;
+		if (activateTwistLubrication && phys->eta > 0.) Ct = -phys->nun*a*std::exp(phys->delta)*phys->delta*relTwistVelocity;
+	}
 	// total torque
 	C1 = -(geom->radius1-geom->penetrationDepth/2.)*phys->shearForce.cross(geom->normal)+Cr+Ct;
 	C2 = -(geom->radius2-geom->penetrationDepth/2.)*phys->shearForce.cross(geom->normal)-Cr-Ct;

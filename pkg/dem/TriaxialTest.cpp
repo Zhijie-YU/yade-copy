@@ -81,7 +81,7 @@ bool TriaxialTest::generate(string& message)
 			LOG_INFO("Mean radius value of "<<radiusMean<<" requested, scaling "<<nScaled<<" dimensions by "<<boxScaleFactor);
 			dimensions[0]*=fixedDims[0]?1.:boxScaleFactor; dimensions[1]*=fixedDims[1]?1.:boxScaleFactor; dimensions[2]*=fixedDims[2]?1.:boxScaleFactor;
 			upperCorner=lowerCorner+dimensions;
-			num=sphere_pack.makeCloud(lowerCorner,upperCorner,radiusMean,radiusStdDev,numberOfGrains);
+			num=sphere_pack.makeCloud(lowerCorner,upperCorner,radiusMean,radiusStdDev,numberOfGrains,false,-1,vector<Real>(),vector<Real>(),false,seed);
 		}
 		message+="Generated a sample with " + boost::lexical_cast<string>(num) + " spheres inside box of dimensions: ("
 			+ boost::lexical_cast<string>(upperCorner[0]-lowerCorner[0]) + ","

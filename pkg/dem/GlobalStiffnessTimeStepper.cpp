@@ -154,6 +154,10 @@ void GlobalStiffnessTimeStepper::computeStiffnesses(Scene* rb){
 			viscosities.resize(size); Rviscosities.resize(size);
 			}
 	}
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+// this is to remove warning about manipulating raw memory
+#pragma GCC diagnostic ignored "-Wclass-memaccess"
 	/* reset stored values */
 	memset(& stiffnesses[0],0,sizeof(Vector3r)*size);
 	memset(&Rstiffnesses[0],0,sizeof(Vector3r)*size);
@@ -161,6 +165,7 @@ void GlobalStiffnessTimeStepper::computeStiffnesses(Scene* rb){
 		memset(& viscosities[0],0,sizeof(Vector3r)*size);
 		memset(&Rviscosities[0],0,sizeof(Vector3r)*size);
 	}
+#pragma GCC diagnostic pop
 
 	FOREACH(const shared_ptr<Interaction>& contact, *rb->interactions){
 		if(!contact->isReal()) continue;

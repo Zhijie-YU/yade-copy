@@ -15,6 +15,8 @@ YADE_PLUGIN(/* self-contained in hpp: */ (Polyhedra) (PolyhedraGeom) (Bo1_Polyhe
 	#endif
 	);
 
+CREATE_LOGGER(Law2_PolyhedraGeom_PolyhedraPhys_Volumetric);
+
 //*********************************************************************************
 /* Polyhedra Constructor */
 

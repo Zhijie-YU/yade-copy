@@ -2,7 +2,7 @@
 # image: registry.gitlab.com/yade-dev/docker-yade
 #
 # Five new images:
-# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
+# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04
 # image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
 # image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
 # image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
@@ -12,13 +12,12 @@
 
 
 stages:
-  - cmake
   - build
   - test
   - pages
+  - deb
 
 # If you want to compile everything also on merge_request, change this template.
-# If you want to compile on one platform see [1] note below.
 .plaftorms_template: &platforms_definition
   only:
     - master
@@ -32,44 +31,6 @@ stages:
 #               volumes = ["/cache","/home/docker/ccache:/root/.ccache:rw"]
 #            where /home/docker/ccache is the directory in the host with write access.
 # See also : https://gitlab.com/gitlab-org/gitlab-runner/blob/master/docs/configuration/advanced-configuration.md#example-2-mount-a-host-directory-as-a-data-volume
-.cmake_template: &cmake_definition
-  <<: *platforms_definition
-  stage: cmake
-  script:
-    - mkdir build && cd build
-    - export CC="ccache gcc"
-    - export CXX="ccache g++"
-    - cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX=../install -DPYTHON_VERSION=3 -DDISABLE_SAVE_TEMPS=1 ..
-    - ccache -s
-  artifacts:
-    paths:
-      - build
-    expire_in: 2 weeks
-
-cmake_16_04:
-  <<: *cmake_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
-
-cmake_18_04:
-  <<: *cmake_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
-# [1] if you need to compile merge_request on another platform for testing, move these 3 lines to that platform. And do the same in stages: build, test, check.
-  only:
-    - master
-    - merge_request
-
-cmake_stretch:
-  <<: *cmake_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
-
-cmake_buster:
-  <<: *cmake_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
-
-cmake_suse15:
-  <<: *cmake_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:suse15
-
 
 # Perhaps two more will added later
 # 1.4. only: tags       Perhaps creating tags would trigger a build, e.g. tagging a new release?
@@ -83,6 +44,14 @@ cmake_suse15:
   <<: *platforms_definition
   stage: build
   script:
+    - export GCC_COLORS="error=01;31:warning=01;35:note=01;36:range1=04;32:range2=04;34:locus=93:quote=07;96:fixit-insert=92:fixit-delete=91:diff-filename=01;91:diff-hunk=33:diff-delete=31:diff-insert=32"
+    - export CXXFLAGS="-fdiagnostics-color=always $CXXFLAGS"
+    - echo $CXXFLAGS
+    - mkdir build && cd build
+    - export CC="ccache gcc"
+    - export CXX="ccache g++"
+    - cmake -DSUFFIX=-ci -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_INSTALL_PREFIX=../install -DPYTHON_VERSION=3 -DDISABLE_SAVE_TEMPS=1 ..
+    - ccache -s
     - export LINK_GOLD=$(case    $CI_PIPELINE_SOURCE in "merge_request_event") echo "20" ;; *) echo "10";; esac)
     - export LINK_REGULAR=$(case $CI_PIPELINE_SOURCE in "merge_request_event") echo "10" ;; *) echo "20";; esac)
     - ld --version
@@ -101,52 +70,52 @@ cmake_suse15:
         *) echo "8";;
         esac)
     - echo $JOBSNUM
-    - cd build
     - echo "max_size = 100.0G" > ~/.ccache/ccache.conf
     - make -j $JOBSNUM
     - make install
     - make clean
     - ccache -s
+  tags:
+    - fast
+
+.artifacts_template: &artifacts_definition
   artifacts:
     paths:
       - install
     expire_in: 2 weeks
-  tags:
-    - fast
 
 # 2.1 build stage: ubuntu 16.04
 make_16_04:
   <<: *make_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
-  dependencies:
-    - cmake_16_04
+  <<: *artifacts_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04
 
 make_18_04:
   <<: *make_definition
+  artifacts:
+    paths:
+      - install
+      - build
+    expire_in: 2 weeks
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
-  only:
-    - master
-    - merge_request
-  dependencies:
-    - cmake_18_04
 
 make_stretch:
   <<: *make_definition
+  <<: *artifacts_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
-  dependencies:
-    - cmake_stretch
 
 make_buster:
   <<: *make_definition
+  <<: *artifacts_definition
   image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
-  dependencies:
-    - cmake_buster
 
 make_suse15:
   <<: *make_definition
+  <<: *artifacts_definition
+  before_script:
+    - export CXXFLAGS="-Wno-int-in-bool-context -Wno-comment $CXXFLAGS"
+    - echo $CXXFLAGS
   image: registry.gitlab.com/yade-dev/docker-yade:suse15
-  dependencies:
-    - cmake_suse15
 
 
 # 3.1. test stage
@@ -160,16 +129,13 @@ make_suse15:
 
 test_16_04:
   <<: *test_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04
   dependencies:
     - make_16_04
 
 test_18_04:
   <<: *test_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
-  only:
-    - master
-    - merge_request
   dependencies:
     - make_18_04
 
@@ -191,12 +157,20 @@ test_suse15:
   dependencies:
     - make_suse15
 
+test_18_foam:
+  stage: test
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04_foam
+  only:
+    - master
+    - merge_request
+  dependencies:
+    - make_18_04
+  script:
+    - cat /etc/os-release
+    - export OMPI_MCA_btl_vader_single_copy_mechanism=none
+    - /builds/yade-dev/trunk/scripts/checks-and-tests/testOpenFoam.sh
 
-# Four new images:
-# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
-# image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
-# image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
-# image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+
 # 3.2. check stage
 .check_template: &check_definition
   <<: *platforms_definition
@@ -210,16 +184,13 @@ test_suse15:
 
 check_16_04:
   <<: *check_definition
-  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04-py3
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04
   dependencies:
     - make_16_04
 
 check_18_04:
   <<: *check_definition
   image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
-  only:
-    - master
-    - merge_request
   dependencies:
     - make_18_04
 
@@ -258,7 +229,6 @@ doc_18_04:
     - cd build
     - xvfb-run -s "-screen 0 1600x1200x24" make doc
   dependencies:
-    - cmake_18_04
     - make_18_04
   artifacts:
     paths:
@@ -281,4 +251,61 @@ pages:
     paths:
       - public
 
+# 6. build debian packages
+.deb_template: &deb_definition
+  stage: deb
+  only:
+    - master
+  script:
+    - cd $CI_PROJECT_DIR/deb/yadedaily
+    - export JOBSNUM=$(case $CI_RUNNER_DESCRIPTION in
+        "y4pak") echo "43" ;;
+        "c4pak") echo "43" ;;
+        "y6pak") echo "46" ;;
+        "c6pak") echo "46" ;;
+        "y7pak") echo "46" ;;
+        "c7pak") echo "46" ;;
+        "yade-runner") echo "12" ;;
+        "yade-runner-01") echo "1" ;;
+        *) echo "8";;
+        esac)
+    - echo $JOBSNUM
+    - export CCACHE_DIR=/root/.ccache
+    - ccache -s
+    - DEB_BUILD_OPTIONS=noddebs dpkg-buildpackage -j$JOBSNUM
+    - rm -rf $CI_PROJECT_DIR/deb/yadedaily
+    - ls -l $CI_PROJECT_DIR/deb
+    - ccache -s
+  dependencies: []
+  artifacts:
+    paths:
+      - ./deb
+    expire_in: 5 day
 
+deb_buster:
+  <<: *deb_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-buster
+  before_script:
+    - rm -rf ./deb
+    - ./scripts/ppa_ci/builddeb.py -d "buster"
+
+deb_stretch:
+  <<: *deb_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:debian-stretch
+  before_script:
+    - rm -rf ./deb
+    - ./scripts/ppa_ci/builddeb.py -d "stretch"
+
+deb_bionic:
+  <<: *deb_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu18.04
+  before_script:
+    - rm -rf ./deb
+    - ./scripts/ppa_ci/builddeb.py -d "bionic"
+
+deb_xenial:
+  <<: *deb_definition
+  image: registry.gitlab.com/yade-dev/docker-yade:ubuntu16.04
+  before_script:
+    - rm -rf ./deb
+    - ./scripts/ppa_ci/builddeb.py -d "xenial"

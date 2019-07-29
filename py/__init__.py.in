@@ -66,13 +66,15 @@ for root,dirs,files in os.walk(config.libDir):
 		plugin=os.path.join(config.libDir,root,f)
 		plugins.append(plugin)
 if 'YADE_DEBUG' in os.environ:
-	print('The following plugins will be loaded:')
-	for p in plugins: print('\t'+p)
+     print('The following plugins will be loaded:')
+     for p in plugins: print('\t'+p)
 
 # c++ initialization code
 from yade import boot
 boot.initialize(plugins,config.confDir)
 from yade import system
+## ENABLE_LOGGER ## this was in git revision 014b11496 YADE_LOG4CXX → YADE_BOOST_LOG ##
+## ENABLE_LOGGER #? system.setExitHandlers() # avoid backtrace if crash at finalization (log4cxx)
 
 # create proxies for deprecated classes
 deprecatedTypes=system.cxxCtorsDict()

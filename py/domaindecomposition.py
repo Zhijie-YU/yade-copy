@@ -196,10 +196,10 @@ class Globaldomain(object):
 				if idx==2:
 					self.zDecomp = int(self.zDecomp) + 1
 			elif estimatedWorkers == self.numThreads: optimized=True	
-		print "workers used:",estimatedWorkers,". workers wanted:",self.numThreads 
+		print ("workers used:",estimatedWorkers,". workers wanted:",self.numThreads)
 		self.unusedWorkers=self.numThreads-estimatedWorkers
 		self.numThreads=estimatedWorkers
-		print 'xdecomp', int(self.xDecomp),'ydecomp', int(self.yDecomp),'zdecomp',int(self.zDecomp)
+		print ('xdecomp', int(self.xDecomp),'ydecomp', int(self.yDecomp),'zdecomp',int(self.zDecomp))
 
 		# convert values to grid points for subdomain algorithm
 		self.xDecomp = int(self.xDecomp)+1
@@ -227,7 +227,7 @@ class Globaldomain(object):
 						self.unusedWorkers-=1		
 					else: self.makeOneSubdomain(i,j,k)
 
-		print "total subdomains", self.workerDomain
+		print ("total subdomains", self.workerDomain)
 
 
 	def makeOneSubdomain(self,i,j,k):

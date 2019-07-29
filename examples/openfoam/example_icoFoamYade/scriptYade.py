@@ -77,7 +77,7 @@
 #           mkdir yadep
 #
 #       d) run the example :
-#           mpiexec -n 1 python scriptYade.py : -n 2 icoFoamYade -parallel
+#           mpiexec -n 1 python3 scriptYade.py : -n 2 icoFoamYade -parallel
 #
 # 9. Notes (OpenFOAM side):
 #     to configure the mesh, edit :  system/blockMeshDict
@@ -92,23 +92,18 @@
 #10. Post-Processing : Paraview or ParaFOAM can be used to visualize the results, you can also use the OpenFOAM
 #    utilities to postprocess the fluid side.
 #
-#
-#
-#
-#
-#
 #       DISCLAIMER : The settings provided in this example are not universal, depending on your problem, you
 #       should change the solver settings such as timestep, under relaxation factors, linear solver settings etc.
 #----------------------------------------------------------------------------------------------------------------#
 
 
-
+from __future__ import print_function
 import sys
 from yadeimport import *
 from yade.utils import *
 
 initMPI()                           #Initialize the mpi environment, always required.
-fluidCoupling = FoamCoupling();     #Initialize the engine
+fluidCoupling = yade.FoamCoupling();     #Initialize the engine
 fluidCoupling.getRank();            #part of Initialization.
 
 
@@ -186,7 +181,16 @@ class simulation():
     ]
 
   def printMessage(self):
+
      print("********************************YADE-ITER = " + str(O.iter) +" **********************************")
+     if O.iter == 4000:
+         maxVel = 0.05
+         for b in O.bodies:
+             if type(b.shape)==Sphere:
+                 bodyVel = abs(b.state.vel.norm())
+                 if bodyVel > maxVel:
+                     raise ValueError("Body velocity exceeds imposed shear velocity by ", abs(bodyVel-maxVel))
+
 
 
 
@@ -196,8 +200,9 @@ class simulation():
 
 if __name__=="__main__":
     sim = simulation()
-    sim.irun(1000000)
-    fluidCoupling.killmpi()
+    sim.irun(5000)
+    # print("body id = ", O.bodies[34].id)
+    fluidCoupling.killMPI()
 
-import __builtin__
-__builtin__.sim=sim
+import builtins
+builtins.sim=sim

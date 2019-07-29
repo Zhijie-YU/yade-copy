@@ -143,7 +143,6 @@ typedef typename RTriangulation::Cell_iterator					CellIterator;
 typedef typename RTriangulation::Finite_cells_iterator				FiniteCellsIterator;
 typedef typename RTriangulation::Cell_circulator				CellCirculator;
 typedef typename RTriangulation::Cell_handle					CellHandle;
-
 typedef typename RTriangulation::Facet						Facet;
 typedef typename RTriangulation::Facet_iterator					FacetIterator;
 typedef typename RTriangulation::Facet_circulator				FacetCirculator;

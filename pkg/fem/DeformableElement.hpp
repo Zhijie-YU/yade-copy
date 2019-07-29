@@ -84,7 +84,7 @@ class DeformableElement: public Shape {
 
 	);
 	REGISTER_CLASS_INDEX(DeformableElement,Shape);
-
+	DECLARE_LOGGER;
 };
 }
 // necessary

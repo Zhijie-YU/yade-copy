@@ -45,7 +45,7 @@ A potential particle is defined as in :eq:`ppFormula` [Houlsby2009]_:
    .. math:: f=(1-k) \Bigg(\sum_{i=1}^{N} \langle a_{i}x+b_{i}y+c_{i}z-d_i\rangle ^2-r^2 \Bigg) +k (x^2+y^2+z^2-R^2)\\
      :label: ppFormula
 
-where :math:`(a_i, b_i, c_i)` is the normal vector of the :math:`i^{th}` plane, defined with respect to the particle's local coordinate system and :math:`d_i` is the distance of the plane to the local origin. :math:`\langle \;\rangle` are Macaulay brackets, i.e., :math:`〈x〉 = x` for :math:`x > 0`; :math:`\langle x \rangle = 0` for :math:`x \leqslant 0`. The planes are assembled such that their normal vectors point outwards. They are summed quadratically and expanded by a distance *r*, which is also related to the radius of the curvature at the corners. Furthermore, a “shadow” spherical particle is added; *R* is the radius of the sphere, with :math:`0 < k \; \leqslant \; 1`, denoting the fraction of sphericity of the particle. The geometry of some cuboidal potential particles is displayed in Fig. `fig-pp`_, for different values of the parameter :math:`k`.
+where :math:`(a_i, b_i, c_i)` is the normal vector of the :math:`i^{th}` plane, defined with respect to the particle's local coordinate system and :math:`d_i` is the distance of the plane to the local origin. :math:`\langle \;\rangle` are Macaulay brackets, i.e., :math:`〈x〉 = x` for :math:`x > 0`; :math:`\langle x \rangle = 0` for :math:`x \leq 0`. The planes are assembled such that their normal vectors point outwards. They are summed quadratically and expanded by a distance *r*, which is also related to the radius of the curvature at the corners. Furthermore, a “shadow” spherical particle is added; *R* is the radius of the sphere, with :math:`0 < k \; \leq \; 1`, denoting the fraction of sphericity of the particle. The geometry of some cuboidal potential particles is displayed in Fig. `fig-pp`_, for different values of the parameter :math:`k`.
 
 .. _fig-pp:
 .. figure:: /fig/potentialParticle.*
@@ -77,7 +77,7 @@ The *Potential Blocks* code was developed during the D.Phil. thesis of CW Boon [
  
 For a convex particle defined by *N* planes, the space that it occupies can be defined using the following inequalities :eq:`pbOriginalPlaneEquations`:
 
-   .. math:: a_{i}x + b_{i}y + c_{i}z \; \leqslant \;  d_{i}, i=1:N\\   
+   .. math:: a_{i}x + b_{i}y + c_{i}z \; \leq \;  d_{i}, i=1:N\\   
         :label: pbOriginalPlaneEquations
 
 where :math:`(a_i, b_i, c_i)` is the unit normal vector of the :math:`i^{th}` plane, defined with respect to the particle's local coordinate system, and :math:`d_i` is the distance of the plane to the local origin. According to [Boon2012]_, an inner, smooth potential particle is used to calculate the contact normal, formulated as in :eq:`pbOriginalFormula`: 

@@ -52,6 +52,8 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		typedef typename FlowSolver::RTriangulation					RTriangulation;
 		typedef typename FlowSolver::FiniteVerticesIterator                  	  	FiniteVerticesIterator;
 		typedef typename FlowSolver::FiniteCellsIterator				FiniteCellsIterator;
+		typedef typename FlowSolver::FiniteFacetsIterator				FiniteFacetsIterator;
+		typedef typename FlowSolver::Facet					Facet;
 		typedef typename FlowSolver::CellHandle						CellHandle;
 		typedef typename FlowSolver::FiniteEdgesIterator				FiniteEdgesIterator;
 		typedef typename FlowSolver::VertexHandle                    			VertexHandle;
@@ -131,10 +133,15 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		void setImposedPressure(unsigned int cond, Real p);
 		void clearImposedPressure();
 		void clearImposedFlux();
+		unsigned int imposeCavity(Vector3r pos);
 		void computeViscousForces(Solver& flow);
 		Real getCellFlux(unsigned int cond);
 		Real getCellFluxFromId(unsigned long id);
 		Real getBoundaryFlux(unsigned int boundary) {return solver->boundaryFlux(boundary);}
+		Real getBoundaryVolume(unsigned int boundary, Real dt) {return -1.0*solver->boundaryFlux(boundary)*dt;}
+		Real getCellInVolumeFromId(unsigned long id, Real dt) {return -1.0*getCellFluxFromId(id)*dt;}
+		Real getBoundaryArea(unsigned int boundary) {return solver->boundaryArea(boundary);}
+		std::vector<std::vector<double>> getBoundaryVel(unsigned int boundary) {return solver->boundaryVel(boundary);}
 		Vector3r fluidForce(unsigned int idSph) {
 			const CGT::CVector& f=solver->T[solver->currentTes].vertex(idSph)->info().forces; return Vector3r(f[0],f[1],f[2]);}
 		Vector3r averageVelocity();
@@ -167,6 +174,8 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 			return (solver->surfaceDistance[interaction]);}
 		Real edgeSize() {
 			return (solver->edgeIds.size());}
+		double getEquivalentCompressibility() {return (solver->equivalentCompressibility);}
+		double getCavityDensity() {return (solver->cavityFluidDensity);}
 		Real OSI() {
 			return (solver->onlySpheresInteractions.size());}
 		int onlySpheresInteractions(unsigned int interaction) {
@@ -220,6 +229,7 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		double getPorePressure(Vector3r pos){return solver->getPorePressure(pos[0], pos[1], pos[2]);}
 		double getPoreTemperature(Vector3r pos){return solver->getPoreTemperature(pos[0], pos[1], pos[2]);}
 		int getCell(double posX, double posY, double posZ){return solver->getCell(posX, posY, posZ);}
+		double getCavityFlux(){return solver->getCavityFlux();}
 		unsigned int nCells(){return solver->T[solver->currentTes].cellHandles.size();}
 		CELL_VECTOR_GETTER(,cellCenter)
 		CELL_VECTOR_GETTER(.averageCellVelocity,cellVelocity)
@@ -324,7 +334,11 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		((Real,minKdivKmean,0.0001,,"define the min K value (see :yref:`FlowEngine::clampKValues`)"))
 		((Real,maxKdivKmean,100,,"define the max K value (see :yref:`FlowEngine::clampKValues`)"))
 		((double,permeabilityFactor,1.0,,"Permability multiplier ($m$): $m=1$ (default) attempts to predicty the actual hydraulic conductivity using a Poiseuille equation; $m>0$ multiplies the default values by $m$; $m<0$ defines the conductivity independently of particle size and viscosity as if the material was a homogeneous continuum of conductivity $-m$"))
+		((double,cavityFactor,1.,,"Permeability/viscosity for cavity cell neighbors (arbitrarily high to model triangulated fluid filled cavity)."))
+		((double,volumeFactor,1.,,"Factor used for simulating low porosity (for thermal considerations only) in high porosity DEM packings."))
+		((Real,flatThreshold,-1,,"If >=0, pore volumes below flatThreshold value are blocked from flow calc. Useful for compressible flow involving odd triangulations with some very flat pores."))
 		((double,viscosity,1.0,,"viscosity of the fluid"))
+		((bool,tempDependentViscosity,false,,"boolean to vary viscosity (ultimately cell permeability) with cell temperature. Linear model for viscosity b/w 20-70 degC. If true, kFactor must also be set negative, and becomes the darcy permeability."))
 		((double,desiredPorosity,0,,"Correct the cell volumes to reflect this desired porosity (not active by default (0))."))
 		((Real,volumeCorrection,1,,"Volume correction factor (not user controlled. auto computed if :yref:`FlowEngine::desiredPorosity` != 0)"))
 		((double,stiffness, 10000,,"equivalent contact stiffness used in the lubrication model"))
@@ -367,6 +381,13 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		((int, fixTriUpdatePermInt, -1,,"If positive, triangulation is fixed and DFNFlow trickPermeability is run according to the interval. Activating this automatically sets :yref:`FlowEngine::meshUpdateInt` and :yref:`FlowEngine::defTolerance` to -1 (never retriangulate)."))
 		((bool, thermalEngine, false,,"activate thermalEngine within FlowEngine."))
 		((bool, iniVoidVolumes, false,,"activate the computation of the inverse of the initial void volumes in each cell when pore volumes are initialized."))
+		((bool, controlCavityPressure, false,,"use full cavity flux and fluidbulkmodulus to control cavity as dynamic pressure (dirichlet) boundary condition."))
+		((bool, controlCavityVolumeChange, false,,"cavity imposes a volume change on neighbor cells (shouldnt be used with controlCavityPressure)"))
+		((double, phiZero, 0,,"if >0, considers water aircontent impact on fluid compressibility."))
+		((double, cavityFlux, 0,,"For adding flux to pressuremanaged cavity model (:yref:`FlowEngine::controlCavityPressure`). Negavite influx, postive outflux."))
+		((double, cavityFluidDensity, 0,,">0 means cavity compressibility model considers density changes instead of volume changes."))
+		((double, thermalPorosity, 0,,">0 means the void volume space will be factored by thermalPorosity for pore internal energy considerations."))
+		((bool, averageCavityPressure, false,,"true means the pressure in the cavity will be averaged each iteration."))
 		,
 		/*deprec*/
 		((meanK_opt,clampKValues,"the name changed"))
@@ -388,15 +409,22 @@ class TemplateFlowEngine_@TEMPLATE_FLOW_NAME@ : public PartialEngine
 		.def("imposeFlux",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::imposeFlux,(boost::python::arg("pos"),boost::python::arg("p")),"Impose a flux in cell located  at 'pos' (i.e. add a source term in the flow problem). Outflux positive, influx negative.")
 		.def("imposePressureFromId",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::imposePressureFromId,(boost::python::arg("id"),boost::python::arg("p")),"Impose pressure in cell of index 'id' (after remeshing the same condition will apply for the same location, regardless of what the new cell index is at this location). The index of the condition itself is returned (for multiple imposed pressures at different points).")
 		.def("imposePressure",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::imposePressure,(boost::python::arg("pos"),boost::python::arg("p")),"Impose pressure in cell of location 'pos'. The index of the condition is returned (for multiple imposed pressures at different points).")
+		.def("imposeCavity",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::imposeCavity,(boost::python::arg("pos")),"Cell with location 'pos' participates in a cavity (high conductivity and no volume factoring). The index of the condition is returned (for multiple imposed pressures at different points).")
 		.def("setImposedPressure",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::setImposedPressure,(boost::python::arg("cond"),boost::python::arg("p")),"Set pressure value at the point indexed 'cond'.")
 		.def("clearImposedPressure",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::clearImposedPressure,"Clear the list of points with pressure imposed.")
 		.def("clearImposedFlux",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::clearImposedFlux,"Clear the list of points with flux imposed.")
 		.def("getCellFlux",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getCellFlux,(boost::python::arg("cond")),"Get influx in cell associated to an imposed P (indexed using 'cond').")
 		.def("getCellFluxFromId",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getCellFluxFromId,(boost::python::arg("id")),"Get influx in cell.")
 		.def("getBoundaryFlux",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getBoundaryFlux,(boost::python::arg("boundary")),"Get total flux through boundary defined by its body id.\n\n.. note:: The flux may be not zero even for no-flow condition. This artifact comes from cells which are incident to two or more boundaries (along the edges of the sample, typically). Such flux evaluation on impermeable boundary is just irrelevant, it does not imply that the boundary condition is not applied properly.")
+		.def("getBoundaryVolume",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getBoundaryVolume,(boost::python::arg("boundary")),(boost::python::arg("dt")),"Get total volume flowing through boundary defined by its body id in current timestep dt.\n\n.. note:: The volume may be not zero even for no-flow condition. This artifact comes from cells which are incident to two or more boundaries (along the edges of the sample, typically). Such volume evaluation on impermeable boundary is just irrelevant, it does not imply that the boundary condition is not applied properly.")
+		.def("getBoundaryFluidArea",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getBoundaryArea,(boost::python::arg("boundary")),"Get total fluid area associated with boundary defined by its body id.")
+		.def("getBoundaryVel",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getBoundaryVel,(boost::python::arg("boundary")),"Get total avg cell velocity associated with boundary defined by its body id.")
 		.def("getConstrictions",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getConstrictions,(boost::python::arg("all")=true),"Get the list of constriction radii (inscribed circle) for all finite facets (if all==True) or all facets not incident to a virtual bounding sphere (if all==False).  When all facets are returned, negative radii denote facet incident to one or more fictious spheres.")
 		.def("getConstrictionsFull",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getConstrictionsFull,(boost::python::arg("all")=true),"Get the list of constrictions (inscribed circle) for all finite facets (if all==True), or all facets not incident to a fictious bounding sphere (if all==False). When all facets are returned, negative radii denote facet incident to one or more fictious spheres. The constrictions are returned in the format {{cell1,cell2}{rad,nx,ny,nz}}")
 		.def("edgeSize",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::edgeSize,"Return the number of interactions.")
+		.def("getEquivalentCompressibility",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getEquivalentCompressibility,"Return the equivalent compressibility used for modeling air water mixture in cavity.")
+		.def("getCavityDensity",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getCavityDensity,"Return the density of cavity fluid.")
+		.def("getCavityFlux",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::getCavityFlux,"Return the flux through the edge of the cavity.")
 		.def("surfaceSolidThroatInPore",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::surfaceSolidThroatInPore,(boost::python::arg("cellId"),boost::python::arg("throatIndex")),"returns solid area in the throat (index 0-3), keeping only that part of the throat in cell.")
 		.def("OSI",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::OSI,"Return the number of interactions only between spheres.")
 		.def("saveVtk",&TemplateFlowEngine_@TEMPLATE_FLOW_NAME@::saveVtk,(boost::python::arg("folder")="./VTK",boost::python::arg("withBoundaries")=false),"Save pressure field in vtk format. Specify a folder name for output. The cells adjacent to the bounding spheres are generated conditionally based on :yref:`withBoundaries` (not compatible with periodic boundaries)")
@@ -484,9 +512,13 @@ class FlowCellInfo_@TEMPLATE_FLOW_NAME@ : public CGT::SimpleCellInfo {
 	// Partial surfaces of spheres in the double-tetrahedron linking two voronoi centers. [i][j] is for sphere facet "i" and sphere facetVertices[i][j]. Last component for 1/sum_surfaces in the facet.doInterpolate
 	double solidSurfaces [4][4];
 	double temperature;
-    Real tempVariation;
+	Real tempVariation;
 	double internalEnergy;
 	bool Tcondition;
+	bool isCavity;
+	double Reynolds;
+	double NutimesFluidK;
+	double stabilityCoefficient;
 	
 
 	FlowCellInfo_@TEMPLATE_FLOW_NAME@ (void)
@@ -501,9 +533,9 @@ class FlowCellInfo_@TEMPLATE_FLOW_NAME@ : public CGT::SimpleCellInfo {
 		for (int k=0; k<4;k++) for (int l=0; l<3;l++) solidSurfaces[k][l]=0;
 		sphericalVertexSurface.resize(4,0);
 		rayHydr.resize(4, 0);
-		invSumK=index=volumeSign=s=volumeVariation=pression=invVoidV=fict=temperature=tempVariation=0;
+		invSumK=index=volumeSign=s=volumeVariation=pression=invVoidV=fict=temperature=tempVariation=Reynolds=NutimesFluidK=stabilityCoefficient=0;
 		isFictious=false; Pcondition = false; isGhost = false; Tcondition= false;
-		isvisited = false;
+		isvisited = false; isCavity=false;
 		isGhost=false;
 		blocked=false;
 	}	

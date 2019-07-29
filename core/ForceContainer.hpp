@@ -128,4 +128,6 @@ class ForceContainer {
 		const int getNumAllocatedThreads() const;
 		const bool getMoveRotUsed() const;
 		const bool getPermForceUsed() const;
+
+	DECLARE_LOGGER;
 };

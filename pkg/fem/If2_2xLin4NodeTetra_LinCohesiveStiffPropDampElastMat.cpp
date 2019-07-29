@@ -19,6 +19,7 @@ If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat::~If2_2xLin4NodeTetra_LinCo
 typedef std::map<DeformableCohesiveElement::nodepair,Se3r> NodePairsMap;//Initial node differences
 
 CREATE_LOGGER(If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat);
+
 void If2_2xLin4NodeTetra_LinCohesiveStiffPropDampElastMat::go(const shared_ptr<Shape>& element,const shared_ptr<Material>& material,const shared_ptr<Body>& bdy)
 {
 

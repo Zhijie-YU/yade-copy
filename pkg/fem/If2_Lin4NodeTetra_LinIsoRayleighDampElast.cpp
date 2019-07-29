@@ -22,6 +22,7 @@ typedef DeformableElement::NodeMap NodeMap;
 typedef VECTOR12_TEMPLATE(Real) Vector12r;
 
 CREATE_LOGGER(If2_Lin4NodeTetra_LinIsoRayleighDampElast);
+
 void If2_Lin4NodeTetra_LinIsoRayleighDampElast::go(const shared_ptr<Shape>& element,const shared_ptr<Material>& material,const shared_ptr<Body>& bdy)
 {
 

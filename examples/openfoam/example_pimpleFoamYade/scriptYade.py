@@ -77,7 +77,7 @@
 #           mkdir yadep
 #
 #       d) run the example :
-#           mpiexec -n 1 python scriptYade.py : -n 2 pimpleFoamYade -parallel
+#           mpiexec -n 1 python3 scriptYade.py : -n 2 pimpleFoamYade -parallel
 #
 # 9. Notes (OpenFOAM side):
 #     to configure the mesh, edit :  system/blockMeshDict
@@ -96,22 +96,17 @@
 #10. Post-Processing : Paraview or ParaFOAM can be used to visualize the results, you can also use the OpenFOAM
 #    utilities to postprocess the fluid side.
 #
-#
-#
-#
-#
-#
 #       DISCLAIMER : The settings provided in this example are not universal, depending on your problem, you
 #       should change the solver settings such as timestep, under relaxation factors, linear solver settings etc.
 #----------------------------------------------------------------------------------------------------------------#
 
-
+from __future__ import print_function
 import sys
 from yadeimport import *
 from yade.utils import *
 
 initMPI() #Initialize the mpi environment, always required.
-fluidCoupling = FoamCoupling();
+fluidCoupling = yade.FoamCoupling();
 fluidCoupling.getRank();
 
 
@@ -193,7 +188,7 @@ class simulation():
 if __name__=="__main__":
     sim = simulation()
     sim.irun(1000000)
-    fluidCoupling.killmpi()
+    fluidCoupling.killMPI()
 
-import __builtin__
-__builtin__.sim=sim
+import builtins
+builtins.sim=sim

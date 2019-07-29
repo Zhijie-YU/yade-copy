@@ -250,7 +250,10 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setLinearSystem(Real dt)
 				vs[T_nnz]=0;
 				for (int j=0;j<4;j++) if (!cell->neighbor(j)->info().blocked) vs[T_nnz]+= (cell->info().kNorm())[j];
 // 				vs[T_nnz] = (cell->info().kNorm())[0]+ (cell->info().kNorm())[1]+ (cell->info().kNorm())[2]+ (cell->info().kNorm())[3];
-				if (fluidBulkModulus>0) vs[T_nnz] += (1.f/(dt*fluidBulkModulus*cell->info().invVoidVolume()));
+				if (fluidBulkModulus>0) {
+					if (cell->info().isCavity && phiZero>0) vs[T_nnz] += (1.f * equivalentCompressibility/(dt*cell->info().invVoidVolume())); else
+					vs[T_nnz] += (1.f/(dt*fluidBulkModulus*cell->info().invVoidVolume()));
+				}
 				++T_nnz;
 			}
 			for (int j=0; j<4; j++) {
@@ -374,10 +377,36 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::copyLinToCells() {
 template<class _Tesselation, class FlowType>
 void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::copyCellsToLin (Real dt)
 {
-		
-	for (int ii=1; ii<=ncols; ii++) {
+
+// trunk
+/*	for (int ii=1; ii<=ncols; ii++) {*/
+/*		T_bv[ii-1]=T_b[ii-1]-T_cells[ii]->info().dv();*/
+/*		if (fluidBulkModulus>0) T_bv[ii-1] += T_cells[ii]->info().p()/(fluidBulkModulus*dt*T_cells[ii]->info().invVoidVolume());*/
+/*	}*/
+
+
+	// update T_b for cells abutting Pconditions since our Pcondition value might want to change sub remesh
+	#pragma omp parallel for
+	for (int ii=1;ii<=ncols;ii++){
+		if (controlCavityPressure){
+			T_b[ii-1]=0;
+			for (int j=0; j<4; j++) {
+				CellHandle neighborCell = T_cells[ii]->neighbor(j);
+				if (neighborCell->info().Pcondition && !neighborCell->info().blocked) {
+					T_b[ii-1]+=T_cells[ii]->info().kNorm()[j]*(neighborCell->info().p());
+				}
+			}
+		}
 		T_bv[ii-1]=T_b[ii-1]-T_cells[ii]->info().dv();
-		if (fluidBulkModulus>0) T_bv[ii-1] += T_cells[ii]->info().p()/(fluidBulkModulus*dt*T_cells[ii]->info().invVoidVolume());}
+		if (fluidBulkModulus>0) {
+			if (phiZero>0 && T_cells[ii]->info().isCavity){ // consider air compressibility in cavity
+				T_bv[ii-1] += T_cells[ii]->info().p()*equivalentCompressibility/(dt*T_cells[ii]->info().invVoidVolume());	
+				if (controlCavityVolumeChange) T_bv[ii-1] += cavityDV;
+			} else { // use normal bulkmodulus
+				T_bv[ii-1] += T_cells[ii]->info().p()/(fluidBulkModulus*dt*T_cells[ii]->info().invVoidVolume());	
+			}
+		}
+	}		
 }
 
 /// For Gauss Seidel, we need the full matrix
@@ -670,10 +699,16 @@ int FlowBoundingSphereLinSolv<_Tesselation,FlowType>::cholmodSolve(Real dt)
 
 template<class _Tesselation, class FlowType>
 void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::initializeInternalEnergy() {
-        RTriangulation& Tri = T[currentTes].Triangulation();
-        FiniteCellsIterator cellEnd = Tri.finite_cells_end();
-        for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != cellEnd; cell++){
-		if (!cell->info().isGhost) cell->info().internalEnergy = fluidCp*fluidRho*cell->info().temp()*(1./cell->info().invVoidVolume());
+   	Tesselation& Tes = T[currentTes];
+	const long sizeCells = Tes.cellHandles.size();
+	#pragma omp parallel for
+    	for (long i=0; i<sizeCells; i++){
+		CellHandle& cell = Tes.cellHandles[i];
+		if (!cell->info().isFictious && !cell->info().blocked && !cell->info().isCavity){
+			Real volume = thermalPorosity>0 ? thermalPorosity/cell->info().invVoidVolume() : 1./cell->info().invVoidVolume();		
+			cell->info().internalEnergy = fluidCp*fluidRho*cell->info().temp()*volume;
+		}
+		if (cell->info().isCavity) cell->info().internalEnergy = fluidCp*fluidRho*cell->info().temp()*(cell->info().volume()); // ignore particles used for fluid discr. in cavity (i.e. use volume())
 	}
 }
 
@@ -684,10 +719,30 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::augmentConductivityMatrix
 	Real energyFlux; Real upwindTemp; Real facetFlowRate;
 	RTriangulation& Tri = T[currentTes].Triangulation();
 	// cycle through facets instead of cells to avoid duplicate math
+/*   	Tesselation& Tes = T[currentTes];*/
+/*	const long sizeFacets = Tes.facetHandles.size();*/
+/*	#pragma omp parallel for*/
+/*    	for (long i=0; i<sizeFacets; i++){*/
+/*		Facet& facet = Tes.facetHandles[i];*/
+/*		const CellHandle& cell = facet->first;*/
+/*		const CellHandle& neighborCell = facet->first->neighbor(facet->second);*/
+/*		facetFlowRate = cell->info().kNorm()[facet->second] * (cell->info().p() - cell->neighbor(facet->second)->info().p());*/
+/*		if (facetFlowRate>0){*/
+/*			upwindTemp = cell->info().temp();*/
+/*		} else { */
+/*			upwindTemp = neighborCell->info().temp();*/
+/*		}*/
+/*		energyFlux = fluidCp*fluidRho*dt*upwindTemp*facetFlowRate;*/
+/*		if (!cell->info().Tcondition && !cell->info().isFictious && !cell->info().blocked) cell->info().internalEnergy -= energyFlux;*/
+/*		if (!neighborCell->info().Tcondition && !neighborCell->info().isFictious && !neighborCell->info().blocked) neighborCell->info().internalEnergy += energyFlux;*/
+/*	}*/
+
+
+
 	for (FiniteFacetsIterator f_it=Tri.finite_facets_begin(); f_it != Tri.finite_facets_end();f_it++){
 		const CellHandle& cell = f_it->first;
 		const CellHandle& neighborCell = f_it->first->neighbor(f_it->second);
-		if (cell->info().isGhost || neighborCell->info().isGhost) continue;
+		if (cell->info().blocked || neighborCell->info().blocked || (cell->info().Pcondition && neighborCell->info().Pcondition)) continue;
 		facetFlowRate = cell->info().kNorm()[f_it->second] * (cell->info().p() - cell->neighbor(f_it->second)->info().p());
 		if (facetFlowRate>0){
 			upwindTemp = cell->info().temp();
@@ -695,24 +750,54 @@ void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::augmentConductivityMatrix
 			upwindTemp = neighborCell->info().temp();
 		}
 		energyFlux = fluidCp*fluidRho*dt*upwindTemp*facetFlowRate;
-		if (!cell->info().Tcondition) cell->info().internalEnergy -= energyFlux;
-		if (!neighborCell->info().Tcondition) neighborCell->info().internalEnergy += energyFlux;
+		if (!cell->info().Tcondition && !cell->info().isFictious) cell->info().internalEnergy -= energyFlux;
+		if (!neighborCell->info().Tcondition && !neighborCell->info().isFictious) neighborCell->info().internalEnergy += energyFlux;
 	}	 
 }
 
 
+
+
 template<class _Tesselation, class FlowType>
-void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setNewCellTemps()
+void FlowBoundingSphereLinSolv<_Tesselation,FlowType>::setNewCellTemps(bool addToDeltaTemp)
 {
-	RTriangulation& Tri = T[currentTes].Triangulation();
-	FiniteCellsIterator cellEnd = Tri.finite_cells_end();
-	for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != cellEnd; cell++) {
-		if (!cell->info().Tcondition && !cell->info().isGhost) {
+   	Tesselation& Tes = T[currentTes];
+	const long sizeCells = Tes.cellHandles.size();
+	double cavityInternalEnergy = 0; 
+	double cavityVolume = 0;
+	#pragma omp parallel for
+    	for (long i=0; i<sizeCells; i++){
+		CellHandle& cell = Tes.cellHandles[i];
+		if (!cell->info().isFictious && !cell->info().blocked) {
 			Real oldTemp = cell->info().temp();
-			cell->info().temp()=cell->info().internalEnergy/((1./cell->info().invVoidVolume())*fluidCp*fluidRho); //FIXME: invVoidVolume depends on volumeSolidPore() which uses CGAL points only updated each remesh. We need our own volumeSolidPore(). 
-			cell->info().dtemp() = cell->info().temp() - oldTemp;
+			//cell->info().temp()=cell->info().internalEnergy/(cell->info().volume()*fluidCp*fluidRho);
+			if (!cell->info().isCavity){
+				Real volume = thermalPorosity>0 ? thermalPorosity/cell->info().invVoidVolume() : 1./cell->info().invVoidVolume();
+            			cell->info().temp()=cell->info().internalEnergy/(volume*fluidCp*fluidRho); //FIXME: invVoidVolume depends on volumeSolidPore() which uses CGAL points only updated each remesh. We might need our own volumeSolidPore(). 
+			} else { 
+				cell->info().temp()=cell->info().internalEnergy/((cell->info().volume())*fluidCp*fluidRho);
+			}
+			if (!addToDeltaTemp) cell->info().dtemp() = cell->info().temp() - oldTemp;
+			else cell->info().dtemp() += cell->info().temp()-oldTemp; // fluid conduction is a midstep proces that uses a midsteptemp, in this case we want to add to the existing deltatemp so that fluid expansion is computed based on full temp step
+		}
+		if (controlCavityPressure && cell->info().isCavity && !cell->info().blocked) {
+			cavityInternalEnergy += cell->info().internalEnergy;
+			cavityVolume += 1./cell->info().invVoidVolume();
 		}
 	}
+	double cavityTemp;
+	if (controlCavityPressure) {
+		cavityTemp = cavityInternalEnergy/(cavityVolume*fluidCp*fluidRho); //use cavityFluidDensity?
+	#pragma omp parallel for
+    	for (long i=0; i<sizeCells; i++){
+		CellHandle& cell = Tes.cellHandles[i];
+		if (!cell->info().isCavity) continue;
+		Real oldTemp = cell->info().temp();
+		cell->info().temp()=cavityTemp;
+		cell->info().dtemp() = cell->info().temp() - oldTemp;
+	}
+	}
+	
 }
 
 template<class _Tesselation, class FlowType>

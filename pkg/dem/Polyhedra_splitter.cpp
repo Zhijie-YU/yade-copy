@@ -12,7 +12,10 @@
 #include <sys/stat.h>
 
 YADE_PLUGIN((PolyhedraSplitter)(SplitPolyTauMax)(SplitPolyMohrCoulomb));
+
 CREATE_LOGGER(PolyhedraSplitter);
+CREATE_LOGGER(SplitPolyTauMax);
+CREATE_LOGGER(SplitPolyMohrCoulomb);
 
 using PSplitTwo = std::tuple<const shared_ptr<Body>, Vector3r, Vector3r>;
 using PSplitOne = std::tuple<const shared_ptr<Body>, Vector3r>;

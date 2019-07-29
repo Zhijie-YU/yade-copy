@@ -107,7 +107,7 @@ void FlowBoundingSphere<Tesselation>::averageRelativeCellVelocity()
                 numCells++;
 		Real totFlowRate = 0;//used to acount for influxes in elements where pressure is imposed
                 for ( int i=0; i<4; i++ ) if (!Tri.is_infinite(cell->neighbor(i))){
-				CVector Surfk = cell->info()-cell->neighbor(i)->info();
+				CVector Surfk =  cell->info()-cell->neighbor(i)->info();
 				Real area = sqrt ( Surfk.squared_length() );
 				Surfk = Surfk/area;
                         	CVector branch = cell->vertex ( facetVertices[i][0] )->point().point() - cell->info();
@@ -119,7 +119,7 @@ void FlowBoundingSphere<Tesselation>::averageRelativeCellVelocity()
 		//This is the influx term
 		if (cell->info().Pcondition) cell->info().averageVelocity() = cell->info().averageVelocity() - (totFlowRate)*((Point) cell->info()-CGAL::ORIGIN );
 		//now divide by volume
-		cell->info().averageVelocity() = cell->info().averageVelocity() /std::abs(cell->info().volume());
+		if (cell->info().volume()!=0) cell->info().averageVelocity() = cell->info().averageVelocity() /std::abs(cell->info().volume());
 	}
 }
 
@@ -480,6 +480,8 @@ void FlowBoundingSphere<Tesselation>::interpolate(Tesselation& Tes, Tesselation&
 			oldCell = Tri.locate(CGT::Sphere(center[0],center[1],center[2]));
 			if (!newCell->info().Pcondition) newCell->info().getInfo(oldCell->info());
 			if (!newCell->info().Tcondition && thermalEngine) newCell->info().temp() = oldCell->info().temp();
+			newCell->info().blocked = oldCell->info().blocked;
+			// if (oldCell->info().isCavity) newCell->info().p()=oldCell->info().p(); // needed?
 		}
 }
 
@@ -580,14 +582,26 @@ void FlowBoundingSphere<Tesselation>::computePermeability()
 					cell->info().facetFluidSurfacesRatio[j]=fluidArea/area;
 					// kFactor<0 means we replace Poiseuille by Darcy localy, yielding a particle size-independent bulk conductivity
 					if (kFactor>0) cell->info().kNorm()[j]= kFactor*(fluidArea * pow(radius,2)) / (8*viscosity*distance);
-					else cell->info().kNorm()[j]= -kFactor * area / distance;						
+					else cell->info().kNorm()[j]= -kFactor * area / distance;
+					if (tempDependentViscosity && kFactor<0 && thermalEngine){ //negative kFactor takes on direct permeability value instead of k/viscosity as above
+						const Real avgTemp = (cell->info().temp() + neighbourCell->info().temp())/2.;
+						const Real viscosityWithTemp = -1.11962e-5 * avgTemp + 1.24084e-3; // linear approx of viscosity between 20-70 degC 
+						cell->info().kNorm()[j] = -kFactor * area / (viscosityWithTemp * distance);
+					}
+					if (cell->info().isCavity && neighbourCell->info().isCavity) {
+						cell->info().kNorm()[j] = cavityFactor;  // arbitrarily high conductivity for cavity neighbors				
+					}
 					meanDistance += distance;
 					meanRadius += radius;
-					meanK +=  (cell->info().kNorm())[j];
+					if (!cell->info().isCavity) meanK +=  (cell->info().kNorm())[j];
 					
 					if (!neighbourCell->info().isGhost) (neighbourCell->info().kNorm())[Tri.mirror_index(cell, j)]= (cell->info().kNorm())[j];
 					if (k<0 && debugOut) {surfneg+=1; cout<<"__ k<0 __"<<k<<" "<<" fluidArea "<<fluidArea<<" area "<<area<<" "<<crossSections[0]<<" "<<crossSections[1]<<" "<<crossSections[2] <<" "<<W[0]->info().id()<<" "<<W[1]->info().id()<<" "<<W[2]->info().id()<<" "<<p1<<" "<<p2<<" test "<<endl;}
-				} else  {cout <<"infinite K1!"<<endl; k = infiniteK;}//Will be corrected in the next loop
+				} else  {
+					cout <<"infinite K1!"<<endl;
+					k = infiniteK;	
+					cell->info().kNorm()[j]=infiniteK;
+				}//Will be corrected in the next loop
 				if (!neighbourCell->info().isGhost) (neighbourCell->info().kNorm())[Tri.mirror_index(cell, j)]= (cell->info().kNorm())[j];
 			}
 		}
@@ -835,6 +849,15 @@ void FlowBoundingSphere<Tesselation>::initializePressure( double pZero )
 		IFCells.push_back(cell);
 		cell->info().Pcondition=false;}
 
+
+        cavityCells.clear();
+        for (unsigned int n=0; n<imposedCavity.size();n++) {
+		CellHandle cell=Tri.locate(CGT::Sphere(imposedCavity[n],0));
+		cavityCells.push_back(cell);
+		cell->info().isCavity=true;
+		//cout << "cell set as cavity " << cell->info().id << endl;
+	}
+
 }
 
 
@@ -845,7 +868,7 @@ void FlowBoundingSphere<Tesselation>::initializeTemperatures( double tZero )
         FiniteCellsIterator cellEnd = Tri.finite_cells_end();
 
         for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != cellEnd; cell++){
-		if (!cell->info().Tcondition && !cell->info().isGhost) cell->info().temp() = tZero;
+		if (!cell->info().Tcondition && !cell->info().isGhost && !cell->info().blocked) cell->info().temp() = tZero;
 	}
         for (int bound=0; bound<6;bound++) {
                 int& id = *boundsIds[bound];
@@ -1058,6 +1081,206 @@ double FlowBoundingSphere<Tesselation>::boundaryFlux(unsigned int boundaryId)
 	return Q1;
 }
 
+template <class Tesselation>
+double FlowBoundingSphere<Tesselation>::boundaryArea(unsigned int boundaryId)
+{
+	if (noCache && T[!currentTes].Max_id()<=0) return 0;
+	bool tes = noCache?(!currentTes):currentTes;
+	RTriangulation& Tri = T[tes].Triangulation();
+	double A=0;
+
+	VectorCell tmpCells;
+	tmpCells.resize(10000);
+	VCellIterator cells_it = tmpCells.begin();
+
+	VCellIterator cell_up_end = Tri.incident_cells(T[tes].vertexHandles[boundaryId],cells_it);
+	for (VCellIterator it = tmpCells.begin(); it != cell_up_end; it++)
+	{
+		const CellHandle& cell = *it;
+		if (cell->info().isGhost) continue;
+
+		for (int j=0; j<4; j++) {
+			if (cell->neighbor(j)->info().isFictious) continue;
+			const CVector& Surfk = cell->info().facetSurfaces[j];
+			Real area = sqrt(Surfk.squared_length());
+			A += cell->info().facetFluidSurfacesRatio[j]*area;
+		}
+	}
+	return A;
+}
+
+template <class Tesselation>
+std::vector<std::vector<double>> FlowBoundingSphere<Tesselation>::boundaryVel(unsigned int boundaryId)
+{
+	//if (noCache && T[!currentTes].Max_id()<=0) return 0;
+	bool tes = noCache?(!currentTes):currentTes;
+	RTriangulation& Tri = T[tes].Triangulation();
+	//double avgVel=0;
+	//int numCells=0;
+	std::vector<std::vector<double>> velocities;
+	VectorCell tmpCells;
+	tmpCells.resize(10000);
+	VCellIterator cells_it = tmpCells.begin();
+	std::vector<double> vectorVel(4,0);
+
+	VCellIterator cell_up_end = Tri.incident_cells(T[tes].vertexHandles[boundaryId],cells_it);
+	for (VCellIterator it = tmpCells.begin(); it != cell_up_end; it++)
+	{
+//		numCells+=1;
+		const CellHandle& cell = *it;
+		if (cell->info().isGhost) continue;
+
+		for (int j=0; j<4; j++) {
+			if (cell->neighbor(j)->info().isFictious) continue;
+			const CVector& Surfk = cell->info().facetSurfaces[j];
+			Real area = sqrt(Surfk.squared_length());
+			vectorVel[0] = cell->info().averageVelocity()[0];
+			vectorVel[1] = cell->info().averageVelocity()[1];
+			vectorVel[2] = cell->info().averageVelocity()[2];
+			vectorVel[3] = cell->info().facetFluidSurfacesRatio[j]*area;
+			//vectorVel[4] = cell->info().kNorm()[j];
+			velocities.push_back(vectorVel);
+			//avgVel += sqrt(cell->info().averageVelocity().squared_length());
+		}
+	}
+	//avgVel /= double(numCells);
+	return velocities;
+}
+
+
+
+
+template <class Tesselation>
+double FlowBoundingSphere<Tesselation>::getCavityFlux()
+{
+	double cavityEdgeFlux = 0;
+	//double cavityVolume = 0;
+   	Tesselation& Tes = T[currentTes];
+	const long sizeCells = Tes.cellHandles.size();
+	#pragma omp parallel for
+    	for (long i=0; i<sizeCells; i++){
+		CellHandle& cell = Tes.cellHandles[i];
+		if (!cell->info().isCavity || cell->info().isFictious || cell->info().blocked) continue;  // only measuring cavity flux		
+		//cavityVolume += cell->info().volume();
+		for (int j=0;j<4;j++){
+			if (cell->neighbor(j)->info().isCavity || cell->neighbor(j)->info().blocked) continue;
+			cavityEdgeFlux += -(cell->info().kNorm())[j]* (cell->info().p()-cell->neighbor(j)->info().p()); // influx to cavity will be negative
+		}
+	}
+
+	return cavityEdgeFlux;
+}
+
+template <class Tesselation>
+void FlowBoundingSphere<Tesselation>::adjustCavityVolumeChange(double dt, int stepsSinceLastMesh, double pZero)
+{
+	double totalStep = dt*stepsSinceLastMesh;
+	//double Q1=0;
+	netCavityFlux = 0;
+	//double cavityVolume = 0;
+   	Tesselation& Tes = T[currentTes];
+	const long sizeCells = Tes.cellHandles.size();
+	#pragma omp parallel for
+    	for (long i=0; i<sizeCells; i++){
+		CellHandle& cell = Tes.cellHandles[i];
+		if (!cell->info().isCavity || cell->info().isFictious || cell->info().blocked) continue;  // only measuring cavity flux		
+		//cavityVolume += cell->info().volume();
+		for (int j=0;j<4;j++){
+			if (cell->neighbor(j)->info().isCavity || cell->neighbor(j)->info().blocked) continue;
+			netCavityFlux += -(cell->info().kNorm())[j]* (cell->info().p()-cell->neighbor(j)->info().p()); // influx to cavity will be negative
+		}
+	}
+
+	// add imposed flux
+	netCavityFlux += cavityFlux;  // influx to cavity will be negative
+
+	cavityDV += netCavityFlux/totalStep;
+}
+
+template <class Tesselation>
+void FlowBoundingSphere<Tesselation>::adjustCavityPressure(double dt, int stepsSinceLastMesh, double pZero)
+{
+	double totalStep = dt*stepsSinceLastMesh;
+	//double Q1=0;
+	netCavityFlux = 0;
+	double cavityVolume = 0;
+   	Tesselation& Tes = T[currentTes];
+	const long sizeCells = Tes.cellHandles.size();
+	#pragma omp parallel for
+    	for (long i=0; i<sizeCells; i++){
+		CellHandle& cell = Tes.cellHandles[i];
+		if (!cell->info().isCavity || cell->info().isFictious || cell->info().blocked) continue;  // only measuring cavity flux		
+		cavityVolume += cell->info().volume();
+		for (int j=0;j<4;j++){
+			if (cell->neighbor(j)->info().isCavity || cell->neighbor(j)->info().blocked) continue;
+			netCavityFlux += (cell->info().kNorm())[j]* (cell->info().shiftedP()-cell->neighbor(j)->info().shiftedP()); // influx to cavity will be negative
+		}
+	}
+
+	// add imposed flux
+	netCavityFlux += cavityFlux;  // influx to cavity will be negative
+
+	// assign dynamic pcondition to cavity cells
+	double delP;
+	if (cavityFluidDensity==0) {delP = -netCavityFlux*totalStep/(equivalentCompressibility*cavityVolume);} // dv 
+	// or use density?
+	else {
+		double cavityFluidDensityNew =( (cavityFluidDensity*cavityVolume)+(fluidRho*(-netCavityFlux*totalStep)))/(cavityVolume);
+		delP = -(cavityFluidDensity/cavityFluidDensityNew - 1) * 1./equivalentCompressibility;
+		cavityFluidDensity=cavityFluidDensityNew;
+	}
+	#pragma omp parallel for
+    	for (long i=0; i<sizeCells; i++){
+		CellHandle& cell = Tes.cellHandles[i];
+		if (!cell->info().isCavity || cell->info().isFictious || cell->info().blocked) continue;  // only measuring cavity flux		
+		cell->info().Pcondition = true;
+		cell->info().p() += delP;
+	}
+	if (debugOut) cout << "flux added to cavity " << netCavityFlux << endl;
+}
+
+
+template <class Tesselation>
+void FlowBoundingSphere<Tesselation>::adjustCavityCompressibility(double pZero)
+{
+
+	double sumP = 0;
+	int numCells = 0;
+	netCavityFlux = 0;
+   	Tesselation& Tes = T[currentTes];
+	const long sizeCells = Tes.cellHandles.size();
+	#pragma omp parallel for
+    	for (long i=0; i<sizeCells; i++){
+		CellHandle& cell = Tes.cellHandles[i];
+		if (!cell->info().isCavity || cell->info().isFictious || cell->info().blocked) continue; 
+		sumP += cell->info().p();	
+		numCells += 1;
+		if (!controlCavityPressure) continue; // adjustCavPressure will track flux if active
+		for (int j=0;j<4;j++){
+			if (cell->neighbor(j)->info().isCavity || cell->neighbor(j)->info().blocked) continue;
+			netCavityFlux += (cell->info().kNorm())[j]* (cell->info().shiftedP()-cell->neighbor(j)->info().shiftedP()); // reporting/debug purposes only, not used in model
+		}
+
+	}
+	double Pa = sumP/numCells;
+	if (Pa == 0) {cerr << "0 pressure found while trying to account for air compressibility, invalid, setting to atmospheric" << endl;Pa = 1.0135e5;}
+	double Ca = 1./Pa;
+	double phi = phiZero*(pZero/Pa);
+	double Cw = 1./fluidBulkModulus;
+	equivalentCompressibility = phi*Ca + (1.-phi)*Cw;
+	if (debugOut) cout << "Equivalent compressibility " << equivalentCompressibility << endl;
+
+	if (averageCavityPressure){
+	#pragma omp parallel for
+    	for (long i=0; i<sizeCells; i++){
+		CellHandle& cell = Tes.cellHandles[i];
+		if (!cell->info().isCavity || cell->info().isFictious || cell->info().blocked) continue; 
+		cell->info().p() = Pa; // set all cavity cell pressures the the average pressure...	
+	}
+	}
+}
+
+
 template <class Tesselation> 
 double FlowBoundingSphere<Tesselation>::permeameter(double PInf, double PSup, double Section, double DeltaY, const char *file)
 {
@@ -1203,7 +1426,7 @@ void FlowBoundingSphere<Tesselation>::saveVtk(const char* folder, bool withBound
 		vtkWrite.begin_data("Permeability",CELL_DATA,SCALARS,FLOAT);
 		for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != Tri.finite_cells_end(); ++cell) {
 			bool isDrawable = cell->info().isReal() && cell->vertex(0)->info().isReal() && cell->vertex(1)->info().isReal() && cell->vertex(2)->info().isReal()  && cell->vertex(3)->info().isReal();
-			if (isDrawable){vtkWrite.write_data(cell->info().s);}
+			if (isDrawable){vtkWrite.write_data((cell->info().kNorm()[0]+cell->info().kNorm()[1]+cell->info().kNorm()[2]+cell->info().kNorm()[3])/4.);}
 		}
 		vtkWrite.end_data();}
 	else{//normal case
@@ -1216,8 +1439,15 @@ void FlowBoundingSphere<Tesselation>::saveVtk(const char* folder, bool withBound
 			for (unsigned kk=0; kk<allIds.size(); kk++){
 				bool isDrawable = cellHandles[allIds[kk]]->info().isReal() && cellHandles[allIds[kk]]->vertex(0)->info().isReal() && cellHandles[allIds[kk]]->vertex(1)->info().isReal() && cellHandles[allIds[kk]]->vertex(2)->info().isReal() && cellHandles[allIds[kk]]->vertex(3)->info().isReal();
 				 if(isDrawable) vtkWrite.write_data(cellHandles[allIds[kk]]->info().temp());
-			vtkWrite.end_data();
 			}
+			vtkWrite.end_data();
+
+			vtkWrite.begin_data("Reynolds",CELL_DATA,SCALARS,FLOAT);
+			for (unsigned kk=0; kk<allIds.size(); kk++){
+				bool isDrawable = cellHandles[allIds[kk]]->info().isReal() && cellHandles[allIds[kk]]->vertex(0)->info().isReal() && cellHandles[allIds[kk]]->vertex(1)->info().isReal() && cellHandles[allIds[kk]]->vertex(2)->info().isReal() && cellHandles[allIds[kk]]->vertex(3)->info().isReal();
+				 if(isDrawable) vtkWrite.write_data(cellHandles[allIds[kk]]->info().Reynolds);
+			}
+			vtkWrite.end_data();
 			
 			vtkWrite.begin_data("Tcondition",CELL_DATA,SCALARS,FLOAT);
 			for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != Tri.finite_cells_end(); ++cell) {
@@ -1226,6 +1456,13 @@ void FlowBoundingSphere<Tesselation>::saveVtk(const char* folder, bool withBound
 			}
 			vtkWrite.end_data();
 		}
+
+		vtkWrite.begin_data("cavity",CELL_DATA,SCALARS,FLOAT);
+		for (FiniteCellsIterator cell = Tri.finite_cells_begin(); cell != Tri.finite_cells_end(); ++cell) {
+			bool isDrawable = cell->info().isReal() && cell->vertex(0)->info().isReal() && cell->vertex(1)->info().isReal() && cell->vertex(2)->info().isReal() && cell->vertex(3)->info().isReal();
+			if (isDrawable){vtkWrite.write_data(cell->info().isCavity);}
+		}
+		vtkWrite.end_data();
 			
 		vtkWrite.begin_data("fictious",CELL_DATA,SCALARS,INT);
 		for (unsigned kk=0; kk<allIds.size(); kk++) vtkWrite.write_data(fictiousN[kk]);
@@ -1235,6 +1472,7 @@ void FlowBoundingSphere<Tesselation>::saveVtk(const char* folder, bool withBound
 		for (unsigned kk=0; kk<allIds.size(); kk++) vtkWrite.write_data(allIds[kk]);
 		vtkWrite.end_data();
 
+		averageRelativeCellVelocity();
 		vtkWrite.begin_data("Velocity",CELL_DATA,VECTORS,FLOAT);
 		for (unsigned kk=0; kk<allIds.size(); kk++) vtkWrite.write_data(cellHandles[allIds[kk]]->info().averageVelocity()[0],
 			cellHandles[allIds[kk]]->info().averageVelocity()[1],cellHandles[allIds[kk]]->info().averageVelocity()[2]);

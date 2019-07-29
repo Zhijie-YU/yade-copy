@@ -239,6 +239,8 @@ class PhaseCluster : public Serializable
 		.def("updateCapVolList",&PhaseCluster::updateCapVolList,(boost::python::arg("dt")),"increments throat's volume of all interfaces by flux*dt")
 		.def("solvePressure",&PhaseCluster::solvePressure,"Solve 1-phase flow in one single cluster defined by its id.")
 		)
+
+	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(PhaseCluster);
 
@@ -623,6 +625,7 @@ class TwoPhaseFlowEngine : public TwoPhaseFlowEngineT
 	.def("getEffRcByPosRadius",&TwoPhaseFlowEngine::computeEffRcByPosRadius, (boost::python::arg("position1"),boost::python::arg("radius1"),boost::python::arg("position2"),boost::python::arg("radius2"),boost::python::arg("position3"),boost::python::arg("radius3")), "get effective radius by three spheres position and radius.(inscribed sphere)")
 	.def("getMSPRcByPosRadius",&TwoPhaseFlowEngine::computeMSPRcByPosRadius, (boost::python::arg("position1"),boost::python::arg("radius1"),boost::python::arg("position2"),boost::python::arg("radius2"),boost::python::arg("position3"),boost::python::arg("radius3")), "get entry radius wrt MSP method by three spheres position and radius.")
 	)
+
 	DECLARE_LOGGER;
 };
 REGISTER_SERIALIZABLE(TwoPhaseFlowEngine);
